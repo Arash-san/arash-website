@@ -9,6 +9,7 @@ export default function Home() {
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Dot Pattern Background */}
         <DotPattern
+        
           className={cn(
             "[mask-image:radial-gradient(800px_circle_at_center,white,transparent)]",
           )}
@@ -17,26 +18,27 @@ export default function Home() {
           cx={1}
           cy={1}
           cr={1}
+          
         />
         
-        {/* Main Content */}
-        <div className="relative z-10 container mx-auto px-8 py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-center max-w-4xl mx-auto">
-            {/* Left Side - Portrait Image */}
-            <div className="flex justify-center lg:justify-start">
-              <div className="relative w-80 h-[420px] rounded-lg overflow-hidden shadow-2xl bg-gray-100">
-                <Image
-                  src="/portrait.jpg"
-                  alt="Arash Portrait"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </div>
-            
-            {/* Right Side - Text Content */}
-            <div className="space-y-6 text-center lg:text-left">
+                 {/* Main Content */}
+         <div className="relative z-10 container mx-auto px-8 py-16">
+           <div className="flex flex-col lg:flex-row items-center justify-center gap-13 max-w-4xl mx-auto">
+                         {/* Left Side - Portrait Image */}
+             <div className="flex-shrink-0">
+               <div className="relative w-80 h-[420px] rounded-lg overflow-hidden shadow-2xl bg-gray-100">
+                 <Image
+                   src="/portrait.jpg"
+                   alt="Arash Portrait"
+                   fill
+                   className="object-cover"
+                   priority
+                 />
+               </div>
+             </div>
+             
+             {/* Right Side - Text Content */}
+             <div className="space-y-3 text-center lg:text-left lg:ml-4">
               {/* Main Greeting */}
               <div className="space-y-2">
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold">
@@ -47,13 +49,17 @@ export default function Home() {
               </div>
               
               {/* Lorem Ipsum Text */}
-              <div className="space-y-4 max-w-lg">
+              <div className="space-y-2 max-w-lg">
                 <p className="text-lg text-gray-700 leading-relaxed">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                  Welcome to my personal website! 
                 </p>
                 <p className="text-lg text-gray-700 leading-relaxed">
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.
+                  Currently, I'm a second year PhD student in electrical and computer engineering at the <a href="https://www.ou.edu/" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">University Of Oklahoma.</a>
                 </p>
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  In my studies, I'm focusing on the utilization of Large Language Models (LLMs) in different domans, and also working on the interpretibility side of them.
+                </p>
+                <p className="text-lg text-gray-700 leading-relaxed font-bold">You can scroll to see more!</p>
               </div>
             </div>
           </div>
