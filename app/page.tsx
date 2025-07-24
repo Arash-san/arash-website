@@ -53,7 +53,7 @@ export default function Home() {
         <div className="absolute inset-0 hidden lg:flex items-center justify-center">
             {/* Desktop Portrait */}
             <div className="relative w-80 h-[420px] rounded-lg overflow-hidden flex-shrink-0">
-                <Image src="/arash-website/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
+                <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
             </div>
             {/* Desktop Text Container */}
             <div className="relative w-[500px] ml-8 h-96">
@@ -78,7 +78,7 @@ export default function Home() {
                                     <span className="text-xs">GitHub</span>
                                 </a>
                                 <a href="https://scholar.google.com/citations?user=RR1oK4sAAAAJ&hl=en" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
-                                    <Image src="/arash-website/google-scholar--v2.png" alt="Google Scholar" width={28} height={28} className="h-7 w-7" />
+                                    <Image src="/google-scholar--v2.png" alt="Google Scholar" width={28} height={28} className="h-7 w-7" />
                                     <span className="text-xs">Scholar</span>
                                 </a>
                                 <a href="https://www.linkedin.com/in/arash-ahmadi-619ab1352" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
@@ -127,7 +127,7 @@ export default function Home() {
             {/* Mobile Portrait */}
             <div className="absolute top-8 inset-x-0 z-10 flex justify-center">
                 <div className="relative w-72 h-[360px] rounded-lg overflow-hidden">
-                    <Image src="/arash-website/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
+                    <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
                 </div>
             </div>
             {/* Mobile Text Container */}
@@ -154,7 +154,7 @@ export default function Home() {
                                         <span className="text-xs">GitHub</span>
                                     </a>
                                     <a href="https://scholar.google.com/citations?user=RR1oK4sAAAAJ&hl=en" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
-                                        <Image src="/arash-website/google-scholar--v2.png" alt="Google Scholar" width={24} height={24} className="h-6 w-6" />
+                                        <Image src="/google-scholar--v2.png" alt="Google Scholar" width={24} height={24} className="h-6 w-6" />
                                         <span className="text-xs">Scholar</span>
                                     </a>
                                     <a href="https://www.linkedin.com/in/arash-ahmadi-619ab1352" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
