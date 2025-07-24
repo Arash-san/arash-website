@@ -16,23 +16,26 @@ export default function Home() {
   const numSections = 3;
 
   // --- Animation Definitions ---
-  // Opacity animations are shared. y-transform is for desktop only.
-  // pointer-events ensures only the visible section is clickable.
 
-  // Section 1
+  // --- Shared Opacity and Pointer Events ---
   const opacity1 = useTransform(scrollYProgress, [0, 1 / numSections / 2, 1 / numSections], [1, 1, 0]);
-  const y1Desktop = useTransform(scrollYProgress, [0, 1 / numSections], [0, -50]);
   const pointerEvents1 = useTransform(opacity1, (val) => (val > 0.1 ? "auto" : "none"));
 
-  // Section 2
   const opacity2 = useTransform(scrollYProgress, [1 / numSections, 1.5 / numSections, 2 / numSections], [0, 1, 0]);
-  const y2Desktop = useTransform(scrollYProgress, [1 / numSections, 2 / numSections], [50, -50]);
   const pointerEvents2 = useTransform(opacity2, (val) => (val > 0.1 ? "auto" : "none"));
 
-  // Section 3
   const opacity3 = useTransform(scrollYProgress, [2 / numSections, 2.5 / numSections, 1], [0, 1, 1]);
-  const y3Desktop = useTransform(scrollYProgress, [2 / numSections, 1], [50, 0]);
   const pointerEvents3 = useTransform(opacity3, (val) => (val > 0.1 ? "auto" : "none"));
+
+  // --- Desktop-Only Vertical Animation ---
+  const y1Desktop = useTransform(scrollYProgress, [0, 1 / numSections], [0, -50]);
+  const y2Desktop = useTransform(scrollYProgress, [1 / numSections, 2 / numSections], [50, -50]);
+  const y3Desktop = useTransform(scrollYProgress, [2 / numSections, 1], [50, 0]);
+
+  // --- Mobile-Only Vertical Animation ---
+  const y1Mobile = useTransform(scrollYProgress, [0, 1 / numSections], [0, -20]);
+  const y2Mobile = useTransform(scrollYProgress, [1 / numSections, 2 / numSections], [20, 0]);
+  const y3Mobile = useTransform(scrollYProgress, [2 / numSections, 1], [20, 0]);
 
   return (
     <div className="bg-white">
@@ -85,6 +88,10 @@ export default function Home() {
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                                     <span className="text-xs">LinkedIn</span>
                                 </a>
+                                <a href="mailto:arash.ahmadi@ou.edu" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    <span className="text-xs">Email</span>
+                                </a>
                             </div>
                             <p className="font-bold">Scroll to see more!</p>
                         </div>
@@ -115,7 +122,7 @@ export default function Home() {
                             <p>I'm really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
                             <p>I also like watching movies, playing video games, writing an interactive story, walking at nights, the list goes on and on...</p>
                             <p>My goal is to have a good impact to the scientific community and make this world a better and happy place</p>
-                            <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for time to read what I wrote ❤️</p>
+                            <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for your time to read what I wrote ❤️</p>
                         </div>
                     </div>
                 </motion.div>
@@ -134,7 +141,7 @@ export default function Home() {
             <div className="absolute top-[420px] inset-x-0 px-6">
                 <div className="relative h-96 max-w-sm mx-auto">
                     {/* Section 1 */}
-                    <motion.div style={{ opacity: opacity1, pointerEvents: pointerEvents1 }} className="absolute inset-0">
+                    <motion.div style={{ opacity: opacity1, y: y1Mobile, pointerEvents: pointerEvents1 }} className="absolute inset-0">
                         <div className="space-y-3 text-left">
                             <h1 className="text-2xl font-bold">
                                 <span className="text-gray-600">Hi! I'm </span>
@@ -161,13 +168,17 @@ export default function Home() {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                                         <span className="text-xs">LinkedIn</span>
                                     </a>
+                                    <a href="mailto:arash.ahmadi@ou.edu" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                        <span className="text-xs">Email</span>
+                                    </a>
                                 </div>
                                 <p className="font-bold">Scroll to see more!</p>
                             </div>
                         </div>
                     </motion.div>
                     {/* Section 2 */}
-                    <motion.div style={{ opacity: opacity2, pointerEvents: pointerEvents2 }} className="absolute inset-0">
+                    <motion.div style={{ opacity: opacity2, y: y2Mobile, pointerEvents: pointerEvents2 }} className="absolute inset-0">
                         <div className="space-y-3 text-left">
                             <h1 className="text-2xl font-bold text-black">Academic Background</h1>
                             <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
@@ -184,14 +195,14 @@ export default function Home() {
                         </div>
                     </motion.div>
                     {/* Section 3 */}
-                    <motion.div style={{ opacity: opacity3, pointerEvents: pointerEvents3 }} className="absolute inset-0">
+                    <motion.div style={{ opacity: opacity3, y: y3Mobile, pointerEvents: pointerEvents3 }} className="absolute inset-0">
                         <div className="space-y-3 text-left">
                             <h1 className="text-2xl font-bold text-black">My Interests</h1>
                             <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
                                 <p>I'm really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
                                 <p>I also like watching movies, playing video games, writing an interactive story, walking at nights, the list goes on and on...</p>
                                 <p>My goal is to have a good impact to the scientific community and make this world a better and happy place</p>
-                                <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for time to read what I wrote ❤️</p>
+                                <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for your time to read what I wrote ❤️</p>
                             </div>
                         </div>
                     </motion.div>
