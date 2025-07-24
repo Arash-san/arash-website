@@ -28,7 +28,7 @@ export default function Home() {
              <div className="flex-shrink-0">
                <div className="relative w-80 h-[420px] rounded-lg overflow-hidden shadow-2xl bg-gray-100">
                  <Image
-                   src="/portrait.jpg"
+                   src="/arash-website/portrait.jpg"
                    alt="Arash Portrait"
                    fill
                    className="object-cover"
