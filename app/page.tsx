@@ -42,8 +42,8 @@ export default function Home() {
       {/* --- Main Fixed Container for ALL Visible Content --- */}
       <div className="fixed inset-0 z-0">
         <DotPattern
-          width={20}
-          height={20}
+              width={20}
+              height={20}
           cx={1}
           cy={1}
           cr={1}
@@ -215,4 +215,4 @@ export default function Home() {
       <div ref={containerRef} style={{ height: `${numSections * 100}vh` }} />
     </div>
   );
-} 
+}
