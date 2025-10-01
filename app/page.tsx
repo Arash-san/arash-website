@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion, useScroll, useTransform, useMotionValueEvent, animate } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 
@@ -14,6 +14,49 @@ export default function Home() {
   });
 
   const numSections = 3;
+
+  // --- Active Tab State from scroll progress ---
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    // Map progress to 0,1,2
+    const thresholds = [0, 1 / numSections, 2 / numSections, 1];
+    let idx = 0;
+    if (latest >= thresholds[2] - 0.0001) idx = 2;
+    else if (latest >= thresholds[1] - 0.0001) idx = 1;
+    else idx = 0;
+    setActiveIndex(idx);
+  });
+
+  // --- Smooth scroll helper ---
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  function scrollToSection(index: number) {
+    if (typeof window === "undefined") return;
+    const clamped = Math.max(0, Math.min(numSections - 1, index));
+    // Ensure the target section starts from the top of its content
+    const targetSection = sectionScrollRefs[clamped]?.current;
+    if (targetSection) {
+      targetSection.scrollTop = 0;
+    }
+    const target = clamped * window.innerHeight;
+    setIsTransitioning(true);
+    const controls = animate(window.scrollY, target, {
+      duration: 0.6,
+      ease: "easeOut",
+      onUpdate: (v) => window.scrollTo(0, v),
+      onComplete: () => setTimeout(() => setIsTransitioning(false), 50),
+    });
+    return () => controls.stop();
+  }
+
+  // --- Mobile gesture forwarding for per-section scrolling ---
+  const sectionScrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+
+  // Only enable gesture layer on mobile (tailwind lg breakpoint ~1024)
+  const isMobile = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < 1024;
+  }, []);
 
   // --- Animation Definitions ---
 
@@ -37,10 +80,105 @@ export default function Home() {
   const y2Mobile = useTransform(scrollYProgress, [1 / numSections, 2 / numSections], [20, 0]);
   const y3Mobile = useTransform(scrollYProgress, [2 / numSections, 1], [20, 0]);
 
+  // Wheel handler (mobile gesture layer)
+  const onWheelMobile = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!isMobile) return; // do nothing on desktop
+    const dir = Math.sign(e.deltaY);
+    const current = sectionScrollRefs[activeIndex]?.current;
+    if (!current) return;
+    const atTop = current.scrollTop <= 0;
+    const atBottom = Math.ceil(current.scrollTop + current.clientHeight) >= current.scrollHeight;
+    if ((dir > 0 && !atBottom) || (dir < 0 && !atTop)) {
+      // Scroll inside the section
+      const unit = e.deltaMode === 1 ? 16 : 1; // normalize line vs pixel delta
+      const scaled = e.deltaY * unit * 0.25; // slower inner scroll
+      current.scrollTop += scaled;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    // At bounds, trigger section transition if any
+    if (!isTransitioning) {
+      const nextIndex = activeIndex + (dir > 0 ? 1 : -1);
+      if (nextIndex >= 0 && nextIndex < numSections) {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToSection(nextIndex);
+      }
+    } else {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  // Touch handlers (mobile gesture layer)
+  const onTouchStartMobile = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobile) return;
+    setTouchStartY(e.touches[0].clientY);
+  };
+  const onTouchMoveMobile = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobile || touchStartY == null) return;
+    const dy = touchStartY - e.touches[0].clientY; // positive = swipe up
+    const current = sectionScrollRefs[activeIndex]?.current;
+    if (!current) return;
+    const atTop = current.scrollTop <= 0;
+    const atBottom = Math.ceil(current.scrollTop + current.clientHeight) >= current.scrollHeight;
+    if ((dy > 0 && !atBottom) || (dy < 0 && !atTop)) {
+      const scaledDy = dy * 0.35; // slower inner scroll on touch
+      current.scrollTop += scaledDy;
+      // keep small remainder so motion feels natural
+      setTouchStartY(e.touches[0].clientY + (dy - scaledDy));
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (!isTransitioning) {
+      const nextIndex = activeIndex + (dy > 0 ? 1 : -1);
+      if (nextIndex >= 0 && nextIndex < numSections) {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToSection(nextIndex);
+        setTouchStartY(e.touches[0].clientY);
+      }
+    } else {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  // --- Nav Tabs component ---
+  function NavTabs() {
+    const labels = ["Home", "Academic", "Interests"];
+    return (
+      <div role="tablist" aria-label="Section navigation" className="flex items-center gap-2">
+        {labels.map((label, idx) => {
+          const isActive = activeIndex === idx;
+          return (
+            <button
+              key={label}
+              role="tab"
+              aria-selected={isActive}
+              aria-current={isActive ? "page" : undefined}
+              onPointerDown={(e) => { e.preventDefault(); scrollToSection(idx); }}
+              onClick={(e) => { e.preventDefault(); scrollToSection(idx); }}
+              className={cn(
+                "px-3 py-1 rounded-full transition-colors active:opacity-90",
+                isActive ? "bg-black text-white" : "bg-transparent text-black/80 hover:text-black"
+              )}
+              style={{ touchAction: "manipulation" }}
+            >
+              {label.toLowerCase()}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white">
       {/* --- Main Fixed Container for ALL Visible Content --- */}
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0" onWheel={onWheelMobile} onTouchStart={onTouchStartMobile} onTouchMove={onTouchMoveMobile}>
         <DotPattern
               width={20}
               height={20}
@@ -54,9 +192,12 @@ export default function Home() {
 
         {/* --- Desktop Layout --- */}
         <div className="absolute inset-0 hidden lg:flex items-center justify-center">
-            {/* Desktop Portrait */}
-            <div className="relative w-80 h-[420px] rounded-lg overflow-hidden flex-shrink-0">
-                <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
+            {/* Desktop Portrait + Tabs Column */}
+            <div className="flex flex-col items-center justify-start">
+                <div className="mb-3"><NavTabs /></div>
+                <div className="relative w-80 h-[420px] rounded-lg overflow-hidden flex-shrink-0">
+                    <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
+                </div>
             </div>
             {/* Desktop Text Container */}
             <div className="relative w-[500px] ml-8 h-96">
@@ -131,18 +272,19 @@ export default function Home() {
 
         {/* --- Mobile Layout --- */}
         <div className="lg:hidden">
-            {/* Mobile Portrait */}
-            <div className="absolute top-8 inset-x-0 z-10 flex justify-center">
+            {/* Mobile Tabs + Portrait Group (prevents overlap) */}
+            <div className="absolute top-6 inset-x-0 z-10 flex flex-col items-center gap-2">
+                <NavTabs />
                 <div className="relative w-72 h-[360px] rounded-lg overflow-hidden">
                     <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
                 </div>
             </div>
             {/* Mobile Text Container */}
-            <div className="absolute top-[420px] inset-x-0 px-6">
+            <div className="absolute top-[450px] inset-x-0 px-6">
                 <div className="relative h-96 max-w-sm mx-auto">
                     {/* Section 1 */}
                     <motion.div style={{ opacity: opacity1, y: y1Mobile, pointerEvents: pointerEvents1 }} className="absolute inset-0">
-                        <div className="space-y-3 text-left">
+                        <div ref={sectionScrollRefs[0]} className="space-y-3 text-left pr-2 no-scrollbar" style={{ maxHeight: "calc(100vh - 450px - 16px)", overflowY: "auto", overscrollBehavior: "contain" }}>
                             <h1 className="text-2xl font-bold">
                                 <span className="text-gray-600">Hi! I'm </span>
                                 <span className="text-black">Arash</span>
@@ -179,7 +321,7 @@ export default function Home() {
                     </motion.div>
                     {/* Section 2 */}
                     <motion.div style={{ opacity: opacity2, y: y2Mobile, pointerEvents: pointerEvents2 }} className="absolute inset-0">
-                        <div className="space-y-3 text-left">
+                        <div ref={sectionScrollRefs[1]} className="space-y-3 text-left pr-2 no-scrollbar" style={{ maxHeight: "calc(100vh - 450px - 16px)", overflowY: "auto", overscrollBehavior: "contain" }}>
                             <h1 className="text-2xl font-bold text-black">Academic Background</h1>
                             <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
                                 <p>
@@ -196,7 +338,7 @@ export default function Home() {
                     </motion.div>
                     {/* Section 3 */}
                     <motion.div style={{ opacity: opacity3, y: y3Mobile, pointerEvents: pointerEvents3 }} className="absolute inset-0">
-                        <div className="space-y-3 text-left">
+                        <div ref={sectionScrollRefs[2]} className="space-y-3 text-left pr-2 no-scrollbar" style={{ maxHeight: "calc(100vh - 450px - 16px)", overflowY: "auto", overscrollBehavior: "contain" }}>
                             <h1 className="text-2xl font-bold text-black">My Interests</h1>
                             <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
                                 <p>I'm really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
