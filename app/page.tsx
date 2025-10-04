@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, useMotionValueEvent, animate } from "f
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
+import { SubsectionSwitcher } from "@/components/SubsectionSwitcher";
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -13,13 +14,13 @@ export default function Home() {
     offset: ["start start", "end end"], // Maps scroll from top-to-bottom
   });
 
-  const numSections = 3;
+  const numSections = 3.5; // Extended to allow overlay reveal
 
   // --- Active Tab State from scroll progress ---
   const [activeIndex, setActiveIndex] = useState<number>(0);
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    // Map progress to 0,1,2
-    const thresholds = [0, 1 / numSections, 2 / numSections, 1];
+    // Map progress to 0,1,2 (ignoring the extra 0.5 for overlay)
+    const thresholds = [0, 1 / 3, 2 / 3, 1];
     let idx = 0;
     if (latest >= thresholds[2] - 0.0001) idx = 2;
     else if (latest >= thresholds[1] - 0.0001) idx = 1;
@@ -48,8 +49,12 @@ export default function Home() {
     return () => controls.stop();
   }
 
-  // --- Mobile gesture forwarding for per-section scrolling ---
+  // --- Scroll containers ---
+  // Mobile per-section scroll containers
   const sectionScrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  // Desktop scroll containers for Section 3
+  const desktopGeneralRef = useRef<HTMLDivElement>(null);
+  const desktopOverlayRef = useRef<HTMLDivElement>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   // Only enable gesture layer on mobile (tailwind lg breakpoint ~1024)
@@ -76,11 +81,54 @@ export default function Home() {
   const y3Desktop = useTransform(scrollYProgress, [2 / numSections, 1], [50, 0]);
 
   // --- Mobile-Only Vertical Animation ---
-  const y1Mobile = useTransform(scrollYProgress, [0, 1 / numSections], [0, -20]);
-  const y2Mobile = useTransform(scrollYProgress, [1 / numSections, 2 / numSections], [20, 0]);
-  const y3Mobile = useTransform(scrollYProgress, [2 / numSections, 1], [20, 0]);
+  const y1Mobile = useTransform(scrollYProgress, [0, 1 / 3], [0, -20]);
+  const y2Mobile = useTransform(scrollYProgress, [1 / 3, 2 / 3], [20, 0]);
+  const y3Mobile = useTransform(scrollYProgress, [2 / 3, 1], [20, 0]);
 
-  // Wheel handler (mobile gesture layer)
+  // --- Interests subsection: "current mood" overlay animation ---
+  // Scrubbed by scroll in the range [2/3 to 1] (section 3's extended space)
+  const overlayStartProgress = isMobile ? 0.9 : 0.7; // Start later on mobile to ensure full reading
+  const moodOverlayProgress = useTransform(scrollYProgress, [overlayStartProgress, 1], [0, 1]);
+  const moodOverlayOpacity = useTransform(moodOverlayProgress, [0, 1], [0, 1]);
+  const moodOverlayY = useTransform(moodOverlayProgress, [0, 1], [24, 0]);
+  
+  // General content fades out as overlay fades in (desktop only, mobile keeps both visible)
+  const generalContentOpacity = useTransform(moodOverlayProgress, [0, 1], [1, 0]);
+
+  // Desktop layout adjustments when mood overlay is active
+  const portraitOpacity = useTransform(moodOverlayProgress, [0, 1], [1, 0]);
+  const portraitY = useTransform(moodOverlayProgress, [0, 1], [0, -40]);
+  const portraitWidth = useTransform(moodOverlayProgress, [0, 1], [320, 0]);
+  const textWidth = useTransform(moodOverlayProgress, (p) => 500 + p * 220);
+  const textMarginLeft = useTransform(moodOverlayProgress, (p) => (1 - p) * 32);
+  const textHeight = useTransform(moodOverlayProgress, (p) => 384 + p * 120); // grow height for overlay
+  // Mobile: hide/move portrait and raise content when overlay active
+  const mobilePortraitOpacity = useTransform(moodOverlayProgress, [0, 1], [1, 0]);
+  const mobilePortraitY = useTransform(moodOverlayProgress, [0, 1], [0, -100]);
+  const mobileContentTop = useTransform(moodOverlayProgress, [0, 1], [450, 110]);
+
+  // Helper to scroll to a specific progress (0 to 1 across full scroll height)
+  function scrollToProgress(progress: number) {
+    if (typeof window === "undefined") return;
+    const clamped = Math.max(0, Math.min(1, progress));
+    const target = clamped * (numSections - 1) * window.innerHeight;
+    setIsTransitioning(true);
+    const controls = animate(window.scrollY, target, {
+      duration: 0.6,
+      ease: "easeOut",
+      onUpdate: (v) => window.scrollTo(0, v),
+      onComplete: () => setTimeout(() => setIsTransitioning(false), 50),
+    });
+    return () => controls.stop();
+  }
+
+  // State for mood overlay activation (derived from scroll)
+  const [isMoodActive, setIsMoodActive] = useState(false);
+  useMotionValueEvent(moodOverlayProgress, "change", (latest) => {
+    setIsMoodActive(latest > 0.5);
+  });
+
+  // Wheel handler (global). On mobile, forwards to active section; on desktop, also respects desktop section bounds
   const onWheelMobile = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!isMobile) return; // do nothing on desktop
     const dir = Math.sign(e.deltaY);
@@ -88,30 +136,21 @@ export default function Home() {
     if (!current) return;
     const atTop = current.scrollTop <= 0;
     const atBottom = Math.ceil(current.scrollTop + current.clientHeight) >= current.scrollHeight;
+    // Only allow section change when at bounds; otherwise always scroll inner content
     if ((dir > 0 && !atBottom) || (dir < 0 && !atTop)) {
       // Scroll inside the section
       const unit = e.deltaMode === 1 ? 16 : 1; // normalize line vs pixel delta
-      const scaled = e.deltaY * unit * 0.25; // slower inner scroll
+      const scaled = e.deltaY * unit * 0.18; // slow inner scroll more
       current.scrollTop += scaled;
       e.preventDefault();
       e.stopPropagation();
       return;
     }
-    // At bounds, trigger section transition if any
-    if (!isTransitioning) {
-      const nextIndex = activeIndex + (dir > 0 ? 1 : -1);
-      if (nextIndex >= 0 && nextIndex < numSections) {
-        e.preventDefault();
-        e.stopPropagation();
-        scrollToSection(nextIndex);
-      }
-    } else {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    // At bounds: let the document handle the default scroll (natural scrubbing)
+    // Do not call preventDefault here to allow the page to move to next section smoothly
   };
 
-  // Touch handlers (mobile gesture layer)
+  // Touch handlers (global on mobile)
   const onTouchStartMobile = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
     setTouchStartY(e.touches[0].clientY);
@@ -123,8 +162,9 @@ export default function Home() {
     if (!current) return;
     const atTop = current.scrollTop <= 0;
     const atBottom = Math.ceil(current.scrollTop + current.clientHeight) >= current.scrollHeight;
+    // Always consume scroll inside until reaching bounds, then allow transition
     if ((dy > 0 && !atBottom) || (dy < 0 && !atTop)) {
-      const scaledDy = dy * 0.35; // slower inner scroll on touch
+      const scaledDy = dy * 0.25; // even slower inner scroll on touch
       current.scrollTop += scaledDy;
       // keep small remainder so motion feels natural
       setTouchStartY(e.touches[0].clientY + (dy - scaledDy));
@@ -132,18 +172,8 @@ export default function Home() {
       e.stopPropagation();
       return;
     }
-    if (!isTransitioning) {
-      const nextIndex = activeIndex + (dy > 0 ? 1 : -1);
-      if (nextIndex >= 0 && nextIndex < numSections) {
-        e.preventDefault();
-        e.stopPropagation();
-        scrollToSection(nextIndex);
-        setTouchStartY(e.touches[0].clientY);
-      }
-    } else {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    // At bounds: allow native page scroll to continue (no preventDefault)
+    setTouchStartY(e.touches[0].clientY);
   };
 
   // --- Nav Tabs component ---
@@ -193,14 +223,14 @@ export default function Home() {
         {/* --- Desktop Layout --- */}
         <div className="absolute inset-0 hidden lg:flex items-center justify-center">
             {/* Desktop Portrait + Tabs Column */}
-            <div className="flex flex-col items-center justify-start">
-                <div className="mb-3"><NavTabs /></div>
+            <motion.div className="flex flex-col items-center justify-start" style={{ opacity: portraitOpacity, y: portraitY, width: portraitWidth, pointerEvents: useTransform(moodOverlayProgress, [0, 1], ["auto", "none"]) }}>
+                <div className="mb-4"><NavTabs /></div>
                 <div className="relative w-80 h-[420px] rounded-lg overflow-hidden flex-shrink-0">
                     <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
                 </div>
-            </div>
+            </motion.div>
             {/* Desktop Text Container */}
-            <div className="relative w-[500px] ml-8 h-96">
+            <motion.div className="relative" style={{ width: textWidth, marginLeft: textMarginLeft, height: textHeight }}>
                 {/* Section 1 */}
                 <motion.div style={{ opacity: opacity1, y: y1Desktop, pointerEvents: pointerEvents1 }} className="absolute inset-0">
                     <div className="space-y-3">
@@ -258,33 +288,59 @@ export default function Home() {
                 {/* Section 3 */}
                 <motion.div style={{ opacity: opacity3, y: y3Desktop, pointerEvents: pointerEvents3 }} className="absolute inset-0">
                     <div className="space-y-3">
-                        <h1 className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>
-                        <div className="space-y-2 max-w-lg text-lg text-gray-700 leading-relaxed">
-                            <p>I'm really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
-                            <p>I also like watching movies, playing video games, writing an interactive story, walking at nights, the list goes on and on...</p>
-                            <p>My goal is to have a good impact to the scientific community and make this world a better and happy place</p>
-                            <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for your time to read what I wrote ❤️</p>
-                        </div>
+                        <SubsectionSwitcher
+                          title="My Interests"
+                          isActiveProgress={moodOverlayProgress}
+                          onSelectGeneral={() => scrollToProgress(isMobile ? (2/3 + 0.02) : overlayStartProgress)}
+                          onSelectOverlay={() => scrollToProgress(1)}
+                          general={(
+                            <div className="space-y-2 max-w-lg text-lg text-gray-700 leading-relaxed">
+                              <p>I'm really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
+                              <p>I also like watching movies, playing video games, writing an interactive story, walking at nights, the list goes on and on...</p>
+                              <p>My goal is to have a good impact to the scientific community and make this world a better and happy place</p>
+                              <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for your time to read what I wrote ❤️</p>
+                            </div>
+                          )}
+                          overlay={(
+                            <div>
+                              <p className="text-gray-800 mb-3">
+                                So recently, I found this music video that I really like. It's authentic, artistic, and fun to listen. I found this music video by watching a viral part of it that the camera would move from the girl to the guy multiple times.
+                              </p>
+                              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                                <iframe
+                                  className="absolute inset-0 w-full h-full rounded-md"
+                                  src="https://www.youtube.com/embed/QcuV8h_I1y0"
+                                  title="YouTube video player"
+                                  frameBorder="0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  referrerPolicy="strict-origin-when-cross-origin"
+                                  allowFullScreen
+                                />
+                              </div>
+                            </div>
+                          )}
+                        />
                     </div>
                 </motion.div>
-            </div>
+            </motion.div>
         </div>
 
         {/* --- Mobile Layout --- */}
         <div className="lg:hidden">
-            {/* Mobile Tabs + Portrait Group (prevents overlap) */}
-            <div className="absolute top-6 inset-x-0 z-10 flex flex-col items-center gap-2">
-                <NavTabs />
+            {/* Mobile Tabs on top */}
+            <div className="absolute top-2 inset-x-0 z-30 flex justify-center"><NavTabs /></div>
+            {/* Mobile Portrait separate layer below tabs; disable pointer when overlay active */}
+            <motion.div className="absolute top-12 inset-x-0 z-10 flex justify-center" style={{ opacity: mobilePortraitOpacity, y: mobilePortraitY, pointerEvents: useTransform(moodOverlayProgress, [0, 1], ["auto", "none"]) }}>
                 <div className="relative w-72 h-[360px] rounded-lg overflow-hidden">
                     <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
                 </div>
-            </div>
+            </motion.div>
             {/* Mobile Text Container */}
-            <div className="absolute top-[450px] inset-x-0 px-6">
-                <div className="relative h-96 max-w-sm mx-auto">
+            <motion.div className="absolute inset-x-0 px-6" style={{ top: mobileContentTop, bottom: 0 }}>
+                <div className="relative max-w-sm mx-auto" style={{ height: "calc(100vh - " + mobileContentTop.get() + "px)" }}>
                     {/* Section 1 */}
                     <motion.div style={{ opacity: opacity1, y: y1Mobile, pointerEvents: pointerEvents1 }} className="absolute inset-0">
-                        <div ref={sectionScrollRefs[0]} className="space-y-3 text-left pr-2 no-scrollbar" style={{ maxHeight: "calc(100vh - 450px - 16px)", overflowY: "auto", overscrollBehavior: "contain" }}>
+                        <div ref={sectionScrollRefs[0]} className="space-y-3 text-left pr-2 no-scrollbar h-full overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
                             <h1 className="text-2xl font-bold">
                                 <span className="text-gray-600">Hi! I'm </span>
                                 <span className="text-black">Arash</span>
@@ -321,7 +377,7 @@ export default function Home() {
                     </motion.div>
                     {/* Section 2 */}
                     <motion.div style={{ opacity: opacity2, y: y2Mobile, pointerEvents: pointerEvents2 }} className="absolute inset-0">
-                        <div ref={sectionScrollRefs[1]} className="space-y-3 text-left pr-2 no-scrollbar" style={{ maxHeight: "calc(100vh - 450px - 16px)", overflowY: "auto", overscrollBehavior: "contain" }}>
+                        <div ref={sectionScrollRefs[1]} className="space-y-3 text-left pr-2 no-scrollbar h-full overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
                             <h1 className="text-2xl font-bold text-black">Academic Background</h1>
                             <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
                                 <p>
@@ -338,18 +394,44 @@ export default function Home() {
                     </motion.div>
                     {/* Section 3 */}
                     <motion.div style={{ opacity: opacity3, y: y3Mobile, pointerEvents: pointerEvents3 }} className="absolute inset-0">
-                        <div ref={sectionScrollRefs[2]} className="space-y-3 text-left pr-2 no-scrollbar" style={{ maxHeight: "calc(100vh - 450px - 16px)", overflowY: "auto", overscrollBehavior: "contain" }}>
-                            <h1 className="text-2xl font-bold text-black">My Interests</h1>
-                            <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
+                        <div ref={sectionScrollRefs[2]} className="space-y-3 text-left pr-2 no-scrollbar h-full overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
+                          <SubsectionSwitcher
+                            size="sm"
+                            title="My Interests"
+                            isActiveProgress={moodOverlayProgress}
+                            onSelectGeneral={() => scrollToProgress(isMobile ? (2/3 + 0.02) : overlayStartProgress)}
+                            onSelectOverlay={() => scrollToProgress(1)}
+                            general={(
+                              <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
                                 <p>I'm really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
                                 <p>I also like watching movies, playing video games, writing an interactive story, walking at nights, the list goes on and on...</p>
                                 <p>My goal is to have a good impact to the scientific community and make this world a better and happy place</p>
                                 <p className="font-bold">I will gradually update my personal website to introduce my projects and talk more about myself, but for now, thank you for your time to read what I wrote ❤️</p>
-                            </div>
+                              </div>
+                            )}
+                            overlay={(
+                              <div>
+                                <p className="text-gray-800 mb-2">
+                                  So recently, I found this music video that I really like. It's authentic, artistic, and fun to listen. I found this music video by watching a viral part of it that the camera would move from the girl to the guy multiple times.
+                                </p>
+                                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                                  <iframe
+                                    className="absolute inset-0 w-full h-full rounded-md"
+                                    src="https://www.youtube.com/embed/QcuV8h_I1y0"
+                                    title="YouTube video player"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerPolicy="strict-origin-when-cross-origin"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          />
                         </div>
                     </motion.div>
                 </div>
-            </div>
+            </motion.div>
         </div>
       </div>
 
