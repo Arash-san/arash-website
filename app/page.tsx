@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { cn } from "@/lib/utils";
 import { motion, useScroll, useTransform, useMotionValueEvent, animate } from "framer-motion";
@@ -196,7 +196,7 @@ export default function Home() {
             <div className="flex flex-col items-center justify-start">
                 <div className="mb-3"><NavTabs /></div>
                 <div className="relative w-80 h-[420px] rounded-lg overflow-hidden flex-shrink-0">
-                    <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
+                    <Image src="/portrait.jpg" alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma" fill className="object-cover" priority />
                 </div>
             </div>
             {/* Desktop Text Container */}
@@ -232,6 +232,10 @@ export default function Home() {
                                 <a href="mailto:arash.ahmadi@ou.edu" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                                     <span className="text-xs">Email</span>
+                                </a>
+                                <a href="/CV (Arash Ahamdi).pdf" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <span className="text-xs">CV</span>
                                 </a>
                             </div>
                             <p className="font-bold">Scroll to see more!</p>
@@ -276,7 +280,7 @@ export default function Home() {
             <div className="absolute top-6 inset-x-0 z-10 flex flex-col items-center gap-2">
                 <NavTabs />
                 <div className="relative w-72 h-[360px] rounded-lg overflow-hidden">
-                    <Image src="/portrait.jpg" alt="Arash Portrait" fill className="object-cover" priority />
+                    <Image src="/portrait.jpg" alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma" fill className="object-cover" priority />
                 </div>
             </div>
             {/* Mobile Text Container */}
@@ -313,6 +317,10 @@ export default function Home() {
                                     <a href="mailto:arash.ahmadi@ou.edu" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                                         <span className="text-xs">Email</span>
+                                    </a>
+                                    <a href="/CV (Arash Ahamdi).pdf" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                        <span className="text-xs">CV</span>
                                     </a>
                                 </div>
                                 <p className="font-bold">Scroll to see more!</p>
