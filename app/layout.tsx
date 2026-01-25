@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://arash-ahmadi.com"),
   title: "Arash Ahmadi | PhD Student at University of Oklahoma | LLM & AI Research",
   description:
     "Arash Ahmadi is a PhD student in Electrical and Computer Engineering at the University of Oklahoma (OU), specializing in Large Language Models (LLMs), AI interpretability, and machine learning research at InquireLab.",
@@ -137,6 +138,7 @@ export default function RootLayout({
         />
         <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
         <link rel="canonical" href="https://arash-ahmadi.com" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
