@@ -96,6 +96,7 @@ const jsonLd = {
     "https://github.com/arash-san",
     "https://scholar.google.com/citations?user=RR1oK4sAAAAJ&hl=en",
     "https://www.linkedin.com/in/arash-ahmadi-619ab1352",
+    "https://x.com/user_arash",
   ],
   alumniOf: {
     "@type": "CollegeOrUniversity",
@@ -137,7 +138,6 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
-        <link rel="canonical" href="https://arash-ahmadi.com" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body
