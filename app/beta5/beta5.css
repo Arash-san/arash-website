@@ -1,0 +1,559 @@
+/* beta5 — "Sunrise": soft morning light, rounded, optimistic */
+
+.b5 {
+  --dawn: #fdf9f2;
+  --char: #3b3630;
+  --char-soft: #777065;
+  --peach: #f2995e;
+  --peach-deep: #d97a3d;
+  --sky: #7fb5d6;
+  --card: rgba(255, 255, 255, 0.72);
+  --card-border: rgba(59, 54, 48, 0.09);
+  background-color: var(--dawn);
+  background-image: url("/backgrounds/bg-sunrise.webp");
+  background-size: cover;
+  background-attachment: fixed;
+  color: var(--char);
+  font-family: var(--b5-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  line-height: 1.7;
+  padding-top: 0.9rem;
+}
+
+.b5 ::selection {
+  background: var(--peach);
+  color: #fff;
+}
+
+.b5-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Nav */
+.b5-nav {
+  position: sticky;
+  top: 0.9rem;
+  z-index: 20;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.b5-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  box-shadow: 0 6px 24px rgba(217, 122, 61, 0.07);
+}
+
+.b5-brand {
+  font-weight: 800;
+  color: var(--char);
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.b5-brand span {
+  color: var(--peach-deep);
+}
+
+.b5-nav-links {
+  display: flex;
+  gap: 1.3rem;
+  font-size: 0.87rem;
+  font-weight: 600;
+}
+
+.b5-nav-links a {
+  color: var(--char-soft);
+  text-decoration: none;
+}
+
+.b5-nav-links a:hover {
+  color: var(--peach-deep);
+}
+
+@media (max-width: 720px) {
+  .b5-nav-links {
+    display: none;
+  }
+}
+
+/* Hero */
+.b5-hero {
+  text-align: center;
+  padding: 4.5rem 0 3rem;
+}
+
+.b5-hero .b5-portrait {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 1.4rem;
+  border-radius: 44%;
+  overflow: hidden;
+  border: 4px solid #fff;
+  box-shadow: 0 10px 32px rgba(217, 122, 61, 0.22);
+  animation: b5-pop 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.b5-hero .b5-portrait img {
+  object-fit: cover;
+}
+
+.b5-hero .b5-hello {
+  display: inline-block;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.3rem 1rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--peach-deep);
+  margin-bottom: 1.1rem;
+  animation: b5-rise 0.8s 0.05s ease both;
+}
+
+.b5-hero h1 {
+  font-size: clamp(2.1rem, 5.8vw, 3.3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  max-width: 21ch;
+  margin: 0 auto;
+  animation: b5-rise 0.8s 0.12s ease both;
+}
+
+.b5-hero h1 span {
+  color: var(--peach-deep);
+}
+
+.b5-hero .b5-sub {
+  max-width: 600px;
+  margin: 1.2rem auto 0;
+  color: var(--char-soft);
+  font-size: 1.02rem;
+  animation: b5-rise 0.8s 0.2s ease both;
+}
+
+.b5-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.8rem;
+  animation: b5-rise 0.8s 0.28s ease both;
+}
+
+.b5-actions a {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  color: var(--char);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.b5-actions a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(217, 122, 61, 0.16);
+}
+
+.b5-actions a.--primary {
+  background: var(--peach-deep);
+  border-color: var(--peach-deep);
+  color: #fff;
+}
+
+/* Sections */
+.b5-section {
+  padding: 3.5rem 0 0;
+}
+
+.b5-section-head {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.b5-section-head .b5-emoji {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.b5-section-head h2 {
+  font-size: clamp(1.5rem, 3.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.b5-section-head p {
+  color: var(--char-soft);
+  max-width: 540px;
+  margin: 0.5rem auto 0;
+  font-size: 0.95rem;
+}
+
+/* News list */
+.b5-news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.b5-news {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 1.4rem;
+  align-items: start;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  padding: 1.35rem 1.6rem;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.b5-news:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(217, 122, 61, 0.13);
+}
+
+.b5-news .b5-news-when {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--char-soft);
+}
+
+.b5-news .b5-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--peach-deep);
+  background: rgba(242, 153, 94, 0.14);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.b5-news h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.b5-news:hover h3 {
+  color: var(--peach-deep);
+}
+
+.b5-news p {
+  margin-top: 0.35rem;
+  font-size: 0.92rem;
+  color: var(--char-soft);
+}
+
+/* Research cards */
+.b5-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.b5-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  padding: 1.6rem;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.b5-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(127, 181, 214, 0.16);
+}
+
+.b5-card .b5-card-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  background: rgba(242, 153, 94, 0.16);
+}
+
+.b5-card:nth-child(even) .b5-card-dot {
+  background: rgba(127, 181, 214, 0.18);
+}
+
+.b5-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.01em;
+}
+
+.b5-card p {
+  font-size: 0.92rem;
+  color: var(--char-soft);
+}
+
+/* Publications */
+.b5-pubwrap {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 26px;
+  padding: 0.6rem 1.7rem;
+}
+
+.b5-pub {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.2rem;
+  align-items: baseline;
+  padding: 1.05rem 0;
+  border-bottom: 1px solid var(--card-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.b5-pub:last-child {
+  border-bottom: none;
+}
+
+.b5-pub h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.42;
+  letter-spacing: -0.005em;
+}
+
+.b5-pub:hover h3 {
+  color: var(--peach-deep);
+}
+
+.b5-pub .b5-pub-meta {
+  font-size: 0.84rem;
+  color: var(--char-soft);
+  margin-top: 0.2rem;
+}
+
+.b5-pub .b5-pub-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.b5-pub .b5-pub-badge.--journal {
+  color: var(--peach-deep);
+  background: rgba(242, 153, 94, 0.14);
+}
+
+.b5-pub .b5-pub-badge.--conference {
+  color: #4383ab;
+  background: rgba(127, 181, 214, 0.18);
+}
+
+.b5-pub .b5-pub-badge.--preprint {
+  color: #8a7f45;
+  background: rgba(212, 197, 108, 0.2);
+}
+
+/* Journey */
+.b5-journey {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 30px;
+  padding: 2.4rem;
+}
+
+.b5-journey-photo {
+  position: relative;
+}
+
+.b5-journey-photo .b5-photo-frame {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 4px solid #fff;
+  box-shadow: 0 12px 32px rgba(217, 122, 61, 0.18);
+  transform: rotate(-2deg);
+}
+
+.b5-journey-photo img {
+  object-fit: cover;
+}
+
+.b5-journey-photo figcaption {
+  margin-top: 0.8rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--char-soft);
+  font-style: italic;
+}
+
+.b5-journey-copy h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.9rem;
+}
+
+.b5-journey-copy h3 span {
+  color: var(--peach-deep);
+}
+
+.b5-journey-copy p {
+  font-size: 0.95rem;
+  color: var(--char-soft);
+}
+
+.b5-journey-copy p + p {
+  margin-top: 0.8rem;
+}
+
+/* Awards pills */
+.b5-awards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.b5-award {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.b5-award span {
+  color: var(--peach-deep);
+  font-weight: 800;
+  margin-right: 0.45rem;
+}
+
+/* Footer */
+.b5-footer {
+  margin-top: 4.5rem;
+  padding: 2.75rem 0 3.25rem;
+  text-align: center;
+}
+
+.b5-footer .b5-footer-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 30px;
+  padding: 2.5rem 1.5rem;
+}
+
+.b5-footer h2 {
+  font-size: clamp(1.4rem, 3.4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.b5-footer .b5-footer-sub {
+  color: var(--char-soft);
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.b5-footer .b5-footer-cta {
+  display: inline-block;
+  margin-top: 1.4rem;
+  background: var(--peach-deep);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.7rem;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.b5-footer .b5-footer-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(217, 122, 61, 0.3);
+}
+
+.b5-footer .b5-colophon {
+  margin-top: 1.6rem;
+  font-size: 0.84rem;
+  color: var(--char-soft);
+}
+
+@keyframes b5-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes b5-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .b5 * {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .b5-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .b5-news {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .b5-journey {
+    grid-template-columns: 1fr;
+    padding: 1.6rem;
+  }
+
+  .b5-journey-photo {
+    max-width: 300px;
+    margin: 0 auto;
+  }
+}

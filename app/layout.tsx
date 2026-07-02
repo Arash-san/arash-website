@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://arash-ahmadi.com"),
   title: "Arash Ahmadi | PhD Student at University of Oklahoma | LLM & AI Research",
   description:
-    "Arash Ahmadi is a PhD student in Electrical and Computer Engineering at the University of Oklahoma (OU), specializing in Large Language Models (LLMs), AI interpretability, and machine learning research at InquireLab.",
+    "Arash Ahmadi is a PhD student in Electrical and Computer Engineering at the University of Oklahoma (OU), fine-tuning small language models for edge devices and building AI for aviation safety, agentic systems, and reasoning at INQUIRE Lab.",
   keywords: [
     "Arash Ahmadi",
     "University of Oklahoma",
@@ -88,7 +88,7 @@ const jsonLd = {
   familyName: "Ahmadi",
   jobTitle: "PhD Student",
   description:
-    "PhD student in Electrical and Computer Engineering at the University of Oklahoma, specializing in Large Language Models (LLMs) and AI interpretability.",
+    "PhD student in Electrical and Computer Engineering at the University of Oklahoma, fine-tuning small language models for edge devices with applications in agentic systems, aviation safety, and health monitoring. M.S. in ECE (2026), founder of the OU LLM Engineering Club.",
   url: "https://arash-ahmadi.com",
   image: "/portrait.jpg",
   email: "arash.ahmadi@ou.edu",
