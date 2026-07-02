@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { Fraunces, Inter } from "next/font/google";
 import {
@@ -11,20 +12,26 @@ import {
   publications,
   research,
 } from "@/lib/profile-data";
-import "./home.css";
+import "./beta3.css";
 
 const display = Fraunces({
   subsets: ["latin"],
-  variable: "--home-display",
+  variable: "--b3-display",
   style: ["normal", "italic"],
   weight: ["400", "600"],
 });
 
 const sans = Inter({
   subsets: ["latin"],
-  variable: "--home-sans",
+  variable: "--b3-sans",
   weight: ["400", "600", "700"],
 });
+
+export const metadata: Metadata = {
+  title: "Arash Ahmadi — Woven Roots (beta 3)",
+  description: "Theme exploration: kilim warmth, modern layout.",
+  robots: { index: false, follow: false },
+};
 
 function Motif() {
   const diamond = (
@@ -34,7 +41,7 @@ function Motif() {
     </svg>
   );
   return (
-    <div className="home-motif" aria-hidden="true">
+    <div className="b3-motif" aria-hidden="true">
       {diamond}
       {diamond}
       {diamond}
@@ -42,17 +49,17 @@ function Motif() {
   );
 }
 
-export default function Home() {
+export default function Beta3() {
   return (
-    <div className={`home ${display.variable} ${sans.variable}`}>
-      <div className="home-band" aria-hidden="true" />
+    <div className={`b3 ${display.variable} ${sans.variable}`}>
+      <div className="b3-band" aria-hidden="true" />
 
-      <nav className="home-nav" aria-label="Main navigation">
-        <div className="home-nav-inner">
-          <a className="home-brand" href="/">
+      <nav className="b3-nav" aria-label="Main navigation">
+        <div className="b3-nav-inner">
+          <a className="b3-brand" href="/">
             Arash <em>Ahmadi</em>
           </a>
-          <div className="home-nav-links">
+          <div className="b3-nav-links">
             <a href="#news">News</a>
             <a href="#research">Research</a>
             <a href="#publications">Publications</a>
@@ -62,18 +69,18 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="home-shell">
+      <main className="b3-shell">
         {/* Hero */}
-        <header className="home-hero">
-          <div className="home-hero-copy">
-            <p className="home-kicker">
+        <header className="b3-hero">
+          <div className="b3-hero-copy">
+            <p className="b3-kicker">
               {identity.university} · {identity.lab}
             </p>
             <h1>
               Hi, I&apos;m Arash. I make small language models do <em>honest work</em>.
             </h1>
-            <p className="home-lede">{identity.intro}</p>
-            <div className="home-links">
+            <p className="b3-lede">{identity.intro}</p>
+            <div className="b3-links">
               {links.map((l, i) => (
                 <a
                   key={l.label}
@@ -87,15 +94,9 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div className="home-hero-portrait">
-            <div className="home-frame">
-              <Image
-                src="/portrait.jpg"
-                alt="Arash Ahmadi — Ph.D. student in Electrical and Computer Engineering at the University of Oklahoma"
-                fill
-                priority
-                sizes="320px"
-              />
+          <div className="b3-hero-portrait">
+            <div className="b3-frame">
+              <Image src="/portrait.jpg" alt={identity.name} fill priority sizes="320px" />
             </div>
           </div>
         </header>
@@ -103,22 +104,22 @@ export default function Home() {
         <Motif />
 
         {/* News */}
-        <section className="home-section" id="news">
-          <div className="home-section-head">
-            <p className="home-label">Fresh from the loom</p>
+        <section className="b3-section" id="news">
+          <div className="b3-section-head">
+            <p className="b3-label">Fresh from the loom</p>
             <h2>Recent news</h2>
           </div>
-          <div className="home-news-grid">
+          <div className="b3-news-grid">
             {news.map((item, i) => (
               <a
-                className={`home-news${i === 0 ? " --wide" : ""}`}
+                className={`b3-news${i === 0 ? " --wide" : ""}`}
                 key={item.title}
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div className="home-news-meta">
-                  <span className="home-tag">{item.tag}</span>
+                <div className="b3-news-meta">
+                  <span className="b3-tag">{item.tag}</span>
                   <time dateTime={item.date}>{item.dateLabel}</time>
                 </div>
                 <h3>{item.title}</h3>
@@ -129,15 +130,15 @@ export default function Home() {
         </section>
 
         {/* Research */}
-        <section className="home-section" id="research">
-          <div className="home-section-head">
-            <p className="home-label">Threads I follow</p>
+        <section className="b3-section" id="research">
+          <div className="b3-section-head">
+            <p className="b3-label">Threads I follow</p>
             <h2>What I work on</h2>
           </div>
-          <div className="home-research">
+          <div className="b3-research">
             {research.map((r) => (
               <div key={r.title}>
-                <span className="home-diamond" aria-hidden="true" />
+                <span className="b3-diamond" aria-hidden="true" />
                 <h3>{r.title}</h3>
                 <p>{r.body}</p>
               </div>
@@ -146,19 +147,19 @@ export default function Home() {
         </section>
 
         {/* Publications */}
-        <section className="home-section" id="publications">
-          <div className="home-section-head">
-            <p className="home-label">On the record</p>
+        <section className="b3-section" id="publications">
+          <div className="b3-section-head">
+            <p className="b3-label">On the record</p>
             <h2>Publications &amp; preprints</h2>
           </div>
-          <div className="home-pub-legend" aria-hidden="true">
+          <div className="b3-pub-legend" aria-hidden="true">
             <span className="--lg-journal">Journal</span>
             <span className="--lg-conference">Conference</span>
             <span className="--lg-preprint">Preprint</span>
           </div>
           {publications.map((p) => (
             <a
-              className={`home-pub --${p.type.toLowerCase()}`}
+              className={`b3-pub --${p.type.toLowerCase()}`}
               key={p.title}
               href={p.href}
               target="_blank"
@@ -166,12 +167,12 @@ export default function Home() {
             >
               <div>
                 <h3>{p.title}</h3>
-                <p className="home-pub-meta">
+                <p className="b3-pub-meta">
                   {p.venue}
                   {p.note ? ` — ${p.note}` : ""}
                 </p>
               </div>
-              <span className="home-pub-year">{p.year}</span>
+              <span className="b3-pub-year">{p.year}</span>
             </a>
           ))}
         </section>
@@ -179,24 +180,24 @@ export default function Home() {
         <Motif />
 
         {/* Journey */}
-        <section className="home-section" id="journey">
-          <div className="home-section-head">
-            <p className="home-label">Where the thread starts</p>
+        <section className="b3-section" id="journey">
+          <div className="b3-section-head">
+            <p className="b3-label">Where the thread starts</p>
             <h2>{journey.heading}</h2>
           </div>
-          <div className="home-journey">
-            <figure className="home-journey-photo">
-              <div className="home-frame">
+          <div className="b3-journey">
+            <figure className="b3-journey-photo">
+              <div className="b3-frame">
                 <Image
                   src="/childhood.jpg"
-                  alt="Arash Ahmadi as a child in Sanandaj, wearing a Spider-Man t-shirt and holding a Tweety plush"
+                  alt="Arash as a child in Sanandaj, wearing a Spider-Man t-shirt"
                   fill
                   sizes="320px"
                 />
               </div>
               <figcaption>{journey.photoCaption}</figcaption>
             </figure>
-            <div className="home-journey-copy">
+            <div className="b3-journey-copy">
               <h3>
                 Same kid, <em>bigger puzzles</em>.
               </h3>
@@ -208,25 +209,25 @@ export default function Home() {
         </section>
 
         {/* Building */}
-        <section className="home-section" id="building">
-          <div className="home-section-head">
-            <p className="home-label">Made with people</p>
+        <section className="b3-section" id="building">
+          <div className="b3-section-head">
+            <p className="b3-label">Made with people</p>
             <h2>Things I&apos;m building</h2>
           </div>
-          <div className="home-featured-grid">
+          <div className="b3-featured-grid">
             {featured.map((f) => (
               <a
-                className="home-featured"
+                className="b3-featured"
                 key={f.title}
                 href={f.href}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div className="home-featured-img">
+                <div className="b3-featured-img">
                   <Image src={f.image} alt={f.title} fill sizes="(max-width: 860px) 100vw, 330px" />
                 </div>
-                <div className="home-featured-body">
-                  <p className="home-role">{f.role}</p>
+                <div className="b3-featured-body">
+                  <p className="b3-role">{f.role}</p>
                   <h3>{f.title}</h3>
                   <p>{f.body}</p>
                 </div>
@@ -236,8 +237,8 @@ export default function Home() {
         </section>
 
         {/* Vitae */}
-        <section className="home-section" id="vitae">
-          <div className="home-vitae">
+        <section className="b3-section" id="vitae">
+          <div className="b3-vitae">
             <div>
               <h3>Education</h3>
               <ul>
@@ -268,9 +269,9 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="home-footer">
-        <div className="home-shell home-footer-inner">
-          <p className="home-footer-line">
+      <footer className="b3-footer">
+        <div className="b3-shell b3-footer-inner">
+          <p className="b3-footer-line">
             Every rug starts with a <em>single knot</em>.
           </p>
           <p>
@@ -280,7 +281,7 @@ export default function Home() {
         </div>
       </footer>
 
-      <div className="home-band" aria-hidden="true" />
+      <div className="b3-band" aria-hidden="true" />
     </div>
   );
 }
