@@ -12,13 +12,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* The site design is white-on-light; keep the body background stable in OS
+   dark mode so composited scrolling and overscroll never flash a dark canvas. */
 body {
   background: var(--background);
   color: var(--foreground);
