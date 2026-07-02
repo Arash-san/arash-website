@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Fraunces, Inter } from "next/font/google";
 import {
   awards,
   education,
@@ -13,131 +12,94 @@ import {
 } from "@/lib/profile-data";
 import "./home.css";
 
-const display = Fraunces({
-  subsets: ["latin"],
-  variable: "--home-display",
-  style: ["normal", "italic"],
-  weight: ["400", "600"],
-});
-
-const sans = Inter({
-  subsets: ["latin"],
-  variable: "--home-sans",
-  weight: ["400", "600", "700"],
-});
-
-function Motif() {
-  const diamond = (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="7" y="0.5" width="9" height="9" transform="rotate(45 7 0.5)" stroke="currentColor" strokeWidth="1.6" />
-      <rect x="7" y="4.75" width="3" height="3" transform="rotate(45 7 4.75)" fill="currentColor" />
-    </svg>
-  );
-  return (
-    <div className="home-motif" aria-hidden="true">
-      {diamond}
-      {diamond}
-      {diamond}
-    </div>
-  );
-}
-
 export default function Home() {
   return (
-    <div className={`home ${display.variable} ${sans.variable}`}>
-      <div className="home-band" aria-hidden="true" />
-
-      <nav className="home-nav" aria-label="Main navigation">
-        <div className="home-nav-inner">
-          <a className="home-brand" href="/">
-            Arash <em>Ahmadi</em>
+    <div className="site">
+      <div className="wrap">
+        <header className="top">
+          <a className="name" href="/">
+            Arash Ahmadi
           </a>
-          <div className="home-nav-links">
-            <a href="#news">News</a>
-            <a href="#research">Research</a>
-            <a href="#publications">Publications</a>
-            <a href="#journey">Journey</a>
-            <a href="#building">Building</a>
-          </div>
-        </div>
-      </nav>
-
-      <main className="home-shell">
-        {/* Hero */}
-        <header className="home-hero">
-          <div className="home-hero-copy">
-            <p className="home-kicker">
-              {identity.university} · {identity.lab}
-            </p>
-            <h1>
-              Hi, I&apos;m Arash. I make small language models do <em>honest work</em>.
-            </h1>
-            <p className="home-lede">{identity.intro}</p>
-            <div className="home-links">
-              {links.map((l, i) => (
-                <a
-                  key={l.label}
-                  className={i === 0 ? "--primary" : undefined}
-                  href={l.href}
-                  target={l.href.startsWith("http") || l.kind === "file" ? "_blank" : undefined}
-                  rel={l.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                >
-                  {l.label}
-                </a>
-              ))}
-            </div>
-          </div>
-          <div className="home-hero-portrait">
-            <div className="home-frame">
-              <Image
-                src="/portrait.jpg"
-                alt="Arash Ahmadi — Ph.D. student in Electrical and Computer Engineering at the University of Oklahoma"
-                fill
-                priority
-                sizes="320px"
-              />
-            </div>
-          </div>
+          <nav aria-label="Sections">
+            <a href="#news">news</a>
+            <a href="#research">research</a>
+            <a href="#publications">publications</a>
+            <a href="#about">about</a>
+          </nav>
         </header>
 
-        <Motif />
-
-        {/* News */}
-        <section className="home-section" id="news">
-          <div className="home-section-head">
-            <p className="home-label">Fresh from the loom</p>
-            <h2>Recent news</h2>
+        {/* Hero */}
+        <section className="hero">
+          <div className="avatar">
+            <Image
+              src="/portrait.jpg"
+              alt="Arash Ahmadi — Ph.D. student in Electrical and Computer Engineering at the University of Oklahoma"
+              fill
+              priority
+              sizes="64px"
+            />
           </div>
-          <div className="home-news-grid">
-            {news.map((item, i) => (
+          <h1>Hi! I&apos;m Arash :)</h1>
+          <p className="lede">
+            I&apos;m a Ph.D. student in electrical and computer engineering at the{" "}
+            <a href="https://www.ou.edu/" target="_blank" rel="noopener noreferrer">
+              University of Oklahoma
+            </a>
+            , working at{" "}
+            <a href={identity.labUrl} target="_blank" rel="noopener noreferrer">
+              INQUIRE Lab
+            </a>
+            . I fine-tune small language models to run on resource-constrained edge devices, and I
+            put them to work in agentic systems, aviation safety, and health monitoring. I like
+            building things with people — clubs, workshops, websites — and turning the useful parts
+            into research.
+          </p>
+          <div className="links" aria-label="Profile links">
+            {links.map((l) => (
               <a
-                className={`home-news${i === 0 ? " --wide" : ""}`}
-                key={item.title}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                key={l.label}
+                href={l.href}
+                target={l.href.startsWith("http") || l.kind === "file" ? "_blank" : undefined}
+                rel={l.href.startsWith("http") ? "noopener noreferrer" : undefined}
               >
-                <div className="home-news-meta">
-                  <span className="home-tag">{item.tag}</span>
-                  <time dateTime={item.date}>{item.dateLabel}</time>
-                </div>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
+                {l.label}
               </a>
             ))}
           </div>
         </section>
 
+        {/* News */}
+        <section className="section" id="news">
+          <span className="mono label">News</span>
+          {news.map((item) => (
+            <a
+              className="news-row"
+              key={item.title}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <time dateTime={item.date}>
+                {new Date(item.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "numeric",
+                  timeZone: "UTC",
+                })}
+              </time>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </div>
+            </a>
+          ))}
+        </section>
+
         {/* Research */}
-        <section className="home-section" id="research">
-          <div className="home-section-head">
-            <p className="home-label">Threads I follow</p>
-            <h2>What I work on</h2>
-          </div>
-          <div className="home-research">
+        <section className="section" id="research">
+          <span className="mono label">Research</span>
+          <div className="research-list">
             {research.map((r) => (
               <div key={r.title}>
-                <span className="home-diamond" aria-hidden="true" />
                 <h3>{r.title}</h3>
                 <p>{r.body}</p>
               </div>
@@ -146,60 +108,58 @@ export default function Home() {
         </section>
 
         {/* Publications */}
-        <section className="home-section" id="publications">
-          <div className="home-section-head">
-            <p className="home-label">On the record</p>
-            <h2>Publications &amp; preprints</h2>
-          </div>
-          <div className="home-pub-legend" aria-hidden="true">
-            <span className="--lg-journal">Journal</span>
-            <span className="--lg-conference">Conference</span>
-            <span className="--lg-preprint">Preprint</span>
-          </div>
+        <section className="section" id="publications">
+          <span className="mono label">Publications</span>
           {publications.map((p) => (
             <a
-              className={`home-pub --${p.type.toLowerCase()}`}
+              className="pub-row"
               key={p.title}
               href={p.href}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <div>
-                <h3>{p.title}</h3>
-                <p className="home-pub-meta">
-                  {p.venue}
-                  {p.note ? ` — ${p.note}` : ""}
-                </p>
-              </div>
-              <span className="home-pub-year">{p.year}</span>
+              <h3>{p.title}</h3>
+              <p className="meta">
+                <span className="tag">{p.type}</span>
+                {p.venue}, {p.year}
+                {p.note ? ` — ${p.note}` : ""}
+              </p>
             </a>
           ))}
         </section>
 
-        <Motif />
+        {/* Building */}
+        <section className="section" id="building">
+          <span className="mono label">Building</span>
+          {featured.map((f) => (
+            <div className="build-item" key={f.title}>
+              <h3>
+                <a href={f.href} target="_blank" rel="noopener noreferrer">
+                  {f.title}
+                </a>
+              </h3>
+              <p className="role">{f.role}</p>
+              <p className="body">{f.body}</p>
+            </div>
+          ))}
+        </section>
 
-        {/* Journey */}
-        <section className="home-section" id="journey">
-          <div className="home-section-head">
-            <p className="home-label">Where the thread starts</p>
-            <h2>{journey.heading}</h2>
-          </div>
-          <div className="home-journey">
-            <figure className="home-journey-photo">
-              <div className="home-frame">
+        {/* About */}
+        <section className="section" id="about">
+          <span className="mono label">About me</span>
+          <div className="about">
+            <figure>
+              <div className="sticker">
                 <Image
-                  src="/childhood.jpg"
-                  alt="Arash Ahmadi as a child in Sanandaj, wearing a Spider-Man t-shirt and holding a Tweety plush"
+                  src="/childhood-sticker.webp"
+                  alt="Sticker illustration of Arash as a child in Sanandaj, wearing a Spider-Man t-shirt and holding a Tweety plush"
                   fill
-                  sizes="320px"
+                  sizes="200px"
                 />
               </div>
               <figcaption>{journey.photoCaption}</figcaption>
             </figure>
-            <div className="home-journey-copy">
-              <h3>
-                Same kid, <em>bigger puzzles</em>.
-              </h3>
+            <div className="copy">
               {journey.paragraphs.map((p) => (
                 <p key={p.slice(0, 24)}>{p}</p>
               ))}
@@ -207,37 +167,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Building */}
-        <section className="home-section" id="building">
-          <div className="home-section-head">
-            <p className="home-label">Made with people</p>
-            <h2>Things I&apos;m building</h2>
-          </div>
-          <div className="home-featured-grid">
-            {featured.map((f) => (
-              <a
-                className="home-featured"
-                key={f.title}
-                href={f.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="home-featured-img">
-                  <Image src={f.image} alt={f.title} fill sizes="(max-width: 860px) 100vw, 330px" />
-                </div>
-                <div className="home-featured-body">
-                  <p className="home-role">{f.role}</p>
-                  <h3>{f.title}</h3>
-                  <p>{f.body}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        {/* Vitae */}
-        <section className="home-section" id="vitae">
-          <div className="home-vitae">
+        {/* Education & honors */}
+        <section className="section" id="vitae">
+          <span className="mono label">Vitae</span>
+          <div className="vitae">
             <div>
               <h3>Education</h3>
               <ul>
@@ -266,21 +199,14 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </main>
 
-      <footer className="home-footer">
-        <div className="home-shell home-footer-inner">
-          <p className="home-footer-line">
-            Every rug starts with a <em>single knot</em>.
-          </p>
-          <p>
-            {identity.name} · {identity.location} ·{" "}
-            <a href={`mailto:${identity.email}`}>{identity.email}</a>
-          </p>
-        </div>
-      </footer>
-
-      <div className="home-band" aria-hidden="true" />
+        <footer className="footer">
+          <span>
+            {identity.name} · {identity.location}
+          </span>
+          <a href={`mailto:${identity.email}`}>{identity.email}</a>
+        </footer>
+      </div>
     </div>
   );
 }

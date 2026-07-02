@@ -12,8 +12,6 @@ export const identity = {
   labUrl: "https://inquirelab.ai/",
   location: "Norman, Oklahoma",
   email: "arash.ahmadi@ou.edu",
-  tagline:
-    "I work on making language models small, useful, and honest about what they are doing.",
   intro:
     "I'm a Ph.D. student at the University of Oklahoma, where I fine-tune small language models to run on resource-constrained edge devices and put them to work in agentic systems, aviation safety, and health monitoring. I like building things with people — clubs, workshops, websites — and turning the useful parts into research.",
 };
@@ -209,7 +207,6 @@ export const featured = [
     href: "https://ou.campuslabs.com/engage/organization/llm-club",
     body:
       "A place for OU students to learn LLM engineering by doing: study groups, AI-news discussions, responsible-use conversations, and workshops where students train small models on a real computing cluster.",
-    image: "/beta/llm-club.png",
   },
   {
     title: "Cybersecurity Essentials Workshop",
@@ -217,7 +214,6 @@ export const featured = [
     href: "https://inquirelab.ai/cybersecurity/",
     body:
       "Led a 10-person team delivering a five-day intensive for IT professionals, sponsored by the Oklahoma Office of Homeland Security and FEMA. I designed the agenda, taught modules on ransomware, phishing, and network defense, and built the workshop site and CMS.",
-    image: "/beta/cybersecurity-workshop.png",
   },
   {
     title: "INQUIRE Lab website",
@@ -225,7 +221,6 @@ export const featured = [
     href: "https://inquirelab.ai/",
     body:
       "The lab's public home, built with Next.js — making research projects, publications, news, and people easy to find and share.",
-    image: "/beta/research-hero.png",
   },
 ];
 
@@ -253,9 +248,9 @@ export const extras = [
 
 export const journey = {
   heading: "From Sanandaj to Norman",
-  photoCaption: "Sanandaj, early 2000s — already going for the ultimate spin.",
+  photoCaption: "Sanandaj, early 2000s.",
   paragraphs: [
-    "I grew up in Sanandaj, in the Kurdistan province of Iran. The kid in this photo spent his days on puzzles, video games, and taking things apart to see how they worked — mostly getting them back together.",
+    "I grew up in Sanandaj, in the Kurdistan province of Iran. The kid in this sticker spent his days on puzzles, video games, and taking things apart to see how they worked — mostly getting them back together.",
     "That curiosity carried me through a computer engineering degree at the University of Kurdistan, a published thesis on solving the Yin-Yang puzzle, and eventually across the world to Oklahoma, where I get to spend every day working on the most interesting puzzle I've found yet: language models.",
     "Outside the lab I like movies, video games, writing interactive stories, and long walks at night. My goal is simple — do work that matters, and make the people around me glad I'm in the room. :)",
   ],
