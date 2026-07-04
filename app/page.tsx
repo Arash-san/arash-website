@@ -1,144 +1,127 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useMotionValueEvent,
-  animate,
-  type MotionValue,
-} from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
 
-const SECTION_LABELS = ["Home", "News", "Academic", "Interests"];
-const N = SECTION_LABELS.length;
-
-/** Scroll-linked fade with a stable plateau: fully visible for most of a
- *  section's range, crossfading only near the boundaries. */
-function useSectionMotion(progress: MotionValue<number>, i: number) {
-  const c = i / (N - 1);
-  const w = 1 / (N - 1);
-  // Keyframe offsets must stay within [0, 1] and be strictly increasing —
-  // framer-motion drives scroll-linked values through WAAPI ScrollTimeline.
-  const first = i === 0;
-  const last = i === N - 1;
-  const opacityIn: number[] = first
-    ? [c + 0.28 * w, c + 0.5 * w]
-    : last
-      ? [c - 0.5 * w, c - 0.28 * w]
-      : [c - 0.5 * w, c - 0.28 * w, c + 0.28 * w, c + 0.5 * w];
-  const opacityOut: number[] = first ? [1, 0] : last ? [0, 1] : [0, 1, 1, 0];
-  const opacity = useTransform(progress, opacityIn, opacityOut);
-  const yIn: number[] = first ? [c, c + 0.5 * w] : last ? [c - 0.5 * w, c] : [c - 0.5 * w, c, c + 0.5 * w];
-  const yOut: number[] = first ? [0, -40] : last ? [40, 0] : [40, 0, -40];
-  const y = useTransform(progress, yIn, yOut);
-  const pointerEvents = useTransform(opacity, (v) => (v > 0.5 ? "auto" : "none"));
-  return { opacity, y, pointerEvents };
-}
+const SECTIONS = ["home", "news", "academic", "interests"] as const;
+const N = SECTIONS.length;
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function Home() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [active, setActive] = useState(0);
+  const [reduced, setReduced] = useState(false);
 
   const activeRef = useRef(0);
-  activeRef.current = activeIndex;
-  const isMobileRef = useRef(false);
-  isMobileRef.current = isMobile;
-  const reducedMotion = useRef(false);
-  const isTransitioning = useRef(false);
-  const snapTimer = useRef<number | null>(null);
+  activeRef.current = active;
   const lastStep = useRef(0);
-  const scrollerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const wheelAccum = useRef(0);
+  const lastWheel = useRef(0);
+  const touchStartY = useRef<number | null>(null);
+  const swipeConsumed = useRef(false);
+  const dRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Track viewport + motion preferences reactively (handles rotation/resize).
+  // The page never scrolls natively: sections step on wheel/swipe/keys and
+  // long content scrolls inside each section. This is what makes the scroll
+  // deterministic — no half-faded states, no snap fighting the user.
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updateMq = () => setIsMobile(mq.matches);
-    const updateRm = () => (reducedMotion.current = rm.matches);
-    updateMq();
-    updateRm();
-    mq.addEventListener("change", updateMq);
-    rm.addEventListener("change", updateRm);
+    const html = document.documentElement;
+    const prevOverflow = html.style.overflow;
+    const prevOverscroll = html.style.overscrollBehavior;
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    window.scrollTo(0, 0);
     return () => {
-      mq.removeEventListener("change", updateMq);
-      rm.removeEventListener("change", updateRm);
+      html.style.overflow = prevOverflow;
+      html.style.overscrollBehavior = prevOverscroll;
     };
   }, []);
 
-  // On mobile the page itself never scrolls: sections swipe, content inside
-  // each section scrolls natively. This avoids the half-faded in-between
-  // states that window-scroll crossfades produce on touch devices.
   useEffect(() => {
-    if (!isMobile) return;
-    const prev = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
-    window.scrollTo(0, 0);
-    return () => {
-      document.documentElement.style.overflow = prev;
-    };
-  }, [isMobile]);
+    const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(rm.matches);
+    update();
+    rm.addEventListener("change", update);
+    return () => rm.removeEventListener("change", update);
+  }, []);
 
-  function animateScrollTo(target: number, duration = 0.55) {
-    isTransitioning.current = true;
-    if (reducedMotion.current) {
-      window.scrollTo(0, target);
-      isTransitioning.current = false;
-      return;
-    }
-    animate(window.scrollY, target, {
-      duration,
-      ease: "easeOut",
-      onUpdate: (v) => window.scrollTo(0, v),
-      onComplete: () => setTimeout(() => (isTransitioning.current = false), 60),
-    });
-  }
+  // Deep links: /#news etc., on load and when the hash changes in-page.
+  useEffect(() => {
+    const idx = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
+    if (idx > 0) setActive(idx);
+    const onHash = () => {
+      const i = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
+      if (i >= 0) goToRef.current(i);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   function goTo(index: number) {
     const clamped = Math.max(0, Math.min(N - 1, index));
-    const scroller = scrollerRefs.current[clamped];
-    if (scroller) scroller.scrollTop = 0;
-    if (isMobileRef.current) {
-      if (clamped !== activeRef.current && !isTransitioning.current) {
-        isTransitioning.current = true;
-        setActiveIndex(clamped);
-        window.setTimeout(() => (isTransitioning.current = false), reducedMotion.current ? 0 : 420);
-      }
-    } else {
-      setActiveIndex(clamped);
-      animateScrollTo(clamped * window.innerHeight);
-    }
+    if (clamped === activeRef.current) return;
+    const dScroller = dRefs.current[clamped];
+    const mScroller = mRefs.current[clamped];
+    if (dScroller) dScroller.scrollTop = 0;
+    if (mScroller) mScroller.scrollTop = 0;
+    lastStep.current = performance.now();
+    setActive(clamped);
+    window.history.replaceState(null, "", clamped === 0 ? "#" : `#${SECTIONS[clamped]}`);
   }
   const goToRef = useRef(goTo);
   goToRef.current = goTo;
 
-  // Desktop: keep the scrubbable scroll, but settle on the nearest section
-  // once scrolling pauses so the page never rests half-faded.
-  useMotionValueEvent(scrollYProgress, "change", (p) => {
-    if (isMobileRef.current) return;
-    const idx = Math.max(0, Math.min(N - 1, Math.round(p * (N - 1))));
-    setActiveIndex((cur) => (cur === idx ? cur : idx));
-    if (snapTimer.current) window.clearTimeout(snapTimer.current);
-    if (isTransitioning.current) return;
-    snapTimer.current = window.setTimeout(() => {
-      if (isTransitioning.current) return;
-      const h = window.innerHeight;
-      const target = Math.max(0, Math.min(N - 1, Math.round(window.scrollY / h))) * h;
-      if (Math.abs(window.scrollY - target) > 2) animateScrollTo(target, 0.35);
-    }, 160);
-  });
+  /** The scroller of the currently visible layout (desktop or mobile). */
+  function activeScroller() {
+    const i = activeRef.current;
+    const candidates = [dRefs.current[i], mRefs.current[i]];
+    return candidates.find((el) => el && el.clientHeight > 0) || null;
+  }
 
-  // Keyboard navigation.
+  function scrollerConsumes(dir: number) {
+    const el = activeScroller();
+    if (!el || el.scrollHeight <= el.clientHeight + 1) return false;
+    const atTop = el.scrollTop <= 0;
+    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+    return (dir > 0 && !atBottom) || (dir < 0 && !atTop);
+  }
+
+  // Wheel: scroll inside a section natively; at the bounds, one gesture = one
+  // section. Accumulate deltas so trackpad momentum can't double-fire.
+  const onWheel = (e: React.WheelEvent) => {
+    const dir = Math.sign(e.deltaY);
+    if (dir === 0 || scrollerConsumes(dir)) return;
+    const now = performance.now();
+    if (now - lastStep.current < 700) return;
+    if (now - lastWheel.current > 200) wheelAccum.current = 0;
+    lastWheel.current = now;
+    wheelAccum.current += e.deltaY;
+    if (Math.abs(wheelAccum.current) > 50) {
+      wheelAccum.current = 0;
+      goToRef.current(activeRef.current + dir);
+    }
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    swipeConsumed.current = false;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current == null || swipeConsumed.current) return;
+    const dy = touchStartY.current - e.touches[0].clientY; // > 0 = swipe up = next
+    const dir = Math.sign(dy);
+    if (dir === 0 || scrollerConsumes(dir)) return;
+    if (Math.abs(dy) > 56 && performance.now() - lastStep.current > 500) {
+      swipeConsumed.current = true;
+      goToRef.current(activeRef.current + dir);
+    }
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowDown" || e.key === "PageDown") {
@@ -159,65 +142,31 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // --- Mobile gestures: native inner scrolling, swipe at bounds to switch ---
-  const touchY = useRef<number | null>(null);
-  const swipeConsumed = useRef(false);
-
-  function scrollerState() {
-    const el = scrollerRefs.current[activeRef.current];
-    if (!el || el.scrollHeight <= el.clientHeight + 1) {
-      return { scrollable: false, atTop: true, atBottom: true };
-    }
-    return {
-      scrollable: true,
-      atTop: el.scrollTop <= 0,
-      atBottom: Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight,
-    };
-  }
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    if (!isMobileRef.current) return;
-    touchY.current = e.touches[0].clientY;
-    swipeConsumed.current = false;
+  // --- Animation variants -------------------------------------------------
+  const sectionV = {
+    active: {
+      opacity: 1,
+      y: 0,
+      transition: reduced
+        ? { duration: 0 }
+        : { duration: 0.5, ease: EASE, staggerChildren: 0.06, delayChildren: 0.04 },
+    },
+    above: { opacity: 0, y: -28, transition: reduced ? { duration: 0 } : { duration: 0.32, ease: EASE } },
+    below: { opacity: 0, y: 28, transition: reduced ? { duration: 0 } : { duration: 0.32, ease: EASE } },
   };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!isMobileRef.current || touchY.current == null || swipeConsumed.current) return;
-    const dy = touchY.current - e.touches[0].clientY; // > 0 = swipe up = next
-    const { scrollable, atTop, atBottom } = scrollerState();
-    if (scrollable && ((dy > 0 && !atBottom) || (dy < 0 && !atTop))) return; // let native scroll run
-    if (Math.abs(dy) > 56 && !isTransitioning.current) {
-      swipeConsumed.current = true;
-      goToRef.current(activeRef.current + (dy > 0 ? 1 : -1));
-    }
+  const itemV = {
+    active: { opacity: 1, y: 0, transition: reduced ? { duration: 0 } : { duration: 0.45, ease: EASE } },
+    above: { opacity: 0, y: -12 },
+    below: { opacity: 0, y: 12 },
   };
+  const stateOf = (i: number) => (i === active ? "active" : i < active ? "above" : "below");
 
-  const onWheelMobile = (e: React.WheelEvent) => {
-    if (!isMobileRef.current) return;
-    const dir = Math.sign(e.deltaY);
-    if (dir === 0) return;
-    const { scrollable, atTop, atBottom } = scrollerState();
-    if (scrollable && ((dir > 0 && !atBottom) || (dir < 0 && !atTop))) return; // native scroll
-    const now = Date.now();
-    if (!isTransitioning.current && now - lastStep.current > 450) {
-      lastStep.current = now;
-      goToRef.current(activeRef.current + dir);
-    }
-  };
-
-  // Desktop scroll-linked motion (fixed call count — N is constant).
-  const s0 = useSectionMotion(scrollYProgress, 0);
-  const s1 = useSectionMotion(scrollYProgress, 1);
-  const s2 = useSectionMotion(scrollYProgress, 2);
-  const s3 = useSectionMotion(scrollYProgress, 3);
-  const desktopMotion = [s0, s1, s2, s3];
-
-  // --- Nav tabs ---
-  function NavTabs() {
+  // --- Nav tabs with sliding pill ------------------------------------------
+  function NavTabs({ layout }: { layout: "d" | "m" }) {
     return (
       <div role="tablist" aria-label="Section navigation" className="flex items-center gap-1 sm:gap-2">
-        {SECTION_LABELS.map((label, idx) => {
-          const isActive = activeIndex === idx;
+        {SECTIONS.map((label, idx) => {
+          const isActive = active === idx;
           return (
             <button
               key={label}
@@ -232,13 +181,24 @@ export default function Home() {
                 e.preventDefault();
                 goTo(idx);
               }}
-              className={cn(
-                "px-2.5 sm:px-3 py-1 rounded-full text-sm transition-colors active:opacity-90",
-                isActive ? "bg-black text-white" : "bg-transparent text-black/80 hover:text-black"
-              )}
+              className="relative px-2.5 sm:px-3 py-1 rounded-full text-sm active:opacity-90"
               style={{ touchAction: "manipulation" }}
             >
-              {label.toLowerCase()}
+              {isActive && (
+                <motion.span
+                  layoutId={`tab-pill-${layout}`}
+                  className="absolute inset-0 rounded-full bg-black"
+                  transition={reduced ? { duration: 0 } : { type: "spring", bounce: 0.18, duration: 0.5 }}
+                />
+              )}
+              <span
+                className={cn(
+                  "relative z-10 transition-colors duration-200",
+                  isActive ? "text-white" : "text-black/70 hover:text-black"
+                )}
+              >
+                {label}
+              </span>
             </button>
           );
         })}
@@ -246,7 +206,33 @@ export default function Home() {
     );
   }
 
-  // --- Shared content blocks ---
+  // --- Progress dots --------------------------------------------------------
+  function ProgressDots() {
+    return (
+      <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2.5">
+        {SECTIONS.map((label, i) => (
+          <button
+            key={label}
+            aria-label={`Go to ${label}`}
+            onClick={() => goTo(i)}
+            className="group p-1"
+            style={{ touchAction: "manipulation" }}
+          >
+            <motion.span
+              className={cn(
+                "block w-1.5 rounded-full",
+                i === active ? "bg-black" : "bg-black/20 group-hover:bg-black/50"
+              )}
+              animate={{ height: i === active ? 22 : 6 }}
+              transition={reduced ? { duration: 0 } : { type: "spring", bounce: 0.2, duration: 0.5 }}
+            />
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  // --- Content blocks (original voice) --------------------------------------
   const socialLinks = (iconSize: string) => (
     <div className="flex items-start justify-start gap-6 pt-2">
       <a href="https://github.com/arash-san" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
@@ -272,6 +258,28 @@ export default function Home() {
     </div>
   );
 
+  const scrollHint = (
+    <p className="font-bold flex items-center gap-2">
+      Scroll to see more!
+      <motion.svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        animate={reduced ? undefined : { y: [0, 5, 0] }}
+        transition={reduced ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <path d="M12 5v14" />
+        <path d="m19 12-7 7-7-7" />
+      </motion.svg>
+    </p>
+  );
+
   const homeBody = (compact: boolean) => (
     <>
       <p>Welcome to my personal website!</p>
@@ -281,19 +289,19 @@ export default function Home() {
         working at <a href="https://inquirelab.ai/" className="text-red-700 underline" target="_blank" rel="noopener noreferrer">InquireLab</a> in electrical and computer engineering. In my studies, I&apos;m focusing on the utilization of Large Language Models (LLMs) in different domains, and also working on the interpretability side of them.
       </p>
       {socialLinks(compact ? "h-6 w-6" : "h-7 w-7")}
-      <p className="font-bold">Scroll to see more!</p>
+      {scrollHint}
     </>
   );
 
   const newsBody = (compact: boolean) => (
-    <div className={cn("space-y-3", compact ? "" : "pr-1")}>
+    <div className="space-y-3">
       {news.map((item) => (
         <a
           key={item.title}
           href={item.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="block group"
+          className="block group border-l-2 border-gray-200 hover:border-[#DC143C] pl-3 transition-colors"
         >
           <p className="text-xs text-gray-500">
             {item.dateLabel} · <span className="text-red-700">{item.tag}</span>
@@ -341,13 +349,20 @@ export default function Home() {
 
   const interestsBody = (
     <>
-      <div className="float-right w-24 sm:w-28 ml-3 mb-1 -rotate-3">
-        <Image
-          src="/childhood-sticker.webp"
-          alt="Sticker of Arash as a child in Sanandaj, wearing a Spider-Man t-shirt"
-          width={112}
-          height={112}
-        />
+      <div className="float-right w-24 sm:w-28 ml-3 mb-1">
+        <motion.div
+          whileHover={reduced ? undefined : { rotate: 0, scale: 1.06 }}
+          initial={false}
+          style={{ rotate: -3 }}
+          transition={{ type: "spring", bounce: 0.4, duration: 0.5 }}
+        >
+          <Image
+            src="/childhood-sticker.webp"
+            alt="Sticker of Arash as a child in Sanandaj, wearing a Spider-Man t-shirt"
+            width={112}
+            height={112}
+          />
+        </motion.div>
         <p className="text-[10px] text-gray-500 text-center mt-1">Sanandaj, early 2000s</p>
       </div>
       <p>I&apos;m really interested in trying new things. I enjoy spending time with my family and friends, and I want to become a better person every day :)</p>
@@ -357,63 +372,39 @@ export default function Home() {
     </>
   );
 
-  const desktopSections = [
-    {
-      title: (
-        <h1 className="text-5xl xl:text-6xl font-bold">
-          <span className="text-gray-600">Hi! I&apos;m </span>
-          <span className="text-black">Arash</span>
-          <span className="text-gray-600"> :)</span>
-        </h1>
-      ),
-      body: homeBody(false),
-    },
-    {
-      title: <h1 className="text-5xl xl:text-6xl font-bold text-black">Recent News</h1>,
-      body: newsBody(false),
-    },
-    {
-      title: <h1 className="text-5xl xl:text-6xl font-bold text-black">Academic Background</h1>,
-      body: academicBody,
-    },
-    {
-      title: <h1 className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
-      body: interestsBody,
-    },
-  ];
-
-  const mobileSections = [
-    {
-      title: (
-        <h1 className="text-2xl font-bold">
-          <span className="text-gray-600">Hi! I&apos;m </span>
-          <span className="text-black">Arash</span>
-          <span className="text-gray-600"> :)</span>
-        </h1>
-      ),
-      body: homeBody(true),
-    },
-    {
-      title: <h1 className="text-2xl font-bold text-black">Recent News</h1>,
-      body: newsBody(true),
-    },
-    {
-      title: <h1 className="text-2xl font-bold text-black">Academic Background</h1>,
-      body: academicBody,
-    },
-    {
-      title: <h1 className="text-2xl font-bold text-black">My Interests</h1>,
-      body: interestsBody,
-    },
-  ];
+  const titles = {
+    d: [
+      <h1 key="t0" className="text-5xl xl:text-6xl font-bold">
+        <span className="text-gray-600">Hi! I&apos;m </span>
+        <span className="text-black">Arash</span>
+        <span className="text-gray-600"> :)</span>
+      </h1>,
+      <h1 key="t1" className="text-5xl xl:text-6xl font-bold text-black">Recent News</h1>,
+      <h1 key="t2" className="text-5xl xl:text-6xl font-bold text-black">Academic Background</h1>,
+      <h1 key="t3" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
+    ],
+    m: [
+      <h1 key="t0" className="text-2xl font-bold">
+        <span className="text-gray-600">Hi! I&apos;m </span>
+        <span className="text-black">Arash</span>
+        <span className="text-gray-600"> :)</span>
+      </h1>,
+      <h1 key="t1" className="text-2xl font-bold text-black">Recent News</h1>,
+      <h1 key="t2" className="text-2xl font-bold text-black">Academic Background</h1>,
+      <h1 key="t3" className="text-2xl font-bold text-black">My Interests</h1>,
+    ],
+  };
+  const bodies = {
+    d: [homeBody(false), newsBody(false), academicBody, interestsBody],
+    m: [homeBody(true), newsBody(true), academicBody, interestsBody],
+  };
 
   return (
     <div className="bg-white">
-      {/* --- Main fixed container for all visible content --- */}
       <div
-        className="fixed inset-0 z-0"
+        className="fixed inset-0 z-0 overflow-hidden"
         style={{ "--ph": "min(360px, 44dvh)" } as CSSProperties}
-        onWheel={onWheelMobile}
+        onWheel={onWheel}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
       >
@@ -428,13 +419,24 @@ export default function Home() {
           )}
         />
 
+        <ProgressDots />
+
         {/* --- Desktop layout --- */}
         <div className="absolute inset-0 hidden lg:flex items-center justify-center">
-          <div className="flex flex-col items-center justify-start">
+          <motion.div
+            className="flex flex-col items-center justify-start"
+            initial={reduced ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+          >
             <div className="mb-3">
-              <NavTabs />
+              <NavTabs layout="d" />
             </div>
-            <div className="relative w-80 h-[420px] rounded-lg overflow-hidden flex-shrink-0">
+            <motion.div
+              className="relative w-80 h-[420px] rounded-xl overflow-hidden flex-shrink-0 shadow-[0_18px_44px_-18px_rgba(0,0,0,0.3)]"
+              whileHover={reduced ? undefined : { scale: 1.015 }}
+              transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+            >
               <Image
                 src="/portrait.jpg"
                 alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma"
@@ -442,24 +444,31 @@ export default function Home() {
                 className="object-cover"
                 priority
               />
-            </div>
-          </div>
-          <div className="relative w-[500px] ml-8 h-[30rem]">
-            {desktopSections.map((section, i) => (
+            </motion.div>
+          </motion.div>
+          <div className="relative w-[500px] ml-10 h-[30rem]">
+            {SECTIONS.map((label, i) => (
               <motion.div
-                key={SECTION_LABELS[i]}
-                style={{
-                  opacity: desktopMotion[i].opacity,
-                  y: desktopMotion[i].y,
-                  pointerEvents: desktopMotion[i].pointerEvents,
-                }}
+                key={label}
+                variants={sectionV}
+                initial={false}
+                animate={stateOf(i)}
                 className="absolute inset-0"
-                aria-hidden={activeIndex !== i}
+                style={{ pointerEvents: i === active ? "auto" : "none" }}
+                aria-hidden={i !== active}
               >
-                <div className="space-y-3 h-full flex flex-col justify-center">
-                  {section.title}
-                  <div className="space-y-2 max-w-lg text-lg text-gray-700 leading-relaxed">
-                    {section.body}
+                <div
+                  ref={(el) => {
+                    dRefs.current[i] = el;
+                  }}
+                  className="h-full overflow-y-auto no-scrollbar flex"
+                  style={{ overscrollBehavior: "contain" }}
+                >
+                  <div className="my-auto w-full space-y-3 py-2">
+                    <motion.div variants={itemV}>{titles.d[i]}</motion.div>
+                    <motion.div variants={itemV} className="space-y-2 max-w-lg text-lg text-gray-700 leading-relaxed">
+                      {bodies.d[i]}
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
@@ -469,10 +478,15 @@ export default function Home() {
 
         {/* --- Mobile layout --- */}
         <div className="lg:hidden">
-          <div className="absolute top-4 inset-x-0 z-10 flex flex-col items-center gap-2">
-            <NavTabs />
+          <motion.div
+            className="absolute top-4 inset-x-0 z-10 flex flex-col items-center gap-2"
+            initial={reduced ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+          >
+            <NavTabs layout="m" />
             <div
-              className="relative rounded-lg overflow-hidden"
+              className="relative rounded-xl overflow-hidden shadow-[0_14px_34px_-16px_rgba(0,0,0,0.3)]"
               style={{ height: "var(--ph)", width: "calc(var(--ph) * 0.8)" }}
             >
               <Image
@@ -483,38 +497,34 @@ export default function Home() {
                 priority
               />
             </div>
-          </div>
+          </motion.div>
           <div className="absolute inset-x-0 px-6" style={{ top: "calc(var(--ph) + 84px)" }}>
             <div className="relative max-w-sm mx-auto" style={{ height: "calc(100dvh - var(--ph) - 100px)" }}>
-              {mobileSections.map((section, i) => (
+              {SECTIONS.map((label, i) => (
                 <motion.div
-                  key={SECTION_LABELS[i]}
+                  key={label}
+                  variants={sectionV}
                   initial={false}
-                  animate={{
-                    opacity: activeIndex === i ? 1 : 0,
-                    y: activeIndex === i ? 0 : i < activeIndex ? -16 : 16,
-                  }}
-                  transition={{ duration: reducedMotion.current ? 0 : 0.35, ease: "easeOut" }}
-                  style={{ pointerEvents: activeIndex === i ? "auto" : "none" }}
+                  animate={stateOf(i)}
                   className="absolute inset-0"
-                  aria-hidden={activeIndex !== i}
+                  style={{ pointerEvents: i === active ? "auto" : "none" }}
+                  aria-hidden={i !== active}
                 >
                   <div
                     ref={(el) => {
-                      scrollerRefs.current[i] = el;
+                      mRefs.current[i] = el;
                     }}
-                    className="space-y-3 text-left pr-2 no-scrollbar h-full"
+                    className="h-full overflow-y-auto no-scrollbar text-left pr-2 space-y-3"
                     style={{
-                      overflowY: "auto",
                       overscrollBehavior: "contain",
                       touchAction: "pan-y",
                       WebkitOverflowScrolling: "touch",
                     }}
                   >
-                    {section.title}
-                    <div className="space-y-2 text-sm text-gray-700 leading-relaxed pb-4">
-                      {section.body}
-                    </div>
+                    <motion.div variants={itemV}>{titles.m[i]}</motion.div>
+                    <motion.div variants={itemV} className="space-y-2 text-sm text-gray-700 leading-relaxed pb-4">
+                      {bodies.m[i]}
+                    </motion.div>
                   </div>
                 </motion.div>
               ))}
@@ -522,9 +532,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* --- Scroll driver (desktop only; mobile locks page scroll) --- */}
-      <div ref={containerRef} style={{ height: `${N * 100}vh` }} />
     </div>
   );
 }
