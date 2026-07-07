@@ -128,6 +128,7 @@ html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Ro
 
 .slider-row { display: block; font-size: 13px; color: var(--panel-fg); margin-bottom: 10px; }
 .slider-row input { width: 100%; margin: 6px 0 0; accent-color: var(--accent); }
+.slider-note { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; }
 
 #go-btn {
   width: 100%; padding: 12px; border: none; border-radius: 12px;
@@ -138,6 +139,10 @@ html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Ro
 
 #status { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 1em; }
 #status.error { color: #e05252; }
+.status-note {
+  font-size: 12px; color: var(--extra); margin: 6px 0 0;
+  background: var(--badge-gray-bg); border-radius: 8px; padding: 7px 9px;
+}
 
 .route-card {
   border: 2px solid transparent; border-radius: 12px; padding: 10px 12px; margin-top: 10px;

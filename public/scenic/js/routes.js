@@ -185,9 +185,19 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
+  // Freeway/highway fallback: when the user wants them avoided, note whether a
+  // (nearly) highway-free option actually fits the time budget. If none does,
+  // the shown routes still use a freeway because it's the only way in time.
+  const fastestResult = results.find(r => r.isFastest);
+  const avoidingHighways = (prefs.highwayUse ?? 1) < 0.3;
+  const highwayFreeOption = [fastestResult, ...scenic].some(
+    r => r.withinBudget && r.highwayFraction < 0.05);
+
   return {
-    fastest: results.find(r => r.isFastest),
+    fastest: fastestResult,
     scenic,
+    avoidingHighways,
+    highwayUnavoidable: avoidingHighways && !highwayFreeOption,
     featureCounts: {
       green: features.green.length,
       water: features.water.length,

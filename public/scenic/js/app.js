@@ -15,13 +15,17 @@ const saved = loadStore(STORE_KEY, {});
 const recents = loadStore(RECENTS_KEY, []);
 const favorites = loadStore(FAVS_KEY, []);
 
-// The app's purpose is unusual routes, so "avoid main roads" and "different
-// path" are on by default. Flip them on once for returning users whose saved
-// prefs predate these defaults, without touching their other settings.
-const DEFAULTS_REV = 3;
-if (saved.prefs && saved.defaultsRev !== DEFAULTS_REV) {
-  saved.prefs.quietStreets = true;
-  saved.prefs.preferDifferent = true;
+// The app's purpose is unusual routes, so "avoid main roads", "different
+// path", and avoiding freeways/highways are on by default. Apply these once
+// for returning users whose saved settings predate the defaults, without
+// touching their start/end, favorites, or theme.
+const DEFAULTS_REV = 4;
+if (Object.keys(saved).length > 0 && saved.defaultsRev !== DEFAULTS_REV) {
+  if (saved.prefs) {
+    saved.prefs.quietStreets = true;
+    saved.prefs.preferDifferent = true;
+  }
+  saved.highway = 0; // avoid freeways & highways by default
 }
 
 function saveFavorites() {
@@ -312,17 +316,27 @@ document.querySelectorAll('.chip').forEach(chip => {
 });
 
 function highwayLabel(v) {
-  if (v === 0) return 'none';
+  if (v === 0) return 'avoid';
   if (v >= 100) return 'no limit';
   return `up to ${v}%`;
+}
+function updateHighwayNote(v) {
+  const note = document.getElementById('highway-note');
+  if (!note) return;
+  note.textContent = v === 0
+    ? "Only used if it's the only way within your extra-time budget."
+    : v >= 100 ? 'Freeways and highways are used freely.'
+    : 'A little freeway/highway is allowed to save time.';
 }
 if (Number.isFinite(saved.highway)) highwayInput.value = saved.highway;
 if (Number.isFinite(saved.budget)) budgetInput.value = saved.budget;
 document.getElementById('highway-label').textContent = highwayLabel(Number(highwayInput.value));
+updateHighwayNote(Number(highwayInput.value));
 document.getElementById('budget-label').textContent = `+${budgetInput.value}%`;
 
 highwayInput.addEventListener('input', () => {
   document.getElementById('highway-label').textContent = highwayLabel(Number(highwayInput.value));
+  updateHighwayNote(Number(highwayInput.value));
   persist();
 });
 budgetInput.addEventListener('input', () => {
@@ -419,6 +433,7 @@ function wazeUrl(route) {
 const SCENIC_COLORS = ['#2f7d32', '#00838f', '#6a1b9a'];
 
 function renderResults(data) {
+  document.querySelectorAll('.status-note').forEach(n => n.remove());
   const palette = SCENIC_COLORS;
   const routes = [];
   if (data.fastest) routes.push({ ...data.fastest, label: 'Fastest', color: '#546e7a' });
@@ -436,6 +451,13 @@ function renderResults(data) {
   } else {
     const f = data.featureCounts;
     setStatus(`Compared against ${f.green} green spaces, ${f.water} waterways and ${f.historic} landmarks in this area.`);
+  }
+  // Freeway/highway fallback note.
+  if (data.highwayUnavoidable) {
+    const extra = document.createElement('p');
+    extra.className = 'status-note';
+    extra.textContent = '🛣️ No freeway-free route fits your time budget here, so the options below still use one. Increase the extra-time budget to search for a longer way around.';
+    statusEl.after(extra);
   }
 
   const group = [];
@@ -458,7 +480,7 @@ function renderResults(data) {
     if (state.prefs.water && m.waterCoverage > 0.02) badges.push(`<span class="badge water">💧 ${Math.round(m.waterCoverage * 100)}% water</span>`);
     if (state.prefs.historic) m.highlights.historic.forEach(h => badges.push(`<span class="badge historic">🏛️ ${escapeHtml(h)}</span>`));
     if (state.prefs.greenery) m.highlights.green.slice(0, 3).forEach(h => badges.push(`<span class="badge">${escapeHtml(h)}</span>`));
-    if (r.highwayFraction > 0.05) badges.push(`<span class="badge gray">🛣️ ${Math.round(r.highwayFraction * 100)}% highway</span>`);
+    if (r.highwayFraction > 0.05) badges.push(`<span class="badge gray">🛣️ ${Math.round(r.highwayFraction * 100)}% freeway/highway</span>`);
     if (state.prefs.quietStreets) badges.push(`<span class="badge gray">🏘️ ${Math.round((1 - r.mainRoadFraction) * 100)}% off main roads</span>`);
     if (state.prefs.preferDifferent && !r.isFastest && r.uniqueness != null)
       badges.push(`<span class="badge">🔀 ${Math.round(r.uniqueness * 100)}% different roads</span>`);
