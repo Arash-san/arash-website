@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scenic Routes</title>
+<meta name="description" content="Find the most beautiful driving route, not the fastest one. By Arash Ahmadi.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map"></div>
+
+<div id="panel">
+  <div id="panel-handle" title="Drag or tap to show / hide"></div>
+  <div class="panel-header">
+    <h1>🌳 Scenic Routes</h1>
+    <div class="header-btns">
+      <button id="theme-btn" title="Light / dark mode">🌙</button>
+      <button id="collapse-btn" title="Show / hide panel">▾</button>
+    </div>
+  </div>
+  <div id="panel-body">
+    <p class="tagline">Not the fastest way — the most beautiful one.</p>
+
+    <div class="field">
+      <span class="dot start-dot"></span>
+      <input id="start-input" type="text" placeholder="Start (or use my location)" autocomplete="off">
+      <button id="locate-btn" title="Use my location">📍</button>
+      <div class="suggestions" id="start-suggestions"></div>
+    </div>
+    <div class="swap-row"><button id="swap-btn" title="Swap start and destination">⇅ swap</button></div>
+    <div class="field">
+      <span class="dot end-dot"></span>
+      <input id="end-input" type="text" placeholder="Destination" autocomplete="off">
+      <div class="suggestions" id="end-suggestions"></div>
+    </div>
+    <p class="hint">Tip: long-press / right-click the map to set start and destination.</p>
+
+    <div class="prefs">
+      <button class="chip active" data-pref="greenery">🌳 Greenery</button>
+      <button class="chip" data-pref="water">💧 Water</button>
+      <button class="chip" data-pref="historic">🏛️ Historic</button>
+      <button class="chip" data-pref="quietStreets" title="Prefer neighborhood streets over main roads">🏘️ Quiet streets</button>
+    </div>
+
+    <label class="slider-row">
+      <span>🛣️ Highway use: <b id="highway-label">up to 20%</b></span>
+      <input id="highway" type="range" min="0" max="100" step="10" value="20">
+    </label>
+
+    <label class="slider-row">
+      <span>⏱️ Extra time I'll accept: <b id="budget-label">+30%</b></span>
+      <input id="budget" type="range" min="10" max="100" step="5" value="30">
+    </label>
+
+    <button id="go-btn">Find scenic routes</button>
+    <div id="status"></div>
+    <div id="results"></div>
+    <p class="credit">Built by <a href="https://arash-ahmadi.com" target="_blank" rel="noopener">Arash Ahmadi</a> · data © OpenStreetMap contributors</p>
+  </div>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
