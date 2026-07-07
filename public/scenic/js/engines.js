@@ -25,7 +25,9 @@ export async function osrmRoute(points, { alternatives = false } = {}) {
     annotations: 'speed,distance,duration',
     alternatives: alternatives ? '3' : 'false',
   });
-  const res = await fetch(`${OSRM_BASE}/route/v1/driving/${coordStr}?${params}`, { signal: timeout(20000) });
+  // Short timeout: the public OSRM demo server is frequently overloaded, so we
+  // fail fast and let Valhalla (the reliable primary) carry the route.
+  const res = await fetch(`${OSRM_BASE}/route/v1/driving/${coordStr}?${params}`, { signal: timeout(9000) });
   if (!res.ok) throw new Error(`OSRM ${res.status}`);
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
@@ -85,25 +87,7 @@ function decodePolyline6(str) {
   return coords;
 }
 
-// costingOptions e.g. { use_highways: 0 } or { use_highways: 0, top_speed: 50 }.
-export async function valhallaRoute(points, costingOptions = {}) {
-  const body = {
-    locations: points.map(([lat, lon]) => ({ lat, lon })),
-    costing: 'auto',
-    costing_options: { auto: { use_tolls: 0, ...costingOptions } },
-    units: 'kilometers',
-  };
-  const res = await fetch(`${VALHALLA_BASE}/route`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: timeout(20000),
-  });
-  if (!res.ok) throw new Error(`Valhalla ${res.status}`);
-  const data = await res.json();
-  const trip = data.trip;
-  if (!trip || !trip.legs || trip.legs.length === 0) throw new Error('Valhalla: no route');
-
+function normalizeValhallaTrip(trip) {
   const coords = [];
   const roads = [];
   let fastDist = 0, mainDist = 0, totalDist = 0;
@@ -129,6 +113,30 @@ export async function valhallaRoute(points, costingOptions = {}) {
     mainRoadFraction: totalDist > 0 ? mainDist / totalDist : 0,
     roads: roads.slice(0, 6),
   };
+}
+
+// Returns an ARRAY of normalized routes (main first, then any alternates).
+// costingOptions e.g. { use_highways: 0 } or { use_highways: 0, top_speed: 50 }.
+export async function valhallaRoute(points, costingOptions = {}, { alternates = 0 } = {}) {
+  const body = {
+    locations: points.map(([lat, lon]) => ({ lat, lon })),
+    costing: 'auto',
+    costing_options: { auto: { use_tolls: 0, ...costingOptions } },
+    units: 'kilometers',
+  };
+  if (alternates) body.alternates = alternates;
+  const res = await fetch(`${VALHALLA_BASE}/route`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Valhalla ${res.status}`);
+  const data = await res.json();
+  const trips = [data.trip, ...(data.alternates || []).map(a => a.trip)]
+    .filter(t => t && t.legs && t.legs.length > 0);
+  if (trips.length === 0) throw new Error('Valhalla: no route');
+  return trips.map(normalizeValhallaTrip);
 }
 
 /* ---------- Overpass ---------- */

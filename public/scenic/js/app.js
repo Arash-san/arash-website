@@ -367,7 +367,12 @@ goBtn.addEventListener('click', async () => {
     });
     renderResults(data);
   } catch (err) {
-    setStatus(String(err.message || err), true);
+    const raw = String(err.message || err);
+    // Translate low-level fetch/abort errors into something actionable.
+    const friendly = /timed out|timeout|aborted|network|failed to fetch/i.test(raw)
+      ? 'The map service took too long to respond. Please try again in a moment.'
+      : raw;
+    setStatus(friendly, true);
   } finally {
     goBtn.disabled = false;
   }

@@ -2,7 +2,7 @@
 // extra candidates through scenic waypoints and quiet back streets, score
 // everything, and return a ranked list within the user's detour budget.
 
-import { osrmRoute, valhallaRoute, getScenicFeatures } from './engines.js';
+import { valhallaRoute, getScenicFeatures } from './engines.js';
 import { prepareFeatures, analyzeRoute, scenicScore } from './scoring.js';
 import { haversine, bbox, makeProjector, samplePolyline, pointSegDist2 } from './geo.js';
 
@@ -74,14 +74,17 @@ function dedupeRoutes(routes) {
 
 // Quiet-streets candidate: Valhalla with highways off and capped top speed
 // pushes the route onto neighborhood streets, but the speed cap inflates its
-// reported duration. Re-route the same corridor through OSRM via a few
-// interior points to get realistic timing (and consistent road metrics).
+// reported duration. Re-route the same corridor at normal speed through a few
+// interior points for realistic timing — OSRM if it's up, else Valhalla, so
+// this never hard-depends on the flaky OSRM demo server.
 async function quietRoute(start, end) {
-  const quiet = await valhallaRoute([start, end], { use_highways: 0, top_speed: 50 });
+  const quiet = (await valhallaRoute([start, end], { use_highways: 0, top_speed: 50 }))[0];
+  const pts = quiet.coords;
+  const vias = [0.2, 0.4, 0.6, 0.8].map(t => pts[Math.floor(pts.length * t)]);
   try {
-    const pts = quiet.coords;
-    const vias = [0.2, 0.4, 0.6, 0.8].map(t => pts[Math.floor(pts.length * t)]);
-    const retimed = (await osrmRoute([start, ...vias, end]))[0];
+    // Re-route through the same interior points at normal speed so the
+    // reported duration isn't inflated by the top_speed cap.
+    const retimed = (await valhallaRoute([start, ...vias, end]))[0];
     retimed.quiet = true;
     return retimed;
   } catch {
@@ -98,13 +101,16 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
   }
   const budgetFactor = Math.max(0.05, Math.min(1.0, detourBudget ?? 0.3));
 
-  // 1. Baseline candidates, all in parallel: fastest + OSRM alternatives, a
-  // highway-limited Valhalla variant, a quiet-streets variant.
+  // 1. Baseline candidates, all in parallel. Valhalla (FOSSGIS) is the routing
+  // engine throughout — reliable and fast, unlike the public OSRM demo server
+  // which is frequently overloaded. Its `alternates` supply route diversity.
   const limitHighways = prefs.highwayUse < 0.95;
-  const basePromises = [osrmRoute([start, end], { alternatives: true })];
+  const basePromises = [
+    valhallaRoute([start, end], {}, { alternates: 2 }).catch(() => []),
+  ];
   if (limitHighways) {
     basePromises.push(
-      valhallaRoute([start, end], { use_highways: prefs.highwayUse }).then(r => [r]).catch(() => [])
+      valhallaRoute([start, end], { use_highways: prefs.highwayUse }).catch(() => [])
     );
   }
   if (prefs.quietStreets) {
@@ -119,17 +125,18 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
 
   const [baseResults, features] = await Promise.all([Promise.all(basePromises), featuresPromise]);
   const baseRoutes = baseResults.flat();
+  if (baseRoutes.length === 0) {
+    throw new Error('Routing services are unavailable right now. Please try again in a moment.');
+  }
   const fastest = baseRoutes.reduce((m, r) => (r.duration < m.duration ? r : m), baseRoutes[0]);
 
-  // 3. Extra candidates via scenic waypoints.
+  // 3. Extra candidates via scenic waypoints (Valhalla — the reliable engine).
   const waypoints = pickWaypoints(features, start, end, directDist, budgetFactor, prefs);
-  const viaCalls = waypoints.map(wp => ({ wp, promise: osrmRoute([start, wp.center, end]) }));
-  if (limitHighways && waypoints[0]) {
-    viaCalls.push({
-      wp: waypoints[0],
-      promise: valhallaRoute([start, waypoints[0].center, end], { use_highways: prefs.highwayUse }).then(r => [r]),
-    });
-  }
+  const viaOpts = limitHighways ? { use_highways: prefs.highwayUse } : {};
+  const viaCalls = waypoints.map(wp => ({
+    wp,
+    promise: valhallaRoute([start, wp.center, end], viaOpts),
+  }));
   const viaResults = await Promise.allSettled(viaCalls.map(c => c.promise));
   const viaRoutes = [];
   viaResults.forEach((res, i) => {
