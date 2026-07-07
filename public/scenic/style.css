@@ -48,7 +48,12 @@
 html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
 
 #map { position: absolute; inset: 0; background: #ddd; }
-[data-theme="dark"] #map { background: #111; }
+[data-theme="dark"] #map { background: #262a2e; }
+/* Dark mode keeps the exact same OSM tiles (street names included) and just
+   softens them into muted grey via a filter. */
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: grayscale(0.75) brightness(0.72) contrast(0.95);
+}
 [data-theme="dark"] .leaflet-control-zoom a { background: #232823; color: #e4eae4; border-color: #3a443a; }
 [data-theme="dark"] .leaflet-control-attribution { background: rgba(24,28,24,0.8); color: #9fb09f; }
 [data-theme="dark"] .leaflet-control-attribution a { color: #7db8e8; }
@@ -89,10 +94,11 @@ html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Ro
   background: var(--input-bg); color: var(--panel-fg);
 }
 .field input:focus { border-color: var(--accent); }
-#locate-btn {
+#locate-btn, .save-btn {
   flex: none; border: 1px solid var(--border); background: var(--btn-bg); border-radius: 10px;
-  padding: 9px 10px; cursor: pointer; font-size: 14px;
+  padding: 9px 10px; cursor: pointer; font-size: 14px; color: var(--panel-fg);
 }
+.save-btn { padding: 9px 8px; }
 .swap-row { text-align: right; margin: 0 0 4px; }
 #swap-btn {
   border: none; background: none; color: var(--accent); font-size: 12px;
@@ -109,6 +115,7 @@ html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Ro
 .suggestions div:hover { background: var(--pop-hover); }
 .suggestions .dist { color: var(--faint); font-size: 11px; margin-left: 4px; }
 .suggestions .recent-tag { color: #b0894a; font-size: 11px; margin-right: 5px; }
+.suggestions .fav-tag { font-size: 11px; margin-right: 5px; }
 .hint { font-size: 11.5px; color: var(--faint); margin: 2px 0 10px; }
 
 .prefs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }

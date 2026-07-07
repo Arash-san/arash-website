@@ -1,10 +1,11 @@
-import { geocode, reverseGeocode } from './engines.js';
+import { geocode, resolveSuggestion, reverseGeocode } from './engines.js';
 import { findRoutes } from './routes.js';
 
 /* ---------- persisted state ---------- */
 
 const STORE_KEY = 'scenic.state.v2';
 const RECENTS_KEY = 'scenic.recents.v1';
+const FAVS_KEY = 'scenic.favorites.v1';
 
 function loadStore(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
@@ -12,6 +13,11 @@ function loadStore(key, fallback) {
 }
 const saved = loadStore(STORE_KEY, {});
 const recents = loadStore(RECENTS_KEY, []);
+const favorites = loadStore(FAVS_KEY, []);
+
+function saveFavorites() {
+  localStorage.setItem(FAVS_KEY, JSON.stringify(favorites));
+}
 
 function persist() {
   localStorage.setItem(STORE_KEY, JSON.stringify({
@@ -39,31 +45,18 @@ const initView = saved.view || { center: [35.2226, -97.4395], zoom: 13 }; // Nor
 const map = L.map('map', { zoomControl: false }).setView(initView.center, initView.zoom);
 L.control.zoom({ position: 'topright' }).addTo(map);
 
-const TILES = {
-  light: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    },
-  },
-  dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    options: {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    },
-  },
-};
-let tileLayer = null;
+// One tile source for both themes; dark mode dims and inverts the tiles via
+// a CSS filter so the map keeps the exact same detail (street names
+// included), just in muted grey.
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+}).addTo(map);
 
 function applyTheme(theme) {
   state.theme = theme;
   document.documentElement.dataset.theme = theme;
   document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
-  if (tileLayer) tileLayer.remove();
-  tileLayer = L.tileLayer(TILES[theme].url, TILES[theme].options).addTo(map);
 }
 
 const startInput = document.getElementById('start-input');
@@ -140,19 +133,39 @@ function escapeHtml(s) {
   }[c]));
 }
 
+// Saved places matching the typed text (matches name or label substring).
+function matchingFavorites(q) {
+  const needle = q.toLowerCase();
+  return favorites
+    .filter(f => !needle || f.name.toLowerCase().includes(needle) || f.label.toLowerCase().includes(needle))
+    .map(f => ({ label: f.name, sub: f.label, lat: f.lat, lon: f.lon, distKm: 0, fav: true }));
+}
+
 function renderSuggestions(box, items, kind, isRecent) {
   box.innerHTML = '';
   if (!items.length) { box.style.display = 'none'; return; }
   for (const r of items) {
     const div = document.createElement('div');
     const dist = r.distKm > 1 ? `<span class="dist">${r.distKm} km</span>` : '';
-    const tag = isRecent ? '<span class="recent-tag">↺</span>' : '';
+    const tag = r.fav ? '<span class="fav-tag">⭐</span>'
+      : isRecent ? '<span class="recent-tag">↺</span>' : '';
     div.innerHTML = `${tag}${escapeHtml(shortLabel(r.label))}${dist}`;
-    div.addEventListener('click', () => {
-      setPoint(kind, r.lat, r.lon, shortLabel(r.label));
-      addRecent({ label: r.label, lat: r.lat, lon: r.lon, distKm: 0 });
+    div.addEventListener('click', async () => {
       box.style.display = 'none';
-      map.panTo([r.lat, r.lon]);
+      let item = r;
+      if (!Number.isFinite(item.lat)) {
+        // ArcGIS suggestion: resolve to coordinates on selection.
+        setStatus('Locating "' + shortLabel(item.label) + '"…');
+        try {
+          item = await resolveSuggestion(item, biasPoint());
+          setStatus('');
+        } catch (err) {
+          return setStatus(String(err.message || err), true);
+        }
+      }
+      setPoint(kind, item.lat, item.lon, shortLabel(item.label));
+      if (!item.fav) addRecent({ label: item.label, lat: item.lat, lon: item.lon, distKm: 0 });
+      map.panTo([item.lat, item.lon]);
     });
     box.appendChild(div);
   }
@@ -165,8 +178,8 @@ function wireAutocomplete(kind) {
   let timer = null;
 
   input.addEventListener('focus', () => {
-    if (input.value.trim().length < 3 && recents.length) {
-      renderSuggestions(box, recents, kind, true);
+    if (input.value.trim().length < 3) {
+      renderSuggestions(box, [...matchingFavorites(''), ...recents], kind, true);
     }
   });
 
@@ -174,13 +187,13 @@ function wireAutocomplete(kind) {
     clearTimeout(timer);
     const q = input.value.trim();
     if (q.length < 3) {
-      renderSuggestions(box, recents, kind, true);
+      renderSuggestions(box, [...matchingFavorites(q), ...recents], kind, true);
       return;
     }
     timer = setTimeout(async () => {
       try {
         const results = await geocode(q, biasPoint());
-        renderSuggestions(box, results, kind, false);
+        renderSuggestions(box, [...matchingFavorites(q), ...results], kind, false);
       } catch { box.style.display = 'none'; }
     }, 350);
   });
@@ -188,6 +201,28 @@ function wireAutocomplete(kind) {
 }
 wireAutocomplete('start');
 wireAutocomplete('end');
+
+// ⭐ Save the current start/end point as a named place, so complexes and
+// buildings missing from the map directories (e.g. apartment communities)
+// become searchable after saving them once.
+function wireSaveButton(kind) {
+  document.getElementById(kind + '-save').addEventListener('click', () => {
+    const point = state[kind];
+    if (!point) return setStatus('Set a ' + (kind === 'start' ? 'start' : 'destination') + ' point first, then save it.', true);
+    const current = document.getElementById(kind + '-input').value;
+    const name = window.prompt('Name this place (e.g. "Home", "Overlook"):', current);
+    if (!name) return;
+    const trimmed = name.trim();
+    const existing = favorites.findIndex(f => f.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing >= 0) favorites.splice(existing, 1);
+    favorites.unshift({ name: trimmed, label: current, lat: point[0], lon: point[1] });
+    if (favorites.length > 20) favorites.length = 20;
+    saveFavorites();
+    setStatus(`Saved ⭐ "${trimmed}" — it will show up when you search.`);
+  });
+}
+wireSaveButton('start');
+wireSaveButton('end');
 
 document.getElementById('locate-btn').addEventListener('click', () => {
   if (!navigator.geolocation) return setStatus('Geolocation not supported by this browser.', true);
@@ -355,13 +390,11 @@ function googleMapsUrl(route) {
 }
 
 const SCENIC_COLORS = ['#2f7d32', '#00838f', '#6a1b9a'];
-const SCENIC_COLORS_DARK = ['#7ee383', '#4dd0e1', '#ce93d8'];
 
 function renderResults(data) {
-  const dark = state.theme === 'dark';
-  const palette = dark ? SCENIC_COLORS_DARK : SCENIC_COLORS;
+  const palette = SCENIC_COLORS;
   const routes = [];
-  if (data.fastest) routes.push({ ...data.fastest, label: 'Fastest', color: dark ? '#b0bec5' : '#78909c' });
+  if (data.fastest) routes.push({ ...data.fastest, label: 'Fastest', color: '#546e7a' });
   data.scenic.forEach((r, i) => routes.push({
     ...r,
     label: i === 0 ? 'Most scenic' : `Scenic option ${i + 1}`,

@@ -233,10 +233,10 @@ function photonLabel(p) {
   return parts.filter(Boolean).join(', ');
 }
 
-// Photon with location bias; results re-ranked into distance buckets so
-// nearby matches come first while Photon's relevance order is kept within
-// each bucket.
-export async function geocode(q, bias) {
+// Photon (OSM) with location bias; results re-ranked into distance buckets
+// so nearby matches come first while Photon's relevance order is kept
+// within each bucket.
+async function photonSearch(q, bias) {
   const params = new URLSearchParams({ q, limit: '10' });
   if (bias) {
     params.set('lat', bias[0]);
@@ -261,7 +261,62 @@ export async function geocode(q, bias) {
       };
     });
   items.sort((a, b) => a.sortKey - b.sortKey);
-  return items.slice(0, 6);
+  return items;
+}
+
+// ArcGIS World Geocoder suggestions — a second directory that covers street
+// addresses and commercial POIs that are missing from OSM. Suggestions carry
+// no coordinates; resolve on selection via resolveSuggestion().
+const ARCGIS_BASE = 'https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer';
+
+async function arcgisSuggest(q, bias) {
+  const params = new URLSearchParams({ f: 'json', text: q, maxSuggestions: '5' });
+  if (bias) params.set('location', `${bias[1]},${bias[0]}`);
+  const res = await fetch(`${ARCGIS_BASE}/suggest?${params}`, { signal: timeout(8000) });
+  if (!res.ok) throw new Error(`ArcGIS ${res.status}`);
+  const data = await res.json();
+  return (data.suggestions || []).map(s => ({
+    label: s.text,
+    magicKey: s.magicKey,
+    distKm: 0,
+  }));
+}
+
+// Resolve an ArcGIS suggestion (or any free-text label) to coordinates.
+export async function resolveSuggestion(item, bias) {
+  if (Number.isFinite(item.lat)) return item;
+  const params = new URLSearchParams({
+    f: 'json', maxLocations: '1', singleLine: item.label,
+  });
+  if (item.magicKey) params.set('magicKey', item.magicKey);
+  if (bias) params.set('location', `${bias[1]},${bias[0]}`);
+  const res = await fetch(`${ARCGIS_BASE}/findAddressCandidates?${params}`, { signal: timeout(10000) });
+  if (!res.ok) throw new Error(`ArcGIS ${res.status}`);
+  const data = await res.json();
+  const c = data.candidates && data.candidates[0];
+  if (!c) throw new Error('Could not locate this place.');
+  return { ...item, lat: c.location.y, lon: c.location.x };
+}
+
+const normalizeLabel = s => s.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
+
+// Combined directory: OSM (Photon) merged with ArcGIS, deduplicated.
+export async function geocode(q, bias) {
+  const [photon, arcgis] = await Promise.all([
+    photonSearch(q, bias).catch(() => []),
+    arcgisSuggest(q, bias).catch(() => []),
+  ]);
+  const merged = [];
+  const seen = new Set();
+  const nearby = photon.filter(i => i.distKm < 30);
+  const far = photon.filter(i => i.distKm >= 30);
+  for (const item of [...nearby, ...arcgis, ...far]) {
+    const key = normalizeLabel(item.label);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+  }
+  return merged.slice(0, 8);
 }
 
 export async function reverseGeocode(lat, lon) {

@@ -7,7 +7,7 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
 
-const SECTIONS = ["home", "news", "academic", "interests"] as const;
+const SECTIONS = ["home", "news", "academic", "tools", "interests"] as const;
 const N = SECTIONS.length;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -347,6 +347,58 @@ export default function Home() {
     </>
   );
 
+  const tools = [
+    {
+      name: "Scenic Routes",
+      href: "/scenic/",
+      tag: "web app · live",
+      desc: "Finds the most beautiful driving route instead of the fastest one — greenery, water, landmarks and quiet streets, scored from OpenStreetMap data. Runs fully in your browser.",
+    },
+    {
+      name: "Dictaloom",
+      href: "https://github.com/Arash-san/dictaloom",
+      tag: "open source",
+      desc: "AI voice dictation for Windows.",
+    },
+    {
+      name: "KairoMirror",
+      href: "https://github.com/Arash-san/kairomirror",
+      tag: "open source",
+      desc: "A polished Windows GUI for scrcpy — app launching, mirroring, audio, and virtual camera support.",
+    },
+    {
+      name: "OpenTree",
+      href: "https://github.com/Arash-san/opentree",
+      tag: "open source",
+      desc: "Desktop tool for analyzing folders.",
+    },
+  ];
+
+  const toolsBody = (compact: boolean) => (
+    <div className="space-y-3">
+      <p className={compact ? "text-xs" : "text-sm"}>
+        Things I build outside of research — small tools I actually use, free for anyone.
+      </p>
+      {tools.map((item) => (
+        <a
+          key={item.name}
+          href={item.href}
+          target={item.href.startsWith("http") ? "_blank" : undefined}
+          rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+          className="block group border-l-2 border-gray-200 hover:border-[#DC143C] pl-3 transition-colors"
+        >
+          <p className="text-xs text-gray-500">
+            <span className="text-red-700">{item.tag}</span>
+          </p>
+          <p className={cn("font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors", compact ? "text-sm" : "text-base")}>
+            {item.name}
+          </p>
+          <p className="text-xs text-gray-600 mt-0.5">{item.desc}</p>
+        </a>
+      ))}
+    </div>
+  );
+
   const interestsBody = (
     <>
       <div className="float-right w-24 sm:w-28 ml-3 mb-1">
@@ -381,7 +433,8 @@ export default function Home() {
       </h1>,
       <h1 key="t1" className="text-5xl xl:text-6xl font-bold text-black">Recent News</h1>,
       <h1 key="t2" className="text-5xl xl:text-6xl font-bold text-black">Academic Background</h1>,
-      <h1 key="t3" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
+      <h1 key="t3" className="text-5xl xl:text-6xl font-bold text-black">My Custom Tools</h1>,
+      <h1 key="t4" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
     ],
     m: [
       <h1 key="t0" className="text-2xl font-bold">
@@ -391,12 +444,13 @@ export default function Home() {
       </h1>,
       <h1 key="t1" className="text-2xl font-bold text-black">Recent News</h1>,
       <h1 key="t2" className="text-2xl font-bold text-black">Academic Background</h1>,
-      <h1 key="t3" className="text-2xl font-bold text-black">My Interests</h1>,
+      <h1 key="t3" className="text-2xl font-bold text-black">My Custom Tools</h1>,
+      <h1 key="t4" className="text-2xl font-bold text-black">My Interests</h1>,
     ],
   };
   const bodies = {
-    d: [homeBody(false), newsBody(false), academicBody, interestsBody],
-    m: [homeBody(true), newsBody(true), academicBody, interestsBody],
+    d: [homeBody(false), newsBody(false), academicBody, toolsBody(false), interestsBody],
+    m: [homeBody(true), newsBody(true), academicBody, toolsBody(true), interestsBody],
   };
 
   return (
