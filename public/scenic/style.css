@@ -118,6 +118,7 @@ html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Ro
 .suggestions .fav-tag { font-size: 11px; margin-right: 5px; }
 .hint { font-size: 11.5px; color: var(--faint); margin: 2px 0 10px; }
 
+.prefs-label { font-size: 12px; color: var(--muted); margin: 4px 0 6px; }
 .prefs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .chip {
   border: 1px solid var(--border); background: var(--input-bg); color: var(--panel-fg);
@@ -154,9 +155,11 @@ html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Ro
 .badge.water { background: var(--badge-water-bg); color: var(--badge-water-fg); }
 .badge.historic { background: var(--badge-hist-bg); color: var(--badge-hist-fg); }
 .badge.gray { background: var(--badge-gray-bg); color: var(--badge-gray-fg); }
+.nav-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 8px; }
+.nav-label { font-size: 12px; color: var(--faint); }
 .nav-link {
-  display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600;
-  color: var(--link); text-decoration: none;
+  display: inline-block; font-size: 12px; font-weight: 600;
+  color: var(--link); text-decoration: none; white-space: nowrap;
 }
 .nav-link:hover { text-decoration: underline; }
 .credit { font-size: 11px; color: var(--faint); margin: 14px 0 0; text-align: center; }

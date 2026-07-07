@@ -79,10 +79,13 @@ export function analyzeRoute(coords, prepared) {
 }
 
 // Weighted 0-100 scenic score from coverage metrics + user preferences.
-// prefs: { greenery, water, historic, quietStreets } booleans plus highwayUse
-// in [0, 1] — the share of the trip the user is happy to spend on highways.
-// Only highway use beyond that allowance is penalized.
-export function scenicScore(metrics, { highwayFraction, mainRoadFraction }, prefs) {
+// prefs: { greenery, water, historic, quietStreets, preferDifferent } booleans
+// plus highwayUse in [0, 1] — the share of the trip the user is happy to spend
+// on highways. Only highway use beyond that allowance is penalized.
+// route fields: { highwayFraction, mainRoadFraction, uniqueness } where
+// uniqueness in [0, 1] is the fraction of the route that does NOT overlap the
+// fastest route — the app's whole point is to take a different path.
+export function scenicScore(metrics, { highwayFraction, mainRoadFraction, uniqueness = 0 }, prefs) {
   const w = {
     green: prefs.greenery ? 1.0 : 0.35,
     water: prefs.water ? 0.9 : 0.2,
@@ -94,14 +97,19 @@ export function scenicScore(metrics, { highwayFraction, mainRoadFraction }, pref
     w.historic * Math.min(1, metrics.historicCoverage * 2);
   const wSum = w.green + w.water + w.historic;
   const base = positive / wSum;                    // 0..1
+  let scenic = base * 1.6;
+  // Different-path mode: reward routes that diverge from the usual fastest
+  // road, so the app sends you somewhere genuinely new rather than the
+  // shortest street with a tiny detour.
+  if (prefs.preferDifferent) scenic += uniqueness * 0.45;
   const excess = Math.max(0, highwayFraction - (prefs.highwayUse ?? 0.2));
   let penalty = excess * 1.5;
-  // Quiet-streets mode: also penalize time on main roads (primary/secondary
-  // arterials) beyond a small allowance — you can rarely leave a neighborhood
-  // without touching one.
+  // Avoid-main-roads mode: also penalize time on main roads (primary /
+  // secondary arterials) beyond a small allowance — you can rarely leave a
+  // neighborhood without touching one.
   if (prefs.quietStreets) {
     penalty += Math.max(0, (mainRoadFraction ?? 0) - 0.25) * 1.0;
   }
-  return Math.round(Math.max(0, Math.min(1, base * 1.6 - penalty)) * 100);
+  return Math.round(Math.max(0, Math.min(1, scenic - penalty)) * 100);
 }
 

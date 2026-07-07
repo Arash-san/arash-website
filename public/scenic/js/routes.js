@@ -4,9 +4,27 @@
 
 import { osrmRoute, valhallaRoute, getScenicFeatures } from './engines.js';
 import { prepareFeatures, analyzeRoute, scenicScore } from './scoring.js';
-import { haversine, bbox, makeProjector } from './geo.js';
+import { haversine, bbox, makeProjector, samplePolyline, pointSegDist2 } from './geo.js';
 
 const MAX_TRIP_KM = 80;
+
+// Fraction of a candidate route that does NOT run along the fastest route.
+// 1 = a completely different path, 0 = the same roads. Uses projected coords.
+function routeUniqueness(coords, fastestProjected, project) {
+  const samples = samplePolyline(coords, 150).map(project);
+  if (samples.length === 0 || fastestProjected.length < 2) return 0;
+  const thresh2 = 35 * 35; // within 35 m counts as "same road"
+  let near = 0;
+  for (const p of samples) {
+    for (let i = 1; i < fastestProjected.length; i++) {
+      if (pointSegDist2(p, fastestProjected[i - 1], fastestProjected[i]) <= thresh2) {
+        near++;
+        break;
+      }
+    }
+  }
+  return 1 - near / samples.length;
+}
 
 function pickWaypoints(features, start, end, directDist, budgetFactor, prefs) {
   const pool = [];
@@ -132,9 +150,11 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
     historic: prepareFeatures(features.historic, project),
   };
 
+  const fastestProjected = fastest.coords.map(project);
   const maxDuration = fastest.duration * (1 + budgetFactor);
   const results = candidates.map(r => {
     const metrics = analyzeRoute(r.coords, prepared);
+    const uniqueness = r === fastest ? 0 : routeUniqueness(r.coords, fastestProjected, project);
     return {
       coords: r.coords,
       distance: r.distance,
@@ -142,11 +162,12 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
       extraSeconds: Math.round(r.duration - fastest.duration),
       highwayFraction: r.highwayFraction,
       mainRoadFraction: r.mainRoadFraction,
+      uniqueness,
       roads: r.roads,
       via: r.via || null,
       quiet: !!r.quiet,
       metrics,
-      score: scenicScore(metrics, r, prefs),
+      score: scenicScore(metrics, { ...r, uniqueness }, prefs),
       isFastest: r === fastest,
       withinBudget: r.duration <= maxDuration,
     };

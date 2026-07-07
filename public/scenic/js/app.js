@@ -15,6 +15,15 @@ const saved = loadStore(STORE_KEY, {});
 const recents = loadStore(RECENTS_KEY, []);
 const favorites = loadStore(FAVS_KEY, []);
 
+// The app's purpose is unusual routes, so "avoid main roads" and "different
+// path" are on by default. Flip them on once for returning users whose saved
+// prefs predate these defaults, without touching their other settings.
+const DEFAULTS_REV = 3;
+if (saved.prefs && saved.defaultsRev !== DEFAULTS_REV) {
+  saved.prefs.quietStreets = true;
+  saved.prefs.preferDifferent = true;
+}
+
 function saveFavorites() {
   localStorage.setItem(FAVS_KEY, JSON.stringify(favorites));
 }
@@ -22,6 +31,7 @@ function saveFavorites() {
 function persist() {
   localStorage.setItem(STORE_KEY, JSON.stringify({
     prefs: state.prefs,
+    defaultsRev: DEFAULTS_REV,
     highway: Number(highwayInput.value),
     budget: Number(budgetInput.value),
     theme: state.theme,
@@ -73,7 +83,7 @@ const state = {
   theme: saved.theme ||
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
   prefs: Object.assign(
-    { greenery: true, water: false, historic: false, quietStreets: false },
+    { greenery: true, water: false, historic: false, quietStreets: true, preferDifferent: true },
     saved.prefs),
 };
 
@@ -370,7 +380,8 @@ function clearRoutes() {
 }
 
 // Google Maps directions link that approximates this route by pinning a few
-// intermediate waypoints along it.
+// intermediate waypoints along it. (Apple Maps and Waze URL schemes don't
+// support via-waypoints, so those links carry start/destination only.)
 function googleMapsUrl(route) {
   const pts = route.coords;
   const n = Math.min(5, Math.max(1, Math.floor(pts.length / 40)));
@@ -387,6 +398,17 @@ function googleMapsUrl(route) {
     waypoints: waypoints.join('|'),
   });
   return `https://www.google.com/maps/dir/?${params}`;
+}
+
+function appleMapsUrl(route) {
+  const a = route.coords[0], b = route.coords[route.coords.length - 1];
+  return `https://maps.apple.com/?saddr=${a[0].toFixed(5)},${a[1].toFixed(5)}` +
+    `&daddr=${b[0].toFixed(5)},${b[1].toFixed(5)}&dirflg=d`;
+}
+
+function wazeUrl(route) {
+  const b = route.coords[route.coords.length - 1];
+  return `https://waze.com/ul?ll=${b[0].toFixed(5)},${b[1].toFixed(5)}&navigate=yes`;
 }
 
 const SCENIC_COLORS = ['#2f7d32', '#00838f', '#6a1b9a'];
@@ -432,7 +454,9 @@ function renderResults(data) {
     if (state.prefs.historic) m.highlights.historic.forEach(h => badges.push(`<span class="badge historic">🏛️ ${escapeHtml(h)}</span>`));
     if (state.prefs.greenery) m.highlights.green.slice(0, 3).forEach(h => badges.push(`<span class="badge">${escapeHtml(h)}</span>`));
     if (r.highwayFraction > 0.05) badges.push(`<span class="badge gray">🛣️ ${Math.round(r.highwayFraction * 100)}% highway</span>`);
-    if (state.prefs.quietStreets) badges.push(`<span class="badge gray">🏘️ ${Math.round((1 - r.mainRoadFraction) * 100)}% quiet streets</span>`);
+    if (state.prefs.quietStreets) badges.push(`<span class="badge gray">🏘️ ${Math.round((1 - r.mainRoadFraction) * 100)}% off main roads</span>`);
+    if (state.prefs.preferDifferent && !r.isFastest && r.uniqueness != null)
+      badges.push(`<span class="badge">🔀 ${Math.round(r.uniqueness * 100)}% different roads</span>`);
     if (r.quiet) badges.push(`<span class="badge">back-streets route</span>`);
     if (r.via) badges.push(`<span class="badge">via ${escapeHtml(r.via)}</span>`);
 
@@ -444,9 +468,15 @@ function renderResults(data) {
       <div class="sub">${fmtDist(r.distance)} · scenic score ${r.score}/100${r.roads.length ? ' · ' + r.roads.slice(0, 3).map(escapeHtml).join(', ') : ''}</div>
       <div class="scorebar"><div style="width:${r.score}%"></div></div>
       <div class="badges">${badges.join('')}</div>
-      <a class="nav-link" href="${googleMapsUrl(r)}" target="_blank" rel="noopener">Navigate in Google Maps ↗</a>`;
+      <div class="nav-row">
+        <span class="nav-label">Navigate:</span>
+        <a class="nav-link" href="${googleMapsUrl(r)}" target="_blank" rel="noopener" title="Follows this route via pinned waypoints">Google Maps ↗</a>
+        <a class="nav-link" href="${appleMapsUrl(r)}" target="_blank" rel="noopener" title="Apple Maps (start to destination)">Apple Maps ↗</a>
+        <a class="nav-link" href="${wazeUrl(r)}" target="_blank" rel="noopener" title="Waze (to destination)">Waze ↗</a>
+      </div>`;
     card.addEventListener('click', () => selectRoute(idx));
-    card.querySelector('.nav-link').addEventListener('click', e => e.stopPropagation());
+    card.querySelectorAll('.nav-link').forEach(a =>
+      a.addEventListener('click', e => e.stopPropagation()));
     resultsEl.appendChild(card);
   });
 
@@ -454,6 +484,31 @@ function renderResults(data) {
     map.fitBounds(L.featureGroup(group).getBounds(), { padding: [40, 40] });
   }
   selectRoute(routes.length > 1 ? 1 : 0);
+
+  // Bring the results into view with a visible scroll animation — on phones
+  // the cards land below the fold and are easy to miss otherwise. Animated
+  // by hand: native smooth scrolling is disabled in some browsers.
+  setCollapsed(false);
+  setTimeout(() => {
+    const body = document.getElementById('panel-body');
+    animateScroll(body, Math.max(0, statusEl.offsetTop - 10), 550);
+  }, 150);
+}
+
+function animateScroll(el, target, durationMs) {
+  const from = el.scrollTop;
+  const delta = target - from;
+  if (Math.abs(delta) < 2) return;
+  const t0 = performance.now();
+  const easeInOut = t => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+  function step(now) {
+    const t = Math.min(1, (now - t0) / durationMs);
+    el.scrollTop = from + delta * easeInOut(t);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+  // rAF doesn't tick in hidden/background tabs; land on the target anyway.
+  setTimeout(() => { el.scrollTop = target; }, durationMs + 120);
 }
 
 function selectRoute(idx) {
