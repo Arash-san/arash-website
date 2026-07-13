@@ -27,7 +27,7 @@ export default function Home() {
 
   // The page never scrolls natively: sections step on wheel/swipe/keys and
   // long content scrolls inside each section. This is what makes the scroll
-  // deterministic — no half-faded states, no snap fighting the user.
+  // deterministic: no half-faded states, no snap fighting the user.
   useEffect(() => {
     const html = document.documentElement;
     const prevOverflow = html.style.overflow;
@@ -332,7 +332,7 @@ export default function Home() {
       <p>
         Then I got accepted to a direct PhD position at OU! Since then I&apos;ve defended my{" "}
         <a href="https://inquirelab.ai/news" className="text-purple-700 underline" target="_blank" rel="noopener noreferrer">master&apos;s thesis</a>
-        {" "}(April 2026) and published 7 papers and preprints — including a journal paper in{" "}
+        {" "}(April 2026) and published 7 papers and preprints, including a journal paper in{" "}
         <a href="https://doi.org/10.1016/j.eswa.2026.132963" className="text-red-700 underline" target="_blank" rel="noopener noreferrer">Expert Systems with Applications</a>
         {" "}and a paper I presented at{" "}
         <a href="https://doi.org/10.2514/6.2026-1195" className="text-blue-700 underline" target="_blank" rel="noopener noreferrer">AIAA SciTech 2026</a>
@@ -342,7 +342,7 @@ export default function Home() {
       <p>
         I also founded the{" "}
         <a href="https://ou.campuslabs.com/engage/organization/llm-club" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">LLM Engineering Club</a>
-        {" "}at OU — a registered student org for hands-on LLM engineering.
+        {" "}at OU, a registered student org for hands-on LLM engineering.
       </p>
     </>
   );
@@ -352,32 +352,38 @@ export default function Home() {
       name: "Scenic Routes",
       href: "/scenic/",
       tag: "web app · live",
-      desc: "Finds the most beautiful driving route instead of the fastest one — greenery, water, landmarks and quiet streets, scored from OpenStreetMap data. Runs fully in your browser.",
+      desc: "Finds the most beautiful driving route instead of the fastest one, scored by greenery, water, landmarks and quiet streets from OpenStreetMap data. Runs fully in your browser.",
     },
     {
-      name: "Dictaloom",
-      href: "https://github.com/Arash-san/dictaloom",
+      name: "MCP Bridge",
+      href: "https://github.com/INQUIRELAB/mcp-bridge-api",
+      tag: "open source · research",
+      desc: "A lightweight, LLM-agnostic RESTful proxy for Model Context Protocol servers.",
+    },
+    {
+      name: "Freesia",
+      href: "https://github.com/Arash-san/freesia",
       tag: "open source",
-      desc: "AI voice dictation for Windows.",
+      desc: "AI voice dictation for Windows. Speak freely, write beautifully.",
     },
     {
       name: "KairoMirror",
       href: "https://github.com/Arash-san/kairomirror",
       tag: "open source",
-      desc: "A polished Windows GUI for scrcpy — app launching, mirroring, audio, and virtual camera support.",
+      desc: "A polished Windows GUI for scrcpy, with app launching, mirroring, audio, and virtual camera support.",
     },
     {
-      name: "OpenTree",
-      href: "https://github.com/Arash-san/opentree",
+      name: "Maze Creator for Overwatch",
+      href: "https://github.com/Arash-san/Maze-creator-for-overwatch",
       tag: "open source",
-      desc: "Desktop tool for analyzing folders.",
+      desc: "Build your own mazes and play them inside Overwatch.",
     },
   ];
 
   const toolsBody = (compact: boolean) => (
     <div className="space-y-3">
       <p className={compact ? "text-xs" : "text-sm"}>
-        Things I build outside of research — small tools I actually use, free for anyone.
+        Things I build outside of research, free for anyone to use.
       </p>
       {tools.map((item) => (
         <a
@@ -515,7 +521,7 @@ export default function Home() {
                   ref={(el) => {
                     dRefs.current[i] = el;
                   }}
-                  className="h-full overflow-y-auto no-scrollbar flex"
+                  className="h-full overflow-y-auto slim-scroll flex pr-2"
                   style={{ overscrollBehavior: "contain" }}
                 >
                   <div className="my-auto w-full space-y-3 py-2">
@@ -568,7 +574,7 @@ export default function Home() {
                     ref={(el) => {
                       mRefs.current[i] = el;
                     }}
-                    className="h-full overflow-y-auto no-scrollbar text-left pr-2 space-y-3"
+                    className="h-full overflow-y-auto slim-scroll text-left pr-2 space-y-3"
                     style={{
                       overscrollBehavior: "contain",
                       touchAction: "pan-y",

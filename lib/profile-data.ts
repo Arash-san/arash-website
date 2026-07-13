@@ -13,7 +13,7 @@ export const identity = {
   location: "Norman, Oklahoma",
   email: "arash.ahmadi@ou.edu",
   intro:
-    "I'm a Ph.D. student at the University of Oklahoma, where I fine-tune small language models to run on resource-constrained edge devices and put them to work in agentic systems, aviation safety, and health monitoring. I like building things with people — clubs, workshops, websites — and turning the useful parts into research.",
+    "I'm a Ph.D. student at the University of Oklahoma, where I fine-tune small language models to run on resource-constrained edge devices and put them to work in agentic systems, aviation safety, and health monitoring. I like building things with people (clubs, workshops, websites) and turning the useful parts into research.",
 };
 
 export const links = [
@@ -41,7 +41,7 @@ export const news: NewsItem[] = [
     dateLabel: "May 28, 2026",
     title: "New paper published in Expert Systems with Applications",
     body:
-      "Our paper on automated HFACS classification for aviation safety — fine-tuning Llama-3.1 8B with Group Relative Policy Optimization and a multi-component reward system — is out in ESWA (vol. 329).",
+      "Our paper on automated HFACS classification for aviation safety (fine-tuning Llama-3.1 8B with Group Relative Policy Optimization and a multi-component reward system) is out in ESWA (vol. 329).",
     href: "https://doi.org/10.1016/j.eswa.2026.132963",
     tag: "Publication",
   },
@@ -50,7 +50,7 @@ export const news: NewsItem[] = [
     dateLabel: "April 15, 2026",
     title: "Successfully defended my master's thesis",
     body:
-      "“Search-Based Reward Function Optimization for LLM Reasoning via Reinforcement Learning” — a framework for improving LLM reasoning through adaptive, search-driven reward design. On to the rest of the Ph.D.!",
+      "“Search-Based Reward Function Optimization for LLM Reasoning via Reinforcement Learning”: a framework for improving LLM reasoning through adaptive, search-driven reward design. On to the rest of the Ph.D.!",
     href: "https://inquirelab.ai/news",
     tag: "Milestone",
   },
@@ -59,7 +59,7 @@ export const news: NewsItem[] = [
     dateLabel: "April 7, 2026",
     title: "LLM Engineering Club officially approved at OU",
     body:
-      "The club I founded is now a registered student organization — hands-on LLM engineering, study groups, responsible-AI discussions, and workshops with cluster access for local model training.",
+      "The club I founded is now a registered student organization: hands-on LLM engineering, study groups, responsible-AI discussions, and workshops with cluster access for local model training.",
     href: "https://ou.campuslabs.com/engage/organization/llm-club",
     tag: "Community",
   },
@@ -157,21 +157,21 @@ export const education = [
   {
     degree: "Ph.D., Electrical & Computer Engineering",
     school: "University of Oklahoma",
-    period: "2024 — present",
+    period: "2024–present",
     detail:
       "Fine-tuning small language models for efficient deployment on resource-constrained edge devices, with applications in agentic systems and diverse domains.",
   },
   {
     degree: "M.S., Electrical & Computer Engineering",
     school: "University of Oklahoma",
-    period: "2024 — 2026",
+    period: "2024–2026",
     detail:
       "Defended April 2026 · GPA 3.88/4.0 · Thesis: Search-Based Reward Function Optimization for LLM Reasoning via Reinforcement Learning.",
   },
   {
     degree: "B.Sc., Computer Engineering (Software)",
     school: "University of Kurdistan",
-    period: "2018 — 2023",
+    period: "2018–2023",
     detail:
       "Sanandaj, Kurdistan, Iran · GPA 3.88/4.0 · Thesis: Efficient brute-force state space search for the Yin-Yang puzzle.",
   },
@@ -181,12 +181,12 @@ export const research = [
   {
     title: "Small models, edge devices",
     body:
-      "Fine-tuning compact language models so they can run where the data lives — private, fast, and useful without a datacenter.",
+      "Fine-tuning compact language models so they can run where the data lives, private, fast, and useful without a datacenter.",
   },
   {
     title: "Reward design for reasoning",
     body:
-      "Search-driven optimization of reward functions in reinforcement learning, so LLMs learn to reason more reliably — the heart of my master's thesis.",
+      "Search-driven optimization of reward functions in reinforcement learning, so LLMs learn to reason more reliably, the heart of my master's thesis.",
   },
   {
     title: "AI for aviation safety",
@@ -196,7 +196,7 @@ export const research = [
   {
     title: "Agentic systems & tooling",
     body:
-      "Practical bridges between models, tools, and local infrastructure — including MCP Bridge, a lightweight RESTful proxy for Model Context Protocol servers.",
+      "Practical bridges between models, tools, and local infrastructure, including MCP Bridge, a lightweight RESTful proxy for Model Context Protocol servers.",
   },
 ];
 
@@ -220,7 +220,7 @@ export const featured = [
     role: "Designer & Developer · inquirelab.ai",
     href: "https://inquirelab.ai/",
     body:
-      "The lab's public home, built with Next.js — making research projects, publications, news, and people easy to find and share.",
+      "The lab's public home, built with Next.js, making research projects, publications, news, and people easy to find and share.",
   },
 ];
 
@@ -234,7 +234,7 @@ export const awards = [
 export const extras = [
   {
     title: "U.S. patent application",
-    body: "AI-Powered Personal Computer Management System and Methods — U.S. Nonprovisional Patent Application No. 19/378,506, filed November 2025.",
+    body: "AI-Powered Personal Computer Management System and Methods. U.S. Nonprovisional Patent Application No. 19/378,506, filed November 2025.",
   },
   {
     title: "Peer review",
@@ -242,7 +242,7 @@ export const extras = [
   },
   {
     title: "Community",
-    body: "Volunteer at OU's Big Event and Little Event; former engineering officer of the Game Developers' Association — where I once built an LLM-powered Ouija board for a Halloween escape room.",
+    body: "Volunteer at OU's Big Event and Little Event; former engineering officer of the Game Developers' Association, where I once built an LLM-powered Ouija board for a Halloween escape room.",
   },
 ];
 
@@ -250,9 +250,9 @@ export const journey = {
   heading: "From Sanandaj to Norman",
   photoCaption: "Sanandaj, early 2000s.",
   paragraphs: [
-    "I grew up in Sanandaj, in the Kurdistan province of Iran. The kid in this sticker spent his days on puzzles, video games, and taking things apart to see how they worked — mostly getting them back together.",
+    "I grew up in Sanandaj, in the Kurdistan province of Iran. The kid in this sticker spent his days on puzzles, video games, and taking things apart to see how they worked, mostly getting them back together.",
     "That curiosity carried me through a computer engineering degree at the University of Kurdistan, a published thesis on solving the Yin-Yang puzzle, and eventually across the world to Oklahoma, where I get to spend every day working on the most interesting puzzle I've found yet: language models.",
-    "Outside the lab I like movies, video games, writing interactive stories, and long walks at night. My goal is simple — do work that matters, and make the people around me glad I'm in the room. :)",
+    "Outside the lab I like movies, video games, writing interactive stories, and long walks at night. My goal is simple: do work that matters, and make the people around me glad I'm in the room. :)",
   ],
 };
 
