@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type UIEvent } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
@@ -75,8 +75,14 @@ export default function Home() {
     if (clamped === activeRef.current) return;
     const dScroller = dRefs.current[clamped];
     const mScroller = mRefs.current[clamped];
-    if (dScroller) dScroller.scrollTop = 0;
-    if (mScroller) mScroller.scrollTop = 0;
+    if (dScroller) {
+      dScroller.scrollTop = 0;
+      dScroller.dataset.scrolled = "false";
+    }
+    if (mScroller) {
+      mScroller.scrollTop = 0;
+      mScroller.dataset.scrolled = "false";
+    }
     lastStep.current = performance.now();
     setActive(clamped);
     window.history.replaceState(null, "", clamped === 0 ? "#" : `#${SECTIONS[clamped]}`);
@@ -89,6 +95,10 @@ export default function Home() {
     const i = activeRef.current;
     const candidates = [dRefs.current[i], mRefs.current[i]];
     return candidates.find((el) => el && el.clientHeight > 0) || null;
+  }
+
+  function updateScrollFade(event: UIEvent<HTMLDivElement>) {
+    event.currentTarget.dataset.scrolled = event.currentTarget.scrollTop > 8 ? "true" : "false";
   }
 
   function scrollerConsumes(dir: number) {
@@ -457,7 +467,7 @@ export default function Home() {
       <h1 key="t1" className="text-5xl xl:text-6xl font-bold text-black">Recent News</h1>,
       <h1 key="t2" className="text-5xl xl:text-6xl font-bold text-black">Academic Background</h1>,
       <h1 key="t3" className="text-5xl xl:text-6xl font-bold text-black">My Custom Tools</h1>,
-      <h1 key="t4" className="text-5xl xl:text-6xl font-bold text-black">Blog Posts</h1>,
+      <h1 key="t4" className="text-5xl xl:text-6xl font-bold text-black">Blog posts</h1>,
       <h1 key="t5" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
     ],
     m: [
@@ -469,7 +479,7 @@ export default function Home() {
       <h1 key="t1" className="text-2xl font-bold text-black">Recent News</h1>,
       <h1 key="t2" className="text-2xl font-bold text-black">Academic Background</h1>,
       <h1 key="t3" className="text-2xl font-bold text-black">My Custom Tools</h1>,
-      <h1 key="t4" className="text-2xl font-bold text-black">Blog Posts</h1>,
+      <h1 key="t4" className="text-2xl font-bold text-black">Blog posts</h1>,
       <h1 key="t5" className="text-2xl font-bold text-black">My Interests</h1>,
     ],
   };
@@ -540,10 +550,12 @@ export default function Home() {
                   ref={(el) => {
                     dRefs.current[i] = el;
                   }}
-                  className="h-full overflow-y-auto slim-scroll flex pr-2"
+                  className="section-scroll h-full overflow-y-auto slim-scroll flex"
+                  data-scrolled="false"
+                  onScroll={updateScrollFade}
                   style={{ overscrollBehavior: "contain" }}
                 >
-                  <div className="my-auto w-full space-y-3 py-2">
+                  <div className="section-scroll-content my-auto w-full space-y-3 py-2">
                     <motion.div variants={itemV}>{titles.d[i]}</motion.div>
                     <motion.div variants={itemV} className="space-y-2 max-w-lg text-lg text-gray-700 leading-relaxed">
                       {bodies.d[i]}
@@ -593,15 +605,17 @@ export default function Home() {
                     ref={(el) => {
                       mRefs.current[i] = el;
                     }}
-                    className="h-full overflow-y-auto slim-scroll text-left pr-2 space-y-3"
+                    className="section-scroll h-full overflow-y-auto slim-scroll text-left space-y-3"
+                    data-scrolled="false"
+                    onScroll={updateScrollFade}
                     style={{
                       overscrollBehavior: "contain",
                       touchAction: "pan-y",
                       WebkitOverflowScrolling: "touch",
                     }}
                   >
-                    <motion.div variants={itemV}>{titles.m[i]}</motion.div>
-                    <motion.div variants={itemV} className="space-y-2 text-sm text-gray-700 leading-relaxed pb-4">
+                    <motion.div variants={itemV} className="section-scroll-content">{titles.m[i]}</motion.div>
+                    <motion.div variants={itemV} className="section-scroll-content space-y-2 text-sm text-gray-700 leading-relaxed pb-4">
                       {bodies.m[i]}
                     </motion.div>
                   </div>

@@ -5,29 +5,33 @@
   "date": "2026-07-13",
   "dateLabel": "July 13, 2026",
   "title": "Can a Yin Yang puzzle become a cryptographic key?",
-  "subtitle": "A working text encryption experiment, a precise role for the private solution, and the questions that remain before the puzzle can carry security itself.",
-  "excerpt": "I wanted to move the Yin Yang key idea from a sentence into a protocol that we can inspect. This report separates the public puzzle, private witness, agreement key, and encrypted message, then tests each part in the browser.",
+  "subtitle": "I wanted to see what happens when the puzzle is public, its solution is private, and we ask both of them to take part in protecting a message.",
+  "excerpt": "I wanted to move the Yin Yang key idea from a sentence into something we can try. This blog post explains the puzzle, separates the public and private parts, and lets you encrypt and decrypt text in the browser.",
   "readTime": "24 min read",
-  "tags": ["cryptography", "Yin Yang", "interactive report"],
+  "tags": ["cryptography", "Yin Yang", "interactive experiment"],
   "featured": true,
   "blocks": [
     {
       "type": "paragraph",
-      "text": "I have thought about using a Yin Yang puzzle as a cryptographic key since my first paper. The public object looks natural. We can share a puzzle with everyone. The complete solution can remain private. But a public object and a private object do not automatically create public key encryption."
+      "text": "So, what is a Yin Yang puzzle in the first place? It is a grid that we fill with black and white cells. All black cells must connect to each other, all white cells must also connect to each other, and no 2 by 2 square can have only one color. Some cells are given as clues. The remaining cells are the puzzle that we need to solve."
     },
     {
       "type": "paragraph",
-      "text": "This report turns that idea into something we can test. It includes a real text encryption and decryption system. It also keeps the security claim honest. The current system protects the text with standard cryptography and uses the puzzle solution as a committed private witness. The puzzle is not the encryption trapdoor yet."
+      "text": "I have thought about using this puzzle as a cryptographic key since my first paper. For example, we could share the incomplete puzzle with everyone and keep its complete solution private. It feels like a natural public and private pair. But that feeling is only the beginning. A public object and a private object do not automatically give us public key encryption."
+    },
+    {
+      "type": "paragraph",
+      "text": "This blog post turns the idea into something we can actually try. It includes a working text encryption and decryption system, and it also keeps the security claim honest. Standard cryptography protects the text in the current experiment. The puzzle solution acts as a committed private witness that must be present during decryption. The puzzle is not the encryption trapdoor yet."
     },
     {
       "type": "callout",
-      "label": "The central distinction",
+      "label": "The part we cannot ignore",
       "text": "A difficult secret is not enough. A public key system also needs a public operation for the sender, a private inverse for the recipient, a defined attacker, and a reduction to a hardness assumption that we understand."
     },
     {
       "type": "heading",
       "id": "the-cryptographic-claim",
-      "text": "The cryptographic claim"
+      "text": "What are we actually trying to build?"
     },
     {
       "type": "paragraph",
@@ -48,7 +52,7 @@
     {
       "type": "heading",
       "id": "three-packages-not-one-key",
-      "text": "Three packages, not one key"
+      "text": "One puzzle, but three different packages"
     },
     {
       "type": "paragraph",
@@ -65,7 +69,7 @@
     {
       "type": "heading",
       "id": "the-20-by-20-material",
-      "text": "The 20 by 20 material we already possess"
+      "text": "The 20 by 20 material we already have"
     },
     {
       "type": "paragraph",
@@ -78,7 +82,7 @@
     {
       "type": "heading",
       "id": "the-working-browser-protocol",
-      "text": "The working browser protocol"
+      "text": "How the browser experiment works"
     },
     {
       "type": "paragraph",
@@ -95,7 +99,7 @@
     {
       "type": "heading",
       "id": "key-generation",
-      "text": "KeyGen in detail"
+      "text": "What happens when we create a key?"
     },
     {
       "type": "paragraph",
@@ -112,7 +116,7 @@
     {
       "type": "heading",
       "id": "encapsulation-and-encryption",
-      "text": "Encapsulation and encryption"
+      "text": "What does the sender do?"
     },
     {
       "type": "paragraph",
@@ -125,7 +129,7 @@
     {
       "type": "heading",
       "id": "verification-and-decryption",
-      "text": "Witness verification and decryption"
+      "text": "What does the recipient check?"
     },
     {
       "type": "paragraph",
@@ -138,7 +142,7 @@
     {
       "type": "heading",
       "id": "canonical-puzzle-identity",
-      "text": "Canonical puzzle identity"
+      "text": "When eight boards are really one board"
     },
     {
       "type": "paragraph",
@@ -155,7 +159,7 @@
     {
       "type": "heading",
       "id": "commitment-is-not-encryption",
-      "text": "A commitment is not encryption"
+      "text": "Why is a commitment not encryption?"
     },
     {
       "type": "paragraph",
@@ -172,7 +176,7 @@
     {
       "type": "heading",
       "id": "security-parameter",
-      "text": "The security parameter cannot be board width"
+      "text": "Why is board width not a security level?"
     },
     {
       "type": "paragraph",
@@ -189,7 +193,7 @@
     {
       "type": "heading",
       "id": "threat-model",
-      "text": "The threat model changes the answer"
+      "text": "Who are we protecting the message from?"
     },
     {
       "type": "paragraph",
@@ -206,7 +210,7 @@
     {
       "type": "heading",
       "id": "np-complete-is-not-a-trapdoor",
-      "text": "NP completeness is not a trapdoor"
+      "text": "NP completeness still does not give us a trapdoor"
     },
     {
       "type": "paragraph",
@@ -219,11 +223,11 @@
     {
       "type": "heading",
       "id": "research-path",
-      "text": "A research path that does not skip steps"
+      "text": "Where could this idea go next?"
     },
     {
       "type": "paragraph",
-      "text": "The next practical version should replace classical agreement with ML KEM from FIPS 203. The public puzzle can remain bound to the KEM key. A proof of knowledge can later let the recipient prove possession of a valid solution without exposing it. This gives the puzzle an authentication role and gives the message a standardized post quantum foundation."
+      "text": "One practical next version could replace classical agreement with ML KEM from FIPS 203. The public puzzle can remain connected to the KEM key. A proof of knowledge could also let the recipient prove that a valid solution exists without exposing it. In that design, the puzzle would help with authentication and a standard post quantum method would protect the message."
     },
     {
       "type": "lab",
@@ -231,12 +235,12 @@
     },
     {
       "type": "paragraph",
-      "text": "The native trapdoor question should remain a separate research program. It needs a generator with a hidden structure, a public distribution that conceals that structure, an efficient inverse for the owner, and evidence against structural attacks. It should not protect real user data until independent cryptographers have tried to break it."
+      "text": "The native trapdoor question is a different and much harder idea. We would need a generator with hidden structure, a public distribution that hides that structure, an efficient inverse for the owner, and strong evidence against structural attacks. I want to explore that question, but it should not protect real user data until independent cryptographers have tried to break it."
     },
     {
       "type": "heading",
       "id": "what-enterprise-grade-would-mean",
-      "text": "What an enterprise version would require"
+      "text": "What would a real product need?"
     },
     {
       "type": "paragraph",
@@ -249,19 +253,19 @@
     {
       "type": "heading",
       "id": "where-the-agent-fits",
-      "text": "Where the agent fits"
+      "text": "Where did the agent help?"
     },
     {
       "type": "paragraph",
-      "text": "The cryptographic direction, puzzle key idea, symmetry idea, and research questions were given by the researcher. GPT 5.6 soul high was used to explore the protocol, implement the interactive system faster, test failure cases, and help turn the idea into this report."
+      "text": "The cryptographic direction, puzzle key idea, symmetry idea, and research questions came from the researcher. GPT 5.6 soul high was used to explore the protocol, implement the interactive system faster, test failure cases, and help turn the idea into this blog post."
     },
     {
       "type": "paragraph",
-      "text": "There is something worth exploring here. Agents can shorten the distance between an idea and a working experiment. That gives the researcher more chances to test a thought, notice a weakness, and revise the direction. The human still decides which question matters and which claim is responsible."
+      "text": "There is also something interesting about using agents this way. They can shorten the distance between an idea and a working experiment. The researcher gets more chances to test a thought, notice a weakness, and then revise the direction. The human still decides which question matters and which claim is responsible."
     },
     {
       "type": "paragraph",
-      "text": "The result is modest but real. We can encrypt and decrypt text. We can bind that ciphertext to a public Yin Yang puzzle. We can require the private solution during decryption. And we can point to the exact missing piece: a native puzzle trapdoor with a defensible security argument."
+      "text": "Why not? That is really why I am doing this. We already have a beautiful puzzle, a public object, a private solution, and many open questions. We can now encrypt and decrypt text, connect the ciphertext to a public Yin Yang puzzle, and require the private solution during decryption. We can also see the exact missing piece: a native puzzle trapdoor with a security argument that other cryptographers can test. Maybe this does not become a new cryptographic system. Maybe it leads to a different use of puzzle knowledge. But the only good way to learn that is to build the idea carefully, ask where it fails, and then keep going."
     }
   ],
   "sources": [

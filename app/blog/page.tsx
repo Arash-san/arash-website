@@ -5,7 +5,7 @@ import { getAllPosts } from "@/lib/blog";
 
 export const metadata: Metadata = {
   title: "Blog Posts | Arash Ahmadi",
-  description: "Interactive technical reports, experiments, and research notes by Arash Ahmadi.",
+  description: "Interesting work, personal thoughts, experiments, and other ideas by Arash Ahmadi.",
 };
 
 export default async function BlogIndexPage() {
@@ -19,9 +19,9 @@ export default async function BlogIndexPage() {
           <span>Blog posts</span>
         </nav>
         <header className="blog-index-header">
-          <p className="blog-kicker">My technical notebook</p>
+          <p className="blog-kicker">A place for things I want to share</p>
           <h1>Blog posts</h1>
-          <p>I use this space for work that is too interactive for a paper and too long for one post.</p>
+          <p>Welcome to my blog section, where I will share interesting works, my thoughts, and other similar topics.</p>
         </header>
         <section className="blog-index-list" aria-label="Posts">
           {posts.map((post, index) => (
@@ -31,7 +31,7 @@ export default async function BlogIndexPage() {
                 <p className="blog-index-meta">{post.dateLabel} · {post.readTime}{post.status === "draft" ? " · local draft" : ""}</p>
                 <h2><Link href={`/blog/${post.slug}`}>{post.title}</Link></h2>
                 <p>{post.excerpt}</p>
-                <Link className="blog-index-link" href={`/blog/${post.slug}`}>Read and explore <span aria-hidden="true">→</span></Link>
+                <Link className="blog-index-link" href={`/blog/${post.slug}`}>Read the post <span aria-hidden="true">→</span></Link>
               </div>
             </article>
           ))}
