@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-14T06:16:33.410353+00:00",
+  "symmetry": "D4 plus color exchange",
+  "records": [
+    {
+      "size": 3,
+      "totalSolutions": 34,
+      "keySolutions": 4,
+      "largestOrbit": 16,
+      "file": "/yinyang/orbits/3x3.bin.gz",
+      "bytes": 49,
+      "sha256": "a93a4eef2c107faefc395c19bd665a5b9507750aeea38b86b5e73e65da723001"
+    },
+    {
+      "size": 4,
+      "totalSolutions": 96,
+      "keySolutions": 7,
+      "largestOrbit": 16,
+      "file": "/yinyang/orbits/4x4.bin.gz",
+      "bytes": 61,
+      "sha256": "c524df96ece7123a0e20e87b13c36bab562452bd3c123a32933499e84745ef42"
+    },
+    {
+      "size": 5,
+      "totalSolutions": 660,
+      "keySolutions": 46,
+      "largestOrbit": 16,
+      "file": "/yinyang/orbits/5x5.bin.gz",
+      "bytes": 183,
+      "sha256": "247be0d3829bdc649417fb41bd0cac0f7024f75c23d19e38e3de9ed83b11483c"
+    },
+    {
+      "size": 6,
+      "totalSolutions": 7736,
+      "keySolutions": 494,
+      "largestOrbit": 16,
+      "file": "/yinyang/orbits/6x6.bin.gz",
+      "bytes": 1222,
+      "sha256": "5830ed6dc25d29c2ae260019b031a2bf4382a82595f55779e9460ebb99620835"
+    },
+    {
+      "size": 7,
+      "totalSolutions": 230568,
+      "keySolutions": 14471,
+      "largestOrbit": 16,
+      "file": "/yinyang/orbits/7x7.bin.gz",
+      "bytes": 35854,
+      "sha256": "95c4292ca2842f5cfdb182d5354be4b48cf1ede81f512a8e8e0f027886a74aa3"
+    },
+    {
+      "size": 8,
+      "totalSolutions": 11974112,
+      "keySolutions": 748827,
+      "largestOrbit": 16,
+      "file": "/yinyang/orbits/8x8.bin.gz",
+      "bytes": 1823995,
+      "sha256": "b665abd14ba5005abe951433ffff1038cd63a904b1d0fbb791c7131f2a992933"
+    }
+  ]
+}

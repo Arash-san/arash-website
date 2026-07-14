@@ -5,7 +5,7 @@ import { YinYangExplorer } from "@/components/yinyang/yinyang-explorer";
 
 export const metadata: Metadata = {
   title: "Yin Yang Puzzle Explorer | Arash Ahmadi",
-  description: "The original Yin Yang puzzle viewer and a new interactive solution explorer.",
+  description: "Edit Yin Yang puzzles, search exact solution catalogs, and inspect rotation, reflection, diagonal, and color exchange groups.",
 };
 
 export default function YinYangToolPage() {
