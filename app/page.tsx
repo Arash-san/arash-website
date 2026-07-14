@@ -29,7 +29,11 @@ export default function Home() {
   const lastStep = useRef(0);
   const wheelAccum = useRef(0);
   const lastWheel = useRef(0);
+  const wheelDirection = useRef(0);
+  const wheelStartedInside = useRef(false);
   const touchStartY = useRef<number | null>(null);
+  const touchDirection = useRef(0);
+  const touchStartedInside = useRef(false);
   const swipeConsumed = useRef(false);
   const dRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -109,15 +113,24 @@ export default function Home() {
     return (dir > 0 && !atBottom) || (dir < 0 && !atTop);
   }
 
-  // Wheel: scroll inside a section natively; at the bounds, one gesture = one
-  // section. Accumulate deltas so trackpad momentum can't double-fire.
+  // Keep the gesture that reaches an inner scroll boundary inside that section.
+  // A pause between wheel events marks release, so only a fresh gesture that
+  // starts at the boundary can advance to the next or previous section.
   const onWheel = (e: React.WheelEvent) => {
     const dir = Math.sign(e.deltaY);
-    if (dir === 0 || scrollerConsumes(dir)) return;
+    if (dir === 0) return;
+
     const now = performance.now();
-    if (now - lastStep.current < 700) return;
-    if (now - lastWheel.current > 200) wheelAccum.current = 0;
+    const isNewGesture = now - lastWheel.current > 220 || wheelDirection.current !== dir;
+    if (isNewGesture) {
+      wheelAccum.current = 0;
+      wheelDirection.current = dir;
+      wheelStartedInside.current = scrollerConsumes(dir);
+    }
     lastWheel.current = now;
+
+    if (scrollerConsumes(dir) || wheelStartedInside.current) return;
+    if (now - lastStep.current < 700) return;
     wheelAccum.current += e.deltaY;
     if (Math.abs(wheelAccum.current) > 50) {
       wheelAccum.current = 0;
@@ -127,6 +140,8 @@ export default function Home() {
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
+    touchDirection.current = 0;
+    touchStartedInside.current = false;
     swipeConsumed.current = false;
   };
 
@@ -134,11 +149,22 @@ export default function Home() {
     if (touchStartY.current == null || swipeConsumed.current) return;
     const dy = touchStartY.current - e.touches[0].clientY; // > 0 = swipe up = next
     const dir = Math.sign(dy);
-    if (dir === 0 || scrollerConsumes(dir)) return;
+    if (dir === 0 || Math.abs(dy) < 4) return;
+    if (touchDirection.current === 0) {
+      touchDirection.current = dir;
+      touchStartedInside.current = scrollerConsumes(dir);
+    }
+    if (scrollerConsumes(dir) || touchStartedInside.current) return;
     if (Math.abs(dy) > 56 && performance.now() - lastStep.current > 500) {
       swipeConsumed.current = true;
       goToRef.current(activeRef.current + dir);
     }
+  };
+
+  const onTouchEnd = () => {
+    touchStartY.current = null;
+    touchDirection.current = 0;
+    touchStartedInside.current = false;
   };
 
   useEffect(() => {
@@ -267,7 +293,9 @@ export default function Home() {
         <span className="text-xs">LinkedIn</span>
       </a>
       <a href="https://x.com/user_arash" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
-        <span aria-hidden="true" className={cn(iconSize, "flex items-center justify-center font-semibold text-[1.25rem]")}>X</span>
+        <span aria-hidden="true" className={cn(iconSize, "flex items-center justify-center rounded-[5px] bg-black")}>
+          <Image src="/x-logo-white.svg" alt="" width={24} height={24} className="h-[58%] w-[58%]" />
+        </span>
         <span className="text-xs">X</span>
       </a>
       <a href="mailto:arash.ahmadi@ou.edu" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
@@ -500,6 +528,8 @@ export default function Home() {
         onWheel={onWheel}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
       >
         <DotPattern
           width={20}

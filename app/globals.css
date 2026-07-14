@@ -54,13 +54,12 @@ body {
   background-clip: content-box;
 }
 
-/* Inner section scrollbars stay on the left so they do not compete with the
-   page progress control on the right. The text direction is restored on each
-   content block. A mask appears after the first few pixels of scrolling and
-   softens the top edge of long sections. */
+/* Inner section scrollbars use their familiar right edge on larger screens.
+   On phones they move left, away from the page progress control. A mask
+   appears after the first few pixels and softens the top edge of long sections. */
 .section-scroll {
-  direction: rtl;
-  padding-left: 12px;
+  direction: ltr;
+  padding-right: 12px;
   scrollbar-gutter: stable;
 }
 .section-scroll-content {
@@ -69,6 +68,14 @@ body {
 .section-scroll[data-scrolled="true"] {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 100%);
   mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 100%);
+}
+
+@media (max-width: 640px) {
+  .section-scroll {
+    direction: rtl;
+    padding-right: 0;
+    padding-left: 12px;
+  }
 }
 
 /* Blog preview on the portfolio */
