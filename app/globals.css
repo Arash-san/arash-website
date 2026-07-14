@@ -54,18 +54,35 @@ body {
   background-clip: content-box;
 }
 
+/* Inner section scrollbars stay on the left so they do not compete with the
+   page progress control on the right. The text direction is restored on each
+   content block. A mask appears after the first few pixels of scrolling and
+   softens the top edge of long sections. */
+.section-scroll {
+  direction: rtl;
+  padding-left: 12px;
+  scrollbar-gutter: stable;
+}
+.section-scroll-content {
+  direction: ltr;
+}
+.section-scroll[data-scrolled="true"] {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 100%);
+}
+
 /* Blog preview on the portfolio */
 .home-blog-preview {
   display: grid;
   gap: 14px;
 }
 .home-blog-preview article {
-  border-left: 2px solid rgba(0, 0, 0, 0.14);
-  padding-left: 14px;
-  transition: border-color 180ms ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+  padding: 16px 0;
 }
 .home-blog-preview article[data-open="true"] {
-  border-color: #b91c1c;
+  border-color: rgba(0, 0, 0, 0.24);
 }
 .home-blog-toggle {
   display: flex;
@@ -162,10 +179,9 @@ body {
 }
 .blog-kicker {
   color: #991b1b;
-  font-size: 11px !important;
-  font-weight: 750;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 13px !important;
+  font-weight: 680;
+  letter-spacing: -0.01em;
 }
 .blog-index-header {
   max-width: 770px;
@@ -273,30 +289,31 @@ body {
   margin: 0 0 25px;
 }
 .article-copy > h2 {
-  font-size: clamp(32px, 4.6vw, 52px);
-  font-weight: 730;
-  letter-spacing: -0.045em;
-  line-height: 1.08;
-  margin: 92px 0 28px;
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  margin: 88px 0 26px;
   scroll-margin-top: 30px;
 }
 .article-callout {
-  border-left: 3px solid #991b1b;
-  margin: 42px 0;
-  padding: 4px 0 4px 22px;
+  background: #f5f5f4;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 46px 0;
+  padding: 26px 30px 28px;
 }
 .article-callout > strong {
   color: #991b1b;
   display: block;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  margin-bottom: 8px;
-  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
 }
 .article-callout p {
-  color: #404040;
-  font-size: 16px;
-  line-height: 1.7;
+  color: #292929;
+  font-size: 17px;
+  line-height: 1.72;
 }
 .blog-lab {
   width: min(1080px, calc(100vw - 48px));

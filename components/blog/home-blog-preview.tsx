@@ -11,7 +11,7 @@ export function HomeBlogPreview({ compact = false }: { compact?: boolean }) {
   return (
     <div className="home-blog-preview">
       <p className={compact ? "text-xs" : "text-sm"}>
-        Technical notes, experiments, and ideas that are easier to understand when you can touch them.
+        Welcome to my blog section, where I will share interesting works, my thoughts, and other similar topics.
       </p>
       <article data-open={open}>
         <button
@@ -32,7 +32,7 @@ export function HomeBlogPreview({ compact = false }: { compact?: boolean }) {
             <div>
               {post.tags.map((tag) => <span key={tag}>{tag}</span>)}
             </div>
-            <Link href={`/blog/${post.slug}`}>Open the interactive report <span aria-hidden="true">→</span></Link>
+            <Link href={`/blog/${post.slug}`}>Read the blog post <span aria-hidden="true">→</span></Link>
           </div>
         )}
       </article>
