@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 1,
+  "slug": "yin-yang-cryptography",
+  "status": "published",
+  "date": "2026-07-13",
+  "dateLabel": "July 13, 2026",
+  "title": "Can a Yin Yang puzzle become a cryptographic key?",
+  "subtitle": "A working text encryption experiment, a precise role for the private solution, and the questions that remain before the puzzle can carry security itself.",
+  "excerpt": "I wanted to move the Yin Yang key idea from a sentence into a protocol that we can inspect. This report separates the public puzzle, private witness, agreement key, and encrypted message, then tests each part in the browser.",
+  "readTime": "24 min read",
+  "tags": ["cryptography", "Yin Yang", "interactive report"],
+  "featured": true,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "I have thought about using a Yin Yang puzzle as a cryptographic key since my first paper. The public object looks natural. We can share a puzzle with everyone. The complete solution can remain private. But a public object and a private object do not automatically create public key encryption."
+    },
+    {
+      "type": "paragraph",
+      "text": "This report turns that idea into something we can test. It includes a real text encryption and decryption system. It also keeps the security claim honest. The current system protects the text with standard cryptography and uses the puzzle solution as a committed private witness. The puzzle is not the encryption trapdoor yet."
+    },
+    {
+      "type": "callout",
+      "label": "The central distinction",
+      "text": "A difficult secret is not enough. A public key system also needs a public operation for the sender, a private inverse for the recipient, a defined attacker, and a reduction to a hardness assumption that we understand."
+    },
+    {
+      "type": "heading",
+      "id": "the-cryptographic-claim",
+      "text": "The cryptographic claim"
+    },
+    {
+      "type": "paragraph",
+      "text": "A recipient first runs KeyGen. The result must contain a public package and a private package. A sender uses only the public package to create an encrypted message. The recipient uses the private package to recover the text. Someone who sees the public package and every encrypted message should not learn the text."
+    },
+    {
+      "type": "paragraph",
+      "text": "Modern public key encryption is often described through a key encapsulation mechanism. Encaps creates a shared secret and a public encapsulation value. Decaps recovers the same shared secret with the private key. A key derivation function turns that secret into a content key. Authenticated encryption then protects the message and detects changes."
+    },
+    {
+      "type": "lab",
+      "lab": "protocol-flow"
+    },
+    {
+      "type": "paragraph",
+      "text": "The puzzle introduces a second relation. The public clues define an instance. The hidden solution is a witness for that instance. Decryption can verify the witness before it accepts the private agreement key. This creates a useful binding between puzzle knowledge and key use, even though standard agreement still supplies confidentiality."
+    },
+    {
+      "type": "heading",
+      "id": "three-packages-not-one-key",
+      "text": "Three packages, not one key"
+    },
+    {
+      "type": "paragraph",
+      "text": "It is tempting to call the puzzle a public key and the solution a private key. That description hides the rest of the protocol. The sender also needs agreement material. The ciphertext needs an ephemeral key, a nonce, an authentication tag, and a reference to the exact public package that was used."
+    },
+    {
+      "type": "lab",
+      "lab": "key-anatomy"
+    },
+    {
+      "type": "paragraph",
+      "text": "The public package in this experiment contains the board dimensions, public clues, a puzzle identifier, a salted commitment to the solution, and an agreement public key. The private package contains the complete solution, the commitment salt, and the matching agreement private key. The cipher envelope contains only message specific public material."
+    },
+    {
+      "type": "heading",
+      "id": "the-20-by-20-material",
+      "text": "The 20 by 20 material we already possess"
+    },
+    {
+      "type": "paragraph",
+      "text": "The demonstration uses a 20 by 20 Yin Yang board. This is not a claim that 20 by 20 means 400 bits of security. It is material that we already possess: a valid solution, a public clue mask, and the two rules that let the recipient validate the private witness."
+    },
+    {
+      "type": "paragraph",
+      "text": "Every public clue is encoded in a fixed row order. Unknown cells use a separate symbol. The dimensions and clue strings are serialized with one canonical format. SHA 256 hashes this encoding to produce the puzzle identifier. The identifier becomes part of key derivation and part of the commitment. A different clue, dimension, or encoding therefore describes a different public instance."
+    },
+    {
+      "type": "heading",
+      "id": "the-working-browser-protocol",
+      "text": "The working browser protocol"
+    },
+    {
+      "type": "paragraph",
+      "text": "The live system below first tries X25519 through the Web Cryptography API. If the browser does not support it, the system uses elliptic curve Diffie Hellman with P 256. Both paths derive 256 shared bits. HKDF with SHA 256 uses the puzzle identifier as salt and a protocol label as context. AES 256 GCM encrypts the UTF 8 text with a new 96 bit nonce."
+    },
+    {
+      "type": "paragraph",
+      "text": "The complete public package is serialized and hashed. That fingerprint becomes authenticated data for AES GCM. The ciphertext is therefore tied to the puzzle, commitment, protocol version, and recipient agreement key. Changing any of those fields causes decryption to reject the envelope."
+    },
+    {
+      "type": "lab",
+      "lab": "crypto-protocol"
+    },
+    {
+      "type": "heading",
+      "id": "key-generation",
+      "text": "KeyGen in detail"
+    },
+    {
+      "type": "paragraph",
+      "text": "KeyGen starts from a valid complete board. A clue mask creates the public puzzle. The system serializes that puzzle and computes its SHA 256 identifier. It then generates 128 random salt bits and computes a domain separated commitment over the salt, puzzle identifier, and complete solution."
+    },
+    {
+      "type": "paragraph",
+      "text": "The commitment has two jobs. First, it binds one private solution to one public package. Second, the random salt prevents the same solution from producing the same visible digest in different key records. The salt stays in the private package because public verification is not needed in this first design."
+    },
+    {
+      "type": "paragraph",
+      "text": "KeyGen also creates the recipient agreement pair. The public half joins the public puzzle. The private half joins the hidden solution. This pairing means that puzzle knowledge alone cannot decrypt current messages. It also means that stealing only the agreement private key is not accepted by this implementation unless the attacker also supplies the committed solution."
+    },
+    {
+      "type": "heading",
+      "id": "encapsulation-and-encryption",
+      "text": "Encapsulation and encryption"
+    },
+    {
+      "type": "paragraph",
+      "text": "For every message, the sender creates a new ephemeral agreement pair. The ephemeral private key and recipient public key produce a shared secret. The ephemeral public key goes into the cipher envelope. The sender then runs HKDF and deletes the ephemeral private material when the operation ends."
+    },
+    {
+      "type": "paragraph",
+      "text": "AES GCM receives the derived content key, a random nonce, the plaintext, and the public package fingerprint. Its output contains ciphertext and a 128 bit authentication tag. The tag covers both the encrypted text and the public fingerprint. This prevents an attacker from moving a ciphertext to another puzzle package without detection."
+    },
+    {
+      "type": "heading",
+      "id": "verification-and-decryption",
+      "text": "Witness verification and decryption"
+    },
+    {
+      "type": "paragraph",
+      "text": "Decapsulation begins with rejection checks. The private board must match every public clue. Both colors must form one connected region. No solid 2 by 2 block can exist. The salted solution commitment must match. The public coordinates inside the agreement private key must also match the public agreement key."
+    },
+    {
+      "type": "paragraph",
+      "text": "Only after these checks does the system combine the recipient private key with the sender ephemeral public key. It derives the same AES key, recomputes the authenticated public fingerprint, and asks AES GCM to open the envelope. A wrong solution, wrong key, changed nonce, changed public package, or changed ciphertext causes failure."
+    },
+    {
+      "type": "heading",
+      "id": "canonical-puzzle-identity",
+      "text": "Canonical puzzle identity"
+    },
+    {
+      "type": "paragraph",
+      "text": "A square Yin Yang board can be rotated or reflected in eight spatial forms. The colors can also be inverted when a protocol treats black and white as interchangeable. A key registry should not assign a new identity to every drawing of the same mathematical object."
+    },
+    {
+      "type": "paragraph",
+      "text": "The safe method is canonicalization before hashing. Generate every allowed form, serialize each form with the same rules, and choose the smallest encoding. The protocol then hashes that canonical encoding. The choice of allowed forms must be part of the protocol version because changing it changes key identity."
+    },
+    {
+      "type": "lab",
+      "lab": "canonical-identity"
+    },
+    {
+      "type": "heading",
+      "id": "commitment-is-not-encryption",
+      "text": "A commitment is not encryption"
+    },
+    {
+      "type": "paragraph",
+      "text": "The solution commitment hides the direct representation of the witness and binds the private package to the public package. It does not encrypt the solution. It also does not replace a proof of knowledge. A future protocol that needs public verification should use a reviewed proof system instead of revealing the salt and solution."
+    },
+    {
+      "type": "lab",
+      "lab": "commitment-avalanche"
+    },
+    {
+      "type": "paragraph",
+      "text": "The visualization shows the avalanche behavior of SHA 256. One changed witness cell alters many digest bits. This is useful for binding. It says nothing about the effort needed to recover a valid solution from public clues. Hash behavior and puzzle hardness are different claims."
+    },
+    {
+      "type": "heading",
+      "id": "security-parameter",
+      "text": "The security parameter cannot be board width"
+    },
+    {
+      "type": "paragraph",
+      "text": "An n by n board contains n squared cells, but those cells are not independent secret bits. Public clues remove choices. Connectivity and 2 by 2 constraints remove many more choices. Symmetry merges equivalent boards. A solver uses all of this structure."
+    },
+    {
+      "type": "lab",
+      "lab": "security-budget"
+    },
+    {
+      "type": "paragraph",
+      "text": "A cryptographic parameter must predict attack work for instances drawn from a defined generator. We would need a large public challenge set, the exact generator, clue distributions, solution multiplicity, memory cost, parallel attack cost, and results from independent solvers. A single difficult instance is not a security level."
+    },
+    {
+      "type": "heading",
+      "id": "threat-model",
+      "text": "The threat model changes the answer"
+    },
+    {
+      "type": "paragraph",
+      "text": "The current system separates two failures. If an attacker solves the puzzle, the witness loses its value, but the attacker still lacks the private agreement key. If an attacker steals the agreement private key without the solution, this implementation rejects the package. If both private parts are stolen, confidentiality is lost."
+    },
+    {
+      "type": "lab",
+      "lab": "threat-model"
+    },
+    {
+      "type": "paragraph",
+      "text": "Other attacks matter too. A malicious sender can submit malformed ephemeral keys. A parser can disagree about canonical JSON. A nonce can repeat after a random number failure. An implementation can leak key material through logs or browser extensions. Protocol review must include these engineering failures, not only the mathematical puzzle."
+    },
+    {
+      "type": "heading",
+      "id": "np-complete-is-not-a-trapdoor",
+      "text": "NP completeness is not a trapdoor"
+    },
+    {
+      "type": "paragraph",
+      "text": "Yin Yang decision problems are NP complete. That result describes worst case problem families. Public key encryption needs more. KeyGen must create instances that are hard on average for attackers but easy for the trapdoor owner. The public distribution must not reveal which instances contain a trapdoor."
+    },
+    {
+      "type": "paragraph",
+      "text": "We do not have that native construction today. The complete solution is a witness, but it does not provide a public operation that only the witness can invert. This is why the working system keeps standard key agreement in charge of confidentiality. The puzzle receives a real role without receiving an unsupported security claim."
+    },
+    {
+      "type": "heading",
+      "id": "research-path",
+      "text": "A research path that does not skip steps"
+    },
+    {
+      "type": "paragraph",
+      "text": "The next practical version should replace classical agreement with ML KEM from FIPS 203. The public puzzle can remain bound to the KEM key. A proof of knowledge can later let the recipient prove possession of a valid solution without exposing it. This gives the puzzle an authentication role and gives the message a standardized post quantum foundation."
+    },
+    {
+      "type": "lab",
+      "lab": "crypto-roadmap"
+    },
+    {
+      "type": "paragraph",
+      "text": "The native trapdoor question should remain a separate research program. It needs a generator with a hidden structure, a public distribution that conceals that structure, an efficient inverse for the owner, and evidence against structural attacks. It should not protect real user data until independent cryptographers have tried to break it."
+    },
+    {
+      "type": "heading",
+      "id": "what-enterprise-grade-would-mean",
+      "text": "What an enterprise version would require"
+    },
+    {
+      "type": "paragraph",
+      "text": "A production design would use a reviewed KEM and AEAD construction, stable binary encodings, explicit protocol versions, algorithm identifiers, key expiration, revocation, rotation, secure random generation, hardware backed private storage, constant time validation where secret data affects control flow, and test vectors shared between implementations."
+    },
+    {
+      "type": "paragraph",
+      "text": "It would also need misuse tests. Repeated nonces, truncated packages, unknown fields, duplicate fields, enormous boards, malformed points, wrong puzzle dimensions, invalid UTF 8, old protocol versions, and corrupted commitments must all fail in a defined way. The browser experiment is useful because these questions become visible. It is not a release candidate."
+    },
+    {
+      "type": "heading",
+      "id": "where-the-agent-fits",
+      "text": "Where the agent fits"
+    },
+    {
+      "type": "paragraph",
+      "text": "The cryptographic direction, puzzle key idea, symmetry idea, and research questions were given by the researcher. GPT 5.6 soul high was used to explore the protocol, implement the interactive system faster, test failure cases, and help turn the idea into this report."
+    },
+    {
+      "type": "paragraph",
+      "text": "There is something worth exploring here. Agents can shorten the distance between an idea and a working experiment. That gives the researcher more chances to test a thought, notice a weakness, and revise the direction. The human still decides which question matters and which claim is responsible."
+    },
+    {
+      "type": "paragraph",
+      "text": "The result is modest but real. We can encrypt and decrypt text. We can bind that ciphertext to a public Yin Yang puzzle. We can require the private solution during decryption. And we can point to the exact missing piece: a native puzzle trapdoor with a defensible security argument."
+    }
+  ],
+  "sources": [
+    {
+      "label": "Efficient Brute-Force State Space Search for Yin-Yang Puzzle",
+      "href": "https://doi.org/10.1007/s11227-023-05565-w"
+    },
+    {
+      "label": "Yin-Yang Puzzles are NP complete",
+      "href": "https://erikdemaine.org/papers/YinYang_CCCG2021/"
+    },
+    {
+      "label": "NIST FIPS 203 for ML KEM",
+      "href": "https://csrc.nist.gov/pubs/fips/203/final"
+    },
+    {
+      "label": "NIST SP 800 227 for KEM use",
+      "href": "https://csrc.nist.gov/pubs/sp/800/227/final"
+    },
+    {
+      "label": "RFC 9180 Hybrid Public Key Encryption",
+      "href": "https://www.rfc-editor.org/rfc/rfc9180"
+    },
+    {
+      "label": "RFC 5869 HKDF",
+      "href": "https://www.rfc-editor.org/rfc/rfc5869"
+    },
+    {
+      "label": "NIST SP 800 38D for GCM",
+      "href": "https://csrc.nist.gov/pubs/sp/800/38/d/final"
+    },
+    {
+      "label": "RFC 7748 X25519",
+      "href": "https://www.rfc-editor.org/rfc/rfc7748"
+    }
+  ]
+}

@@ -6,8 +6,17 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
+import { HomeBlogPreview } from "@/components/blog/home-blog-preview";
 
-const SECTIONS = ["home", "news", "academic", "tools", "interests"] as const;
+const SECTIONS = ["home", "news", "academic", "tools", "blog", "interests"] as const;
+const SECTION_LABELS: Record<(typeof SECTIONS)[number], string> = {
+  home: "home",
+  news: "news",
+  academic: "academic",
+  tools: "tools",
+  blog: "blog posts",
+  interests: "interests",
+};
 const N = SECTIONS.length;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -164,7 +173,7 @@ export default function Home() {
   // --- Nav tabs with sliding pill ------------------------------------------
   function NavTabs({ layout }: { layout: "d" | "m" }) {
     return (
-      <div role="tablist" aria-label="Section navigation" className="flex items-center gap-1 sm:gap-2">
+      <div role="tablist" aria-label="Section navigation" className="flex items-center gap-0.5 sm:gap-1.5">
         {SECTIONS.map((label, idx) => {
           const isActive = active === idx;
           return (
@@ -181,7 +190,7 @@ export default function Home() {
                 e.preventDefault();
                 goTo(idx);
               }}
-              className="relative px-2.5 sm:px-3 py-1 rounded-full text-sm active:opacity-90"
+              className="relative px-1.5 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-sm active:opacity-90"
               style={{ touchAction: "manipulation" }}
             >
               {isActive && (
@@ -197,7 +206,7 @@ export default function Home() {
                   isActive ? "text-white" : "text-black/70 hover:text-black"
                 )}
               >
-                {label}
+                {SECTION_LABELS[label]}
               </span>
             </button>
           );
@@ -213,7 +222,7 @@ export default function Home() {
         {SECTIONS.map((label, i) => (
           <button
             key={label}
-            aria-label={`Go to ${label}`}
+            aria-label={`Go to ${SECTION_LABELS[label]}`}
             onClick={() => goTo(i)}
             className="group p-1"
             style={{ touchAction: "manipulation" }}
@@ -349,6 +358,12 @@ export default function Home() {
 
   const tools = [
     {
+      name: "Yin Yang Puzzle Explorer",
+      href: "/tools/yin-yang/",
+      tag: "web app · research",
+      desc: "The original puzzle viewer plus a new exact solution explorer with live calculations, symmetry controls, and the search rules from my paper.",
+    },
+    {
       name: "Scenic Routes",
       href: "/scenic/",
       tag: "web app · live",
@@ -405,6 +420,8 @@ export default function Home() {
     </div>
   );
 
+  const blogBody = (compact: boolean) => <HomeBlogPreview compact={compact} />;
+
   const interestsBody = (
     <>
       <div className="float-right w-24 sm:w-28 ml-3 mb-1">
@@ -440,7 +457,8 @@ export default function Home() {
       <h1 key="t1" className="text-5xl xl:text-6xl font-bold text-black">Recent News</h1>,
       <h1 key="t2" className="text-5xl xl:text-6xl font-bold text-black">Academic Background</h1>,
       <h1 key="t3" className="text-5xl xl:text-6xl font-bold text-black">My Custom Tools</h1>,
-      <h1 key="t4" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
+      <h1 key="t4" className="text-5xl xl:text-6xl font-bold text-black">Blog Posts</h1>,
+      <h1 key="t5" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
     ],
     m: [
       <h1 key="t0" className="text-2xl font-bold">
@@ -451,12 +469,13 @@ export default function Home() {
       <h1 key="t1" className="text-2xl font-bold text-black">Recent News</h1>,
       <h1 key="t2" className="text-2xl font-bold text-black">Academic Background</h1>,
       <h1 key="t3" className="text-2xl font-bold text-black">My Custom Tools</h1>,
-      <h1 key="t4" className="text-2xl font-bold text-black">My Interests</h1>,
+      <h1 key="t4" className="text-2xl font-bold text-black">Blog Posts</h1>,
+      <h1 key="t5" className="text-2xl font-bold text-black">My Interests</h1>,
     ],
   };
   const bodies = {
-    d: [homeBody(false), newsBody(false), academicBody, toolsBody(false), interestsBody],
-    m: [homeBody(true), newsBody(true), academicBody, toolsBody(true), interestsBody],
+    d: [homeBody(false), newsBody(false), academicBody, toolsBody(false), blogBody(false), interestsBody],
+    m: [homeBody(true), newsBody(true), academicBody, toolsBody(true), blogBody(true), interestsBody],
   };
 
   return (
