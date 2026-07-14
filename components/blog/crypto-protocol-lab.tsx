@@ -68,7 +68,11 @@ export function CryptoProtocolLab() {
       setStatus("Witness accepted. Authentication tag accepted. Text recovered.");
     } catch (error) {
       setRecovered("");
-      setStatus(error instanceof Error ? error.message : "Decryption failed.");
+      setStatus(
+        error instanceof Error && error.message
+          ? error.message
+          : "Authentication failed. The envelope changed or the key does not match.",
+      );
     } finally {
       setBusy(false);
     }
