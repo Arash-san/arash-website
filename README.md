@@ -18,6 +18,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Local blog CMS
+
+Blog posts live as versioned JSON documents in `content/blog`. Each document stores its metadata, article blocks, sources, and interactive lab positions. The public blog index and article routes read the same files, so there is one source of truth.
+
+Run `npm run cms` and open `http://127.0.0.1:4310` to use the custom editor. It can create and update post files. The CMS listens only on the local loopback address and is separate from the static website bundle. Run `npm run dev -- --port 3001` in a second terminal when you want live article previews. No database or WordPress installation is required.
+
+The first report uses native React labs from `components/blog`. A future post can use paragraph, heading, and callout blocks without code. A new interactive lab needs a React component and one entry in `components/blog/article-content.tsx`.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
