@@ -82,6 +82,24 @@ def read_csv_values(path: Path):
         yield np.asarray(buffer, dtype=np.uint64)
 
 
+def read_catalog_values(path: Path):
+    with path.open("rb") as handle:
+        header = handle.read(20)
+    magic, rows, cols, _, count = struct.unpack("<8sBBHQ", header)
+    if magic != b"YYCAT641" or rows != cols:
+        raise RuntimeError(f"unsupported square catalog header: {path}")
+    values = np.memmap(path, dtype="<u8", mode="r", offset=20, shape=(count,))
+    for start in range(0, count, CHUNK_SIZE):
+        yield np.asarray(values[start : start + CHUNK_SIZE])
+
+
+def read_values(path: Path):
+    if path.suffix == ".yycat":
+        yield from read_catalog_values(path)
+    else:
+        yield from read_csv_values(path)
+
+
 def canonicalize(values: np.ndarray, tables: np.ndarray, mask: np.uint64) -> np.ndarray:
     canonical = np.full(values.shape, mask, dtype=np.uint64)
     for operation in range(8):
@@ -112,7 +130,7 @@ def build_one(source: Path, destination: Path, size: int) -> dict[str, object]:
     mask = np.uint64((1 << (size * size)) - 1)
     chunk_representatives = []
     source_solutions = 0
-    for values in read_csv_values(source):
+    for values in read_values(source):
         source_solutions += values.size
         chunk_representatives.append(np.unique(canonicalize(values, tables, mask)))
     representatives = np.unique(np.concatenate(chunk_representatives))
@@ -152,7 +170,8 @@ def main() -> None:
 
     records = []
     for size in args.sizes:
-        source = args.source / f"{size}x{size} Solutions.csv"
+        binary_source = args.source / f"{size}x{size}.yycat"
+        source = binary_source if binary_source.exists() else args.source / f"{size}x{size} Solutions.csv"
         destination = args.output / f"{size}x{size}.bin.gz"
         record = build_one(source, destination, size)
         records.append(record)

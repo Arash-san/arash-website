@@ -1482,11 +1482,53 @@ button.yy-cell:hover { filter: brightness(.9); transform: scale(.9); }
 .yy-record-row i.is-ready { color: #287a57; }
 .yy-record-row.is-head { background: #272521; color: #fff; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
 .yy-record-row.is-head span { color: #fff; }
+.yy-parity-controls { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.yy-parity-controls button { padding: 9px 12px; border: 1px solid #d4cec4; border-radius: 10px; background: #fff; color: #5d574f; cursor: pointer; font-size: 11px; transition: border-color .16s, color .16s, transform .1s; }
+.yy-parity-controls button:hover { border-color: #8e867b; color: #171717; }
+.yy-parity-controls button:active { transform: translateY(1px); }
+.yy-parity-controls button[aria-pressed="true"] { border-color: #272521; background: #272521; color: #fff; }
+.yy-count-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .75fr); gap: 18px; align-items: start; }
+.yy-count-matrix-wrap { max-height: 640px; overflow: auto; border: 1px solid #d9d2c8; border-radius: 16px; background: #e5ded4; }
+.yy-count-matrix { border-collapse: separate; border-spacing: 1px; min-width: 2060px; width: 100%; background: #e5ded4; }
+.yy-count-matrix th { position: sticky; z-index: 2; background: #302d29; color: #fff; font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.yy-count-matrix thead th { top: 0; height: 34px; }
+.yy-count-matrix tbody th { left: 0; min-width: 42px; }
+.yy-count-matrix thead th:first-child { left: 0; z-index: 3; }
+.yy-count-matrix td { width: 64px; height: 56px; background: rgba(255,255,255,.74); }
+.yy-count-matrix td:empty { background: rgba(244,240,233,.56); }
+.yy-count-matrix button { display: grid; align-content: center; gap: 3px; width: 100%; height: 100%; padding: 6px; color: #514b44; cursor: pointer; text-align: left; transition: background-color .14s, color .14s, opacity .14s; }
+.yy-count-matrix button span { font-size: 9px; }
+.yy-count-matrix button b { color: #171717; font-size: 11px; font-variant-numeric: tabular-nums; }
+.yy-count-matrix button:hover, .yy-count-matrix button.is-selected { background: #fff0ed; color: #a42f28; }
+.yy-count-matrix button.is-muted { opacity: .16; }
+.yy-count-detail { position: sticky; top: 24px; padding: 20px; border: 1px solid #d9d2c8; border-radius: 16px; background: #f7f4ee; }
+.yy-count-detail-head { display: flex; align-items: start; justify-content: space-between; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid #d9d2c8; }
+.yy-count-detail-head span { color: #777066; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.yy-count-detail-head h3 { margin-top: 3px; font-size: 34px; letter-spacing: -.05em; }
+.yy-count-detail-head > i { color: #a42f28; font-size: 11px; font-style: normal; }
+.yy-count-detail dl { margin: 0; }
+.yy-count-detail dl div { display: grid; grid-template-columns: .8fr 1.2fr; gap: 14px; padding: 11px 0; border-bottom: 1px solid #dfd8ce; }
+.yy-count-detail dt { color: #777066; font-size: 10px; }
+.yy-count-detail dd { margin: 0; overflow-wrap: anywhere; color: #292621; font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
+.yy-fixed-chart { margin-top: 20px; }
+.yy-fixed-chart h4 { margin-bottom: 12px; font-size: 12px; }
+.yy-fixed-chart > div { position: relative; min-height: 32px; padding: 5px 0 8px; }
+.yy-fixed-chart p { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 5px; color: #696259; font-size: 9px; }
+.yy-fixed-chart p span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yy-fixed-chart p b { color: #272521; font-variant-numeric: tabular-nums; }
+.yy-fixed-chart > div > i { display: block; height: 2px; max-width: 100%; background: var(--yy-red); }
+.yy-count-loading { display: grid; gap: 10px; }
+.yy-count-loading i { display: block; height: 52px; border-radius: 10px; background: #ece7df; animation: yy-count-pulse 1.2s ease-in-out infinite alternate; }
+.yy-count-loading i:nth-child(2) { width: 82%; }
+.yy-count-loading i:nth-child(3) { width: 64%; }
+@keyframes yy-count-pulse { to { opacity: .4; } }
 .yy-tool-footer > div { display: flex; flex-wrap: wrap; gap: 16px; }
 @media (max-width: 900px) {
   .yy-lab-grid { grid-template-columns: 1fr; }
   .yy-result-card { position: static; }
   .yy-orbit-section > header, .yy-square-record > header { grid-template-columns: 1fr; gap: 14px; }
+  .yy-count-layout { grid-template-columns: 1fr; }
+  .yy-count-detail { position: static; }
 }
 @media (max-width: 640px) {
   .yy-editor-board { min-height: 280px; padding: 8px; }
@@ -1496,6 +1538,12 @@ button.yy-cell:hover { filter: brightness(.9); transform: scale(.9); }
   .yy-editor-actions button:first-child { grid-column: 1 / -1; }
   .yy-result-meta { grid-template-columns: 1fr; }
   .yy-record-table { overflow-x: auto; }
+  .yy-square-record.yy-rectangle-record { padding-inline: 16px; }
+  .yy-count-matrix-wrap { max-height: 520px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yy-count-loading i { animation: none; }
 }
 
 /* Yin Yang explorer */

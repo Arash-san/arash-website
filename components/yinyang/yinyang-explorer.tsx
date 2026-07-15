@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { complexTwenty, squareCatalogs } from "@/lib/yinyang-lab-data";
+import { complexTwenty } from "@/lib/yinyang-lab-data";
+import { RectangleCountMap } from "@/components/yinyang/rectangle-count-map";
 
 type Cell = "." | "0" | "1";
 type Tool = Cell;
@@ -121,7 +122,7 @@ export function YinYangExplorer() {
       <header className="yy-tool-hero yy-lab-hero">
         <p>Puzzle laboratory</p>
         <h1>Yin Yang puzzle viewer</h1>
-        <div><p>Place black and white pieces, remove them again, and find every solution that agrees with your puzzle. The original Flutter viewer stays unchanged on GitHub. This version uses the real solution catalogs directly.</p><span>Exact catalogs from 3 by 3 through 8 by 8</span></div>
+        <div><p>Place black and white pieces, remove them again, and find every solution that agrees with your puzzle. The original Flutter viewer stays unchanged on GitHub. This version uses the real solution catalogs directly.</p><span>Exact rectangle counts through 100 cells</span></div>
       </header>
 
       <section className="yy-lab-grid">
@@ -147,10 +148,7 @@ export function YinYangExplorer() {
         <div className="yy-orbit-strip">{orbit.map((item, index) => <article key={item.label}><Board rows={item.rows} label={item.label} small /><span>{String(index + 1).padStart(2, "0")}</span><p>{item.label}</p></article>)}</div>
       </section>
 
-      <section className="yy-square-record">
-        <header><div><p className="yy-eyebrow">Square catalog map</p><h2>What has been calculated</h2></div><p>A key solution is the smallest representative of one symmetry orbit. The totals through 8 by 8 were checked against the original full files. Larger empty boards are not presented as solved.</p></header>
-        <div className="yy-record-table"><div className="yy-record-row is-head"><span>n by n</span><span>All solutions</span><span>Key solutions</span><span>Data</span></div>{Array.from({ length: 18 }, (_, index) => index + 3).map((value) => { const item = squareCatalogs.find((record) => record.size === value); return <div className="yy-record-row" key={value}><b>{value} × {value}</b><span>{item ? format.format(item.solutions) : "Not calculated"}</span><span>{item ? format.format(item.keys) : "Not calculated"}</span><i className={item ? "is-ready" : ""}>{item ? "Exact catalog" : "Clue solver only"}</i></div>; })}</div>
-      </section>
+      <RectangleCountMap />
 
       <footer className="yy-tool-footer"><p>The 20 by 20 example has 80 empty cells and one verified solution. It was generated from a randomized valid boundary path, then checked with the clue solver.</p><div><a href="https://github.com/Arash-san/Yin-Yang-viewer" target="_blank" rel="noreferrer">Original viewer on GitHub ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
     </div>

@@ -1,0 +1,5470 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T07:01:18.969752+00:00",
+  "maxCells": 100,
+  "definition": "Both colors are nonempty and orthogonally connected; no monochrome 2 by 2 block.",
+  "symmetry": "All distinct board automorphisms plus color exchange; key counts use Burnside's lemma.",
+  "records": [
+    {
+      "board": "3x3",
+      "rows": 3,
+      "cols": 3,
+      "cells": 9,
+      "stateSpace": "512",
+      "solutions": "34",
+      "symmetryGroupSize": 16,
+      "keySolutions": "4",
+      "elapsedSeconds": 0.001808,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "34"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x4",
+      "rows": 3,
+      "cols": 4,
+      "cells": 12,
+      "stateSpace": "4096",
+      "solutions": "50",
+      "symmetryGroupSize": 8,
+      "keySolutions": "9",
+      "elapsedSeconds": 5.8e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "50"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "8"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x5",
+      "rows": 3,
+      "cols": 5,
+      "cells": 15,
+      "stateSpace": "32768",
+      "solutions": "70",
+      "symmetryGroupSize": 8,
+      "keySolutions": "12",
+      "elapsedSeconds": 3.7e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "70"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "14"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x6",
+      "rows": 3,
+      "cols": 6,
+      "cells": 18,
+      "stateSpace": "262144",
+      "solutions": "94",
+      "symmetryGroupSize": 8,
+      "keySolutions": "15",
+      "elapsedSeconds": 4.3e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "94"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "12"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x7",
+      "rows": 3,
+      "cols": 7,
+      "cells": 21,
+      "stateSpace": "2097152",
+      "solutions": "122",
+      "symmetryGroupSize": 8,
+      "keySolutions": "19",
+      "elapsedSeconds": 3.8e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "122"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "18"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x8",
+      "rows": 3,
+      "cols": 8,
+      "cells": 24,
+      "stateSpace": "16777216",
+      "solutions": "154",
+      "symmetryGroupSize": 8,
+      "keySolutions": "23",
+      "elapsedSeconds": 4.3e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "154"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "16"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x9",
+      "rows": 3,
+      "cols": 9,
+      "cells": 27,
+      "stateSpace": "134217728",
+      "solutions": "190",
+      "symmetryGroupSize": 8,
+      "keySolutions": "28",
+      "elapsedSeconds": 4.4e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "190"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "22"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x10",
+      "rows": 3,
+      "cols": 10,
+      "cells": 30,
+      "stateSpace": "1073741824",
+      "solutions": "230",
+      "symmetryGroupSize": 8,
+      "keySolutions": "33",
+      "elapsedSeconds": 4.9e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "230"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "20"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x11",
+      "rows": 3,
+      "cols": 11,
+      "cells": 33,
+      "stateSpace": "8589934592",
+      "solutions": "274",
+      "symmetryGroupSize": 8,
+      "keySolutions": "39",
+      "elapsedSeconds": 5.3e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "274"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "26"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x12",
+      "rows": 3,
+      "cols": 12,
+      "cells": 36,
+      "stateSpace": "68719476736",
+      "solutions": "322",
+      "symmetryGroupSize": 8,
+      "keySolutions": "45",
+      "elapsedSeconds": 5.3e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "322"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "24"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x13",
+      "rows": 3,
+      "cols": 13,
+      "cells": 39,
+      "stateSpace": "549755813888",
+      "solutions": "374",
+      "symmetryGroupSize": 8,
+      "keySolutions": "52",
+      "elapsedSeconds": 5.3e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "374"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "30"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x14",
+      "rows": 3,
+      "cols": 14,
+      "cells": 42,
+      "stateSpace": "4398046511104",
+      "solutions": "430",
+      "symmetryGroupSize": 8,
+      "keySolutions": "59",
+      "elapsedSeconds": 5.6e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "430"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "28"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x15",
+      "rows": 3,
+      "cols": 15,
+      "cells": 45,
+      "stateSpace": "35184372088832",
+      "solutions": "490",
+      "symmetryGroupSize": 8,
+      "keySolutions": "67",
+      "elapsedSeconds": 6.7e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "490"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "34"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x16",
+      "rows": 3,
+      "cols": 16,
+      "cells": 48,
+      "stateSpace": "281474976710656",
+      "solutions": "554",
+      "symmetryGroupSize": 8,
+      "keySolutions": "75",
+      "elapsedSeconds": 7.1e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "554"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "32"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x17",
+      "rows": 3,
+      "cols": 17,
+      "cells": 51,
+      "stateSpace": "2251799813685248",
+      "solutions": "622",
+      "symmetryGroupSize": 8,
+      "keySolutions": "84",
+      "elapsedSeconds": 7e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "622"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "38"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x18",
+      "rows": 3,
+      "cols": 18,
+      "cells": 54,
+      "stateSpace": "18014398509481984",
+      "solutions": "694",
+      "symmetryGroupSize": 8,
+      "keySolutions": "93",
+      "elapsedSeconds": 7.2e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "694"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "36"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x19",
+      "rows": 3,
+      "cols": 19,
+      "cells": 57,
+      "stateSpace": "144115188075855872",
+      "solutions": "770",
+      "symmetryGroupSize": 8,
+      "keySolutions": "103",
+      "elapsedSeconds": 7.5e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "770"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "42"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x20",
+      "rows": 3,
+      "cols": 20,
+      "cells": 60,
+      "stateSpace": "1152921504606846976",
+      "solutions": "850",
+      "symmetryGroupSize": 8,
+      "keySolutions": "113",
+      "elapsedSeconds": 7.7e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "850"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "40"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x21",
+      "rows": 3,
+      "cols": 21,
+      "cells": 63,
+      "stateSpace": "9223372036854775808",
+      "solutions": "934",
+      "symmetryGroupSize": 8,
+      "keySolutions": "124",
+      "elapsedSeconds": 7.8e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "934"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "46"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x22",
+      "rows": 3,
+      "cols": 22,
+      "cells": 66,
+      "stateSpace": "73786976294838206464",
+      "solutions": "1022",
+      "symmetryGroupSize": 8,
+      "keySolutions": "135",
+      "elapsedSeconds": 7.6e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1022"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "44"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x23",
+      "rows": 3,
+      "cols": 23,
+      "cells": 69,
+      "stateSpace": "590295810358705651712",
+      "solutions": "1114",
+      "symmetryGroupSize": 8,
+      "keySolutions": "147",
+      "elapsedSeconds": 8.3e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1114"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "50"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x24",
+      "rows": 3,
+      "cols": 24,
+      "cells": 72,
+      "stateSpace": "4722366482869645213696",
+      "solutions": "1210",
+      "symmetryGroupSize": 8,
+      "keySolutions": "159",
+      "elapsedSeconds": 8.9e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1210"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "48"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x25",
+      "rows": 3,
+      "cols": 25,
+      "cells": 75,
+      "stateSpace": "37778931862957161709568",
+      "solutions": "1310",
+      "symmetryGroupSize": 8,
+      "keySolutions": "172",
+      "elapsedSeconds": 8.7e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1310"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "54"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x26",
+      "rows": 3,
+      "cols": 26,
+      "cells": 78,
+      "stateSpace": "302231454903657293676544",
+      "solutions": "1414",
+      "symmetryGroupSize": 8,
+      "keySolutions": "185",
+      "elapsedSeconds": 8.9e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1414"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "52"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x27",
+      "rows": 3,
+      "cols": 27,
+      "cells": 81,
+      "stateSpace": "2417851639229258349412352",
+      "solutions": "1522",
+      "symmetryGroupSize": 8,
+      "keySolutions": "199",
+      "elapsedSeconds": 9.2e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1522"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "58"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x28",
+      "rows": 3,
+      "cols": 28,
+      "cells": 84,
+      "stateSpace": "19342813113834066795298816",
+      "solutions": "1634",
+      "symmetryGroupSize": 8,
+      "keySolutions": "213",
+      "elapsedSeconds": 0.0001,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1634"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "56"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x29",
+      "rows": 3,
+      "cols": 29,
+      "cells": 87,
+      "stateSpace": "154742504910672534362390528",
+      "solutions": "1750",
+      "symmetryGroupSize": 8,
+      "keySolutions": "228",
+      "elapsedSeconds": 9.9e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1750"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "62"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x30",
+      "rows": 3,
+      "cols": 30,
+      "cells": 90,
+      "stateSpace": "1237940039285380274899124224",
+      "solutions": "1870",
+      "symmetryGroupSize": 8,
+      "keySolutions": "243",
+      "elapsedSeconds": 9.9e-05,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1870"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "60"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x31",
+      "rows": 3,
+      "cols": 31,
+      "cells": 93,
+      "stateSpace": "9903520314283042199192993792",
+      "solutions": "1994",
+      "symmetryGroupSize": 8,
+      "keySolutions": "259",
+      "elapsedSeconds": 0.000103,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1994"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "66"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x32",
+      "rows": 3,
+      "cols": 32,
+      "cells": 96,
+      "stateSpace": "79228162514264337593543950336",
+      "solutions": "2122",
+      "symmetryGroupSize": 8,
+      "keySolutions": "275",
+      "elapsedSeconds": 0.000112,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "2122"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "64"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "3x33",
+      "rows": 3,
+      "cols": 33,
+      "cells": 99,
+      "stateSpace": "633825300114114700748351602688",
+      "solutions": "2254",
+      "symmetryGroupSize": 8,
+      "keySolutions": "292",
+      "elapsedSeconds": 0.000145,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "2254"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "70"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x4",
+      "rows": 4,
+      "cols": 4,
+      "cells": 16,
+      "stateSpace": "65536",
+      "solutions": "96",
+      "symmetryGroupSize": 16,
+      "keySolutions": "7",
+      "elapsedSeconds": 0.008134,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "96"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "16"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x5",
+      "rows": 4,
+      "cols": 5,
+      "cells": 20,
+      "stateSpace": "1048576",
+      "solutions": "220",
+      "symmetryGroupSize": 8,
+      "keySolutions": "33",
+      "elapsedSeconds": 0.012678,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "220"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "20"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "24"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x6",
+      "rows": 4,
+      "cols": 6,
+      "cells": 24,
+      "stateSpace": "16777216",
+      "solutions": "420",
+      "symmetryGroupSize": 8,
+      "keySolutions": "57",
+      "elapsedSeconds": 0.01563,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "420"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "36"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x7",
+      "rows": 4,
+      "cols": 7,
+      "cells": 28,
+      "stateSpace": "268435456",
+      "solutions": "924",
+      "symmetryGroupSize": 8,
+      "keySolutions": "126",
+      "elapsedSeconds": 0.019365,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "924"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "4"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "36"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "44"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x8",
+      "rows": 4,
+      "cols": 8,
+      "cells": 32,
+      "stateSpace": "4294967296",
+      "solutions": "1780",
+      "symmetryGroupSize": 8,
+      "keySolutions": "232",
+      "elapsedSeconds": 0.042253,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1780"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "76"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x9",
+      "rows": 4,
+      "cols": 9,
+      "cells": 36,
+      "stateSpace": "68719476736",
+      "solutions": "3784",
+      "symmetryGroupSize": 8,
+      "keySolutions": "495",
+      "elapsedSeconds": 0.037835,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "3784"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "84"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "92"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x10",
+      "rows": 4,
+      "cols": 10,
+      "cells": 40,
+      "stateSpace": "1099511627776",
+      "solutions": "7376",
+      "symmetryGroupSize": 8,
+      "keySolutions": "942",
+      "elapsedSeconds": 0.032182,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "7376"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "160"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x11",
+      "rows": 4,
+      "cols": 11,
+      "cells": 44,
+      "stateSpace": "17592186044416",
+      "solutions": "15312",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1957",
+      "elapsedSeconds": 0.038892,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "15312"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "8"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "160"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "176"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x12",
+      "rows": 4,
+      "cols": 12,
+      "cells": 48,
+      "stateSpace": "281474976710656",
+      "solutions": "30128",
+      "symmetryGroupSize": 8,
+      "keySolutions": "3807",
+      "elapsedSeconds": 0.040038,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "30128"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "328"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x13",
+      "rows": 4,
+      "cols": 13,
+      "cells": 52,
+      "stateSpace": "4503599627370496",
+      "solutions": "61600",
+      "symmetryGroupSize": 8,
+      "keySolutions": "7788",
+      "elapsedSeconds": 0.053759,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "61600"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "344"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "360"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x14",
+      "rows": 4,
+      "cols": 14,
+      "cells": 56,
+      "stateSpace": "72057594037927936",
+      "solutions": "121984",
+      "symmetryGroupSize": 8,
+      "keySolutions": "15332",
+      "elapsedSeconds": 0.049826,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "121984"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "672"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x15",
+      "rows": 4,
+      "cols": 15,
+      "cells": 60,
+      "stateSpace": "1152921504606846976",
+      "solutions": "247104",
+      "symmetryGroupSize": 8,
+      "keySolutions": "31062",
+      "elapsedSeconds": 0.072517,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "247104"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "16"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "672"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "704"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x16",
+      "rows": 4,
+      "cols": 16,
+      "cells": 64,
+      "stateSpace": "18446744073709551616",
+      "solutions": "491328",
+      "symmetryGroupSize": 8,
+      "keySolutions": "61586",
+      "elapsedSeconds": 0.068643,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "491328"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "1360"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x17",
+      "rows": 4,
+      "cols": 17,
+      "cells": 68,
+      "stateSpace": "295147905179352825856",
+      "solutions": "989824",
+      "symmetryGroupSize": 8,
+      "keySolutions": "124080",
+      "elapsedSeconds": 0.07304,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "989824"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "1392"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "1424"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x18",
+      "rows": 4,
+      "cols": 18,
+      "cells": 72,
+      "stateSpace": "4722366482869645213696",
+      "solutions": "1972992",
+      "symmetryGroupSize": 8,
+      "keySolutions": "246968",
+      "elapsedSeconds": 0.070561,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1972992"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "2752"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x19",
+      "rows": 4,
+      "cols": 19,
+      "cells": 76,
+      "stateSpace": "75557863725914323419136",
+      "solutions": "3962112",
+      "symmetryGroupSize": 8,
+      "keySolutions": "495964",
+      "elapsedSeconds": 0.078979,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "3962112"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "32"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "2752"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2816"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x20",
+      "rows": 4,
+      "cols": 20,
+      "cells": 80,
+      "stateSpace": "1208925819614629174706176",
+      "solutions": "7909120",
+      "symmetryGroupSize": 8,
+      "keySolutions": "989332",
+      "elapsedSeconds": 0.080114,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "7909120"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "5536"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x21",
+      "rows": 4,
+      "cols": 21,
+      "cells": 84,
+      "stateSpace": "19342813113834066795298816",
+      "solutions": "15854080",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1983168",
+      "elapsedSeconds": 0.13107,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "15854080"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "5600"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "5664"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x22",
+      "rows": 4,
+      "cols": 22,
+      "cells": 88,
+      "stateSpace": "309485009821345068724781056",
+      "solutions": "31674368",
+      "symmetryGroupSize": 8,
+      "keySolutions": "3960688",
+      "elapsedSeconds": 0.094304,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "31674368"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "11136"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x23",
+      "rows": 4,
+      "cols": 23,
+      "cells": 92,
+      "stateSpace": "4951760157141521099596496896",
+      "solutions": "63427584",
+      "symmetryGroupSize": 8,
+      "keySolutions": "7931256",
+      "elapsedSeconds": 0.098273,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "63427584"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "64"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "11136"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "11264"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x24",
+      "rows": 4,
+      "cols": 24,
+      "cells": 96,
+      "stateSpace": "79228162514264337593543950336",
+      "solutions": "126780416",
+      "symmetryGroupSize": 8,
+      "keySolutions": "15850344",
+      "elapsedSeconds": 0.104494,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "126780416"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "22336"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "4x25",
+      "rows": 4,
+      "cols": 25,
+      "cells": 100,
+      "stateSpace": "1267650600228229401496703205376",
+      "solutions": "253732864",
+      "symmetryGroupSize": 8,
+      "keySolutions": "31722240",
+      "elapsedSeconds": 0.112333,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "253732864"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "22464"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "22592"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x5",
+      "rows": 5,
+      "cols": 5,
+      "cells": 25,
+      "stateSpace": "33554432",
+      "solutions": "660",
+      "symmetryGroupSize": 16,
+      "keySolutions": "46",
+      "elapsedSeconds": 0.030099,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "660"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "4"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "36"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "36"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x6",
+      "rows": 5,
+      "cols": 6,
+      "cells": 30,
+      "stateSpace": "1073741824",
+      "solutions": "1948",
+      "symmetryGroupSize": 8,
+      "keySolutions": "256",
+      "elapsedSeconds": 0.057106,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1948"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "48"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "52"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x7",
+      "rows": 5,
+      "cols": 7,
+      "cells": 35,
+      "stateSpace": "34359738368",
+      "solutions": "5718",
+      "symmetryGroupSize": 8,
+      "keySolutions": "737",
+      "elapsedSeconds": 0.068084,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "5718"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "10"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "98"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "70"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x8",
+      "rows": 5,
+      "cols": 8,
+      "cells": 40,
+      "stateSpace": "1099511627776",
+      "solutions": "16460",
+      "symmetryGroupSize": 8,
+      "keySolutions": "2089",
+      "elapsedSeconds": 0.098226,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "16460"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "160"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "92"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x9",
+      "rows": 5,
+      "cols": 9,
+      "cells": 45,
+      "stateSpace": "35184372088832",
+      "solutions": "47128",
+      "symmetryGroupSize": 8,
+      "keySolutions": "5943",
+      "elapsedSeconds": 0.089047,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "47128"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "24"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "276"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "116"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x10",
+      "rows": 5,
+      "cols": 10,
+      "cells": 50,
+      "stateSpace": "1125899906842624",
+      "solutions": "133408",
+      "symmetryGroupSize": 8,
+      "keySolutions": "16747",
+      "elapsedSeconds": 0.137902,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "133408"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "424"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "144"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x11",
+      "rows": 5,
+      "cols": 11,
+      "cells": 55,
+      "stateSpace": "36028797018963968",
+      "solutions": "375238",
+      "symmetryGroupSize": 8,
+      "keySolutions": "47027",
+      "elapsedSeconds": 0.117916,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "375238"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "62"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "742"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "174"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x12",
+      "rows": 5,
+      "cols": 12,
+      "cells": 60,
+      "stateSpace": "1152921504606846976",
+      "solutions": "1047660",
+      "symmetryGroupSize": 8,
+      "keySolutions": "131135",
+      "elapsedSeconds": 0.173169,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1047660"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "1212"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "208"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x13",
+      "rows": 5,
+      "cols": 13,
+      "cells": 65,
+      "stateSpace": "36893488147419103232",
+      "solutions": "2908424",
+      "symmetryGroupSize": 8,
+      "keySolutions": "363855",
+      "elapsedSeconds": 0.140812,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "2908424"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "156"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2016"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "244"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x14",
+      "rows": 5,
+      "cols": 14,
+      "cells": 70,
+      "stateSpace": "1180591620717411303424",
+      "solutions": "8029848",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1004178",
+      "elapsedSeconds": 0.361009,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "8029848"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "3292"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "284"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x15",
+      "rows": 5,
+      "cols": 15,
+      "cells": 75,
+      "stateSpace": "37778931862957161709568",
+      "solutions": "22064770",
+      "symmetryGroupSize": 8,
+      "keySolutions": "2758860",
+      "elapsedSeconds": 0.234364,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "22064770"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "398"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "5386"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "326"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x16",
+      "rows": 5,
+      "cols": 16,
+      "cells": 80,
+      "stateSpace": "1208925819614629174706176",
+      "solutions": "60366152",
+      "symmetryGroupSize": 8,
+      "keySolutions": "7546938",
+      "elapsedSeconds": 0.381923,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "60366152"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "8980"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "372"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x17",
+      "rows": 5,
+      "cols": 17,
+      "cells": 85,
+      "stateSpace": "38685626227668133590597632",
+      "solutions": "164508216",
+      "symmetryGroupSize": 8,
+      "keySolutions": "20565501",
+      "elapsedSeconds": 0.33417,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "164508216"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "1008"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "14364"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "420"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x18",
+      "rows": 5,
+      "cols": 18,
+      "cells": 90,
+      "stateSpace": "1237940039285380274899124224",
+      "solutions": "446708388",
+      "symmetryGroupSize": 8,
+      "keySolutions": "55841627",
+      "elapsedSeconds": 0.517724,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "446708388"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "24156"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "472"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x19",
+      "rows": 5,
+      "cols": 19,
+      "cells": 95,
+      "stateSpace": "39614081257132168796771975168",
+      "solutions": "1209044786",
+      "symmetryGroupSize": 8,
+      "keySolutions": "151135739",
+      "elapsedSeconds": 0.292769,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1209044786"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "2562"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "38038"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "526"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "5x20",
+      "rows": 5,
+      "cols": 20,
+      "cells": 100,
+      "stateSpace": "1267650600228229401496703205376",
+      "solutions": "3262553520",
+      "symmetryGroupSize": 8,
+      "keySolutions": "407827346",
+      "elapsedSeconds": 0.369299,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "3262553520"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "64664"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "584"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x6",
+      "rows": 6,
+      "cols": 6,
+      "cells": 36,
+      "stateSpace": "68719476736",
+      "solutions": "7736",
+      "symmetryGroupSize": 16,
+      "keySolutions": "494",
+      "elapsedSeconds": 0.191586,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "7736"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "168"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x7",
+      "rows": 6,
+      "cols": 7,
+      "cells": 42,
+      "stateSpace": "4398046511104",
+      "solutions": "36352",
+      "symmetryGroupSize": 8,
+      "keySolutions": "4600",
+      "elapsedSeconds": 0.270327,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "36352"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "16"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "224"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "208"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x8",
+      "rows": 6,
+      "cols": 8,
+      "cells": 48,
+      "stateSpace": "281474976710656",
+      "solutions": "143164",
+      "symmetryGroupSize": 8,
+      "keySolutions": "17989",
+      "elapsedSeconds": 0.331769,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "143164"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "748"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x9",
+      "rows": 6,
+      "cols": 9,
+      "cells": 54,
+      "stateSpace": "18014398509481984",
+      "solutions": "658428",
+      "symmetryGroupSize": 8,
+      "keySolutions": "82530",
+      "elapsedSeconds": 0.542488,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "658428"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "888"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "924"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x10",
+      "rows": 6,
+      "cols": 10,
+      "cells": 60,
+      "stateSpace": "1152921504606846976",
+      "solutions": "2612956",
+      "symmetryGroupSize": 8,
+      "keySolutions": "327032",
+      "elapsedSeconds": 0.485659,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "2612956"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "3300"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x11",
+      "rows": 6,
+      "cols": 11,
+      "cells": 66,
+      "stateSpace": "73786976294838206464",
+      "solutions": "11744624",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1469050",
+      "elapsedSeconds": 0.639416,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "11744624"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "172"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "4044"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "3560"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x12",
+      "rows": 6,
+      "cols": 12,
+      "cells": 72,
+      "stateSpace": "4722366482869645213696",
+      "solutions": "47078608",
+      "symmetryGroupSize": 8,
+      "keySolutions": "5886612",
+      "elapsedSeconds": 0.697259,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "47078608"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "14288"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x13",
+      "rows": 6,
+      "cols": 13,
+      "cells": 78,
+      "stateSpace": "302231454903657293676544",
+      "solutions": "207526408",
+      "symmetryGroupSize": 8,
+      "keySolutions": "25944771",
+      "elapsedSeconds": 0.786123,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "207526408"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "16092"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "15668"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x14",
+      "rows": 6,
+      "cols": 14,
+      "cells": 84,
+      "stateSpace": "19342813113834066795298816",
+      "solutions": "839650780",
+      "symmetryGroupSize": 8,
+      "keySolutions": "104964042",
+      "elapsedSeconds": 1.177222,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "839650780"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "61556"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x15",
+      "rows": 6,
+      "cols": 15,
+      "cells": 90,
+      "stateSpace": "1237940039285380274899124224",
+      "solutions": "3644985164",
+      "symmetryGroupSize": 8,
+      "keySolutions": "455639995",
+      "elapsedSeconds": 1.353063,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "3644985164"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "1896"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "71120"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "61780"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "6x16",
+      "rows": 6,
+      "cols": 16,
+      "cells": 96,
+      "stateSpace": "79228162514264337593543950336",
+      "solutions": "14861530276",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1857724115",
+      "elapsedSeconds": 1.046677,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "14861530276"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "262644"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x7",
+      "rows": 7,
+      "cols": 7,
+      "cells": 49,
+      "stateSpace": "562949953421312",
+      "solutions": "230568",
+      "symmetryGroupSize": 16,
+      "keySolutions": "14471",
+      "elapsedSeconds": 1.332804,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "230568"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "56"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "452"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "452"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "4"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "4"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x8",
+      "rows": 7,
+      "cols": 8,
+      "cells": 56,
+      "stateSpace": "72057594037927936",
+      "solutions": "1428028",
+      "symmetryGroupSize": 8,
+      "keySolutions": "178801",
+      "elapsedSeconds": 1.623444,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1428028"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "104"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "1360"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "916"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x9",
+      "rows": 7,
+      "cols": 9,
+      "cells": 63,
+      "stateSpace": "9223372036854775808",
+      "solutions": "8921002",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1115747",
+      "elapsedSeconds": 1.555438,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "8921002"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "286"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "2754"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "1934"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x10",
+      "rows": 7,
+      "cols": 10,
+      "cells": 70,
+      "stateSpace": "1180591620717411303424",
+      "solutions": "54759016",
+      "symmetryGroupSize": 8,
+      "keySolutions": "6846515",
+      "elapsedSeconds": 2.223441,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "54759016"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "536"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "8700"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "3868"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x11",
+      "rows": 7,
+      "cols": 11,
+      "cells": 77,
+      "stateSpace": "151115727451828646838272",
+      "solutions": "337313392",
+      "symmetryGroupSize": 8,
+      "keySolutions": "42167378",
+      "elapsedSeconds": 3.0629,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "337313392"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "1668"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "15964"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "8000"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x12",
+      "rows": 7,
+      "cols": 12,
+      "cells": 84,
+      "stateSpace": "19342813113834066795298816",
+      "solutions": "2055764680",
+      "symmetryGroupSize": 8,
+      "keySolutions": "256979354",
+      "elapsedSeconds": 3.196733,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "2055764680"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "3240"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "50960"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "15952"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x13",
+      "rows": 7,
+      "cols": 13,
+      "cells": 91,
+      "stateSpace": "2475880078570760549798248448",
+      "solutions": "12529114088",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1566156566",
+      "elapsedSeconds": 3.328542,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "12529114088"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "9204"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "96684"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "32552"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "7x14",
+      "rows": 7,
+      "cols": 14,
+      "cells": 98,
+      "stateSpace": "316912650057057350374175801344",
+      "solutions": "75861288436",
+      "symmetryGroupSize": 8,
+      "keySolutions": "9482710518",
+      "elapsedSeconds": 4.42681,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "75861288436"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "17640"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "313156"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "64912"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "8x8",
+      "rows": 8,
+      "cols": 8,
+      "cells": 64,
+      "stateSpace": "18446744073709551616",
+      "solutions": "11974112",
+      "symmetryGroupSize": 16,
+      "keySolutions": "748827",
+      "elapsedSeconds": 7.126648,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "11974112"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "7120"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "8x9",
+      "rows": 8,
+      "cols": 9,
+      "cells": 72,
+      "stateSpace": "4722366482869645213696",
+      "solutions": "119113668",
+      "symmetryGroupSize": 8,
+      "keySolutions": "14891997",
+      "elapsedSeconds": 10.720973,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "119113668"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "13792"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "8516"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "8x10",
+      "rows": 8,
+      "cols": 10,
+      "cells": 80,
+      "stateSpace": "1208925819614629174706176",
+      "solutions": "997512632",
+      "symmetryGroupSize": 8,
+      "keySolutions": "124697480",
+      "elapsedSeconds": 12.737631,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "997512632"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "67208"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "8x11",
+      "rows": 8,
+      "cols": 11,
+      "cells": 88,
+      "stateSpace": "309485009821345068724781056",
+      "solutions": "9783359400",
+      "symmetryGroupSize": 8,
+      "keySolutions": "1222944061",
+      "elapsedSeconds": 13.346886,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "9783359400"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "5584"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "117656"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "69848"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "8x12",
+      "rows": 8,
+      "cols": 12,
+      "cells": 96,
+      "stateSpace": "79228162514264337593543950336",
+      "solutions": "82437639600",
+      "symmetryGroupSize": 8,
+      "keySolutions": "10304782964",
+      "elapsedSeconds": 13.430703,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "82437639600"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "624112"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "9x9",
+      "rows": 9,
+      "cols": 9,
+      "cells": 81,
+      "stateSpace": "2417851639229258349412352",
+      "solutions": "1609039928",
+      "symmetryGroupSize": 16,
+      "keySolutions": "100568269",
+      "elapsedSeconds": 47.31491,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "1609039928"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "3008"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "24684"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "24684"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "9x10",
+      "rows": 9,
+      "cols": 10,
+      "cells": 90,
+      "stateSpace": "1237940039285380274899124224",
+      "solutions": "21279591520",
+      "symmetryGroupSize": 8,
+      "keySolutions": "2659979035",
+      "elapsedSeconds": 72.022332,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "21279591520"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "167484"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "73276"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "9x11",
+      "rows": 9,
+      "cols": 11,
+      "cells": 99,
+      "stateSpace": "633825300114114700748351602688",
+      "solutions": "284582339204",
+      "symmetryGroupSize": 8,
+      "keySolutions": "35572862153",
+      "elapsedSeconds": 68.100365,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "284582339204"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "38104"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "311792"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "208124"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    },
+    {
+      "board": "10x10",
+      "rows": 10,
+      "cols": 10,
+      "cells": 100,
+      "stateSpace": "1267650600228229401496703205376",
+      "solutions": "382467306272",
+      "symmetryGroupSize": 16,
+      "keySolutions": "23904291912",
+      "elapsedSeconds": 335.310293,
+      "fixed": [
+        {
+          "operation": "identity",
+          "colorExchange": false,
+          "fixedSolutions": "382467306272"
+        },
+        {
+          "operation": "identity",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 180",
+          "colorExchange": true,
+          "fixedSolutions": "1364320"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip left and right",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "flip up and down",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 90",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "rotate 270",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "main diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": false,
+          "fixedSolutions": "0"
+        },
+        {
+          "operation": "other diagonal",
+          "colorExchange": true,
+          "fixedSolutions": "0"
+        }
+      ]
+    }
+  ]
+}
