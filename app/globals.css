@@ -1440,6 +1440,11 @@ body {
 .yy-card-head label { display: grid; gap: 5px; color: #6b665e; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 .yy-card-head select { min-width: 82px; max-width: 190px; padding: 9px 28px 9px 11px; border: 1px solid #cbc5bb; border-radius: 10px; background: #fff; color: #171717; }
 .yy-card-head > span { padding: 6px 10px; border-radius: 999px; background: #eee9df; color: #615b53; font-size: 12px; white-space: nowrap; }
+.yy-mode-note { display: grid; gap: 4px; margin: -5px 0 16px; padding: 10px 12px; border-left: 2px solid #8d867d; background: #f5f2ec; }
+.yy-mode-note b { color: #302c28; font-size: 11px; }
+.yy-mode-note span { color: #736d65; font-size: 10px; line-height: 1.5; }
+.yy-mode-note.is-catalog { border-left-color: #2f7a59; }
+.yy-mode-note.is-exact { border-left-color: var(--yy-red); }
 .yy-tool-palette { display: flex; gap: 8px; margin-bottom: 16px; }
 .yy-tool-palette button { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid #d4cec4; border-radius: 12px; background: #fff; color: #4f4a44; font-size: 12px; transition: border-color .18s, transform .18s, box-shadow .18s; }
 .yy-tool-palette button:hover { transform: translateY(-1px); }
@@ -1456,6 +1461,7 @@ button.yy-cell:hover { filter: brightness(.9); transform: scale(.9); }
 .yy-cell.value-empty { background: #f8f6f1; }
 .yy-cell.is-empty { background-image: radial-gradient(circle, #bdb7ad 1px, transparent 1.5px); background-size: 7px 7px; }
 .yy-cell.is-clue { box-shadow: inset 0 0 0 1px rgba(216,58,49,.28); }
+.yy-cell.is-source-clue { position: relative; z-index: 1; box-shadow: inset 0 0 0 clamp(1px, .18vw, 3px) var(--yy-red), inset 0 0 0 clamp(2px, .32vw, 5px) rgba(255,255,255,.56); }
 .yy-editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .yy-editor-actions button, .yy-sample-nav button { padding: 10px 14px; border: 1px solid #ccc5bb; border-radius: 11px; background: transparent; color: #38342f; font-size: 12px; }
 .yy-editor-actions .yy-primary { border-color: var(--yy-red); background: var(--yy-red); color: white; }
@@ -1493,6 +1499,7 @@ button.yy-cell:hover { filter: brightness(.9); transform: scale(.9); }
 .yy-solution-viewport { position: relative; height: min(68vh, 720px); min-height: 480px; padding: 10px; border: 1px solid #d6d0c7; border-top: 0; border-radius: 0 0 14px 14px; background: #e9e5de; overflow: hidden; outline: none; overscroll-behavior: contain; }
 .yy-solution-viewport:focus-visible { box-shadow: inset 0 0 0 2px var(--yy-red); }
 .yy-solution-viewport.is-loading { opacity: .72; }
+.yy-solution-viewport.is-static { overflow-y: auto; }
 .yy-solution-grid { display: grid; align-items: start; gap: 8px; }
 .yy-solution-grid > button { position: relative; min-width: 0; padding: 7px; border: 1px solid #cfc8bd; border-radius: 12px; background: #f9f7f2; color: #5d5750; text-align: left; transition: border-color .14s, background .14s, transform .14s; }
 .yy-solution-grid > button:hover { border-color: #8f877d; transform: translateY(-1px); }
@@ -1501,6 +1508,9 @@ button.yy-cell:hover { filter: brightness(.9); transform: scale(.9); }
 .yy-solution-grid > button > span { display: block; margin-top: 6px; color: inherit; font-size: 9px; font-variant-numeric: tabular-nums; }
 .yy-solution-empty { display: grid; place-content: center; height: 100%; gap: 6px; color: #49443e; text-align: center; }
 .yy-solution-empty span { color: #797269; font-size: 11px; }
+.yy-large-search-intro { display: grid; place-content: center; min-height: min(68vh, 720px); padding: 28px; border: 1px dashed #cfc8be; border-radius: 14px; background: #f5f2ec; color: #3e3934; text-align: center; }
+.yy-large-search-intro b { font-size: 18px; }
+.yy-large-search-intro p { max-width: 50ch; margin: 8px auto 0; color: #716b63; font-size: 12px; line-height: 1.7; }
 .yy-scroll-help { margin: 9px 2px 0; color: #777168; font-size: 10px; line-height: 1.5; }
 .yy-orbit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 10px; }
 .yy-orbit-grid article { padding: 10px; border: 1px solid #ddd7ce; border-radius: 16px; background: #f7f4ee; }

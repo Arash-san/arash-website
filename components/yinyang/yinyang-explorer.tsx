@@ -3,16 +3,29 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { yinYangEnumerations } from "@/lib/yinyang-enumeration-data";
 import { RectangleCountMap } from "@/components/yinyang/rectangle-count-map";
+import rectangleCounts from "@/public/yinyang/rectangle-counts.json";
 
 type Cell = "." | "0" | "1";
 type Tool = Cell;
-type SearchState = "idle" | "running" | "complete" | "error";
-type Result = { solutions: number; keyMatches: number; checked: number; elapsedMs: number };
+type SearchState = "idle" | "running" | "complete" | "timeout" | "error";
+type Result = { solutions: number; keyMatches?: number; checked: number; elapsedMs: number; truncated?: boolean };
 type ResultPage = { start: number; items: string[] };
+type BoardMode = "catalog" | "exact" | "live";
+type BoardOption = { board: string; rows: number; cols: number; mode: BoardMode; solutions?: string };
 
 const format = new Intl.NumberFormat("en-US");
 const pageSize = 160;
 const orbitLabels = ["Original", "Rotate 180", "Flip left to right", "Flip top to bottom", "Rotate 90", "Rotate 270", "Main diagonal", "Other diagonal"];
+const completeBoards = new Set(yinYangEnumerations.map((record) => record.board));
+const exactCounts = new Map(rectangleCounts.records.map((record) => [record.board, record.solutions]));
+const boardOptions: BoardOption[] = Array.from({ length: 13 }, (_, rowIndex) => rowIndex + 3).flatMap((rows) =>
+  Array.from({ length: 16 - rows }, (_, colIndex) => {
+    const cols = rows + colIndex;
+    const board = `${rows}x${cols}`;
+    const solutions = exactCounts.get(board);
+    return { board, rows, cols, solutions, mode: completeBoards.has(board) ? "catalog" as const : solutions ? "exact" as const : "live" as const };
+  }),
+);
 
 function operationCount(rows: number, cols: number) { return rows === cols ? 8 : 4; }
 
@@ -53,10 +66,10 @@ function Board({ rows, clues, editable = false, tool = ".", onCell, label, small
     <div className={`yy-grid-board${small ? " is-small" : ""}`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, aspectRatio: `${cols} / ${rows.length}` }} role="grid" aria-label={label}>
       {rows.flatMap((line, rowIndex) => Array.from(line).map((value, colIndex) => {
         const index = rowIndex * cols + colIndex;
-        const isClue = clues?.[index] !== ".";
+        const isClue = clues ? clues[index] !== "." : false;
         return editable ? (
           <button key={index} className={`yy-cell value-${value === "." ? "empty" : value} ${isClue ? "is-clue" : "is-empty"}`} onClick={() => onCell?.(index, tool)} aria-label={`Row ${rowIndex + 1}, column ${colIndex + 1}`} />
-        ) : <i key={index} className={`yy-cell value-${value === "." ? "empty" : value}`} />;
+        ) : <i key={index} className={`yy-cell value-${value === "." ? "empty" : value}${isClue ? " is-source-clue" : ""}`} />;
       }))}
     </div>
   );
@@ -65,8 +78,8 @@ function Board({ rows, clues, editable = false, tool = ".", onCell, label, small
 function empty(rows: number, cols: number): Cell[] { return Array(rows * cols).fill("."); }
 function asRows(cells: readonly string[], rows: number, cols: number) { return Array.from({ length: rows }, (_, row) => cells.slice(row * cols, (row + 1) * cols).join("")); }
 
-function SolutionBrowser({ rows, cols, total, page, selected, loading, onRequest, onSelect }: {
-  rows: number; cols: number; total: number; page: ResultPage; selected: string; loading: boolean; onRequest: (start: number) => void; onSelect: (hex: string, index: number) => void;
+function SolutionBrowser({ rows, cols, clues, total, reportedTotal, page, selected, loading, paged, onRequest, onSelect }: {
+  rows: number; cols: number; clues: Cell[]; total: number; reportedTotal?: number; page: ResultPage; selected: string; loading: boolean; paged: boolean; onRequest: (start: number) => void; onSelect: (hex: string, index: number) => void;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const lastWheel = useRef(0);
@@ -90,20 +103,21 @@ function SolutionBrowser({ rows, cols, total, page, selected, loading, onRequest
   return (
     <div className="yy-solution-browser">
       <div className="yy-solution-toolbar">
-        <div><b>{total ? `${format.format(page.start + 1)} to ${format.format(Math.min(total, page.start + page.items.length))}` : "No matches"}</b><span>of {format.format(total)} solutions</span></div>
-        <div className="yy-solution-jump">
+        <div><b>{total ? paged ? `${format.format(page.start + 1)} to ${format.format(Math.min(total, page.start + page.items.length))}` : `${format.format(page.items.length)} visualized` : "No matches"}</b><span>{paged ? `of ${format.format(total)} solutions` : reportedTotal !== undefined ? `from ${format.format(reportedTotal)} found during this search` : "live search examples"}</span></div>
+        {paged ? <div className="yy-solution-jump">
           <button type="button" onClick={() => move(-columns)} disabled={page.start === 0}>Previous row</button>
           <form onSubmit={(event) => { event.preventDefault(); onRequest(Math.max(0, Math.min(total - 1, Number(jump || 1) - 1))); }}><label>Jump to solution<input value={jump} inputMode="numeric" onChange={(event) => setJump(event.target.value.replace(/\D/g, ""))} /></label><button type="submit" disabled={!total}>Go</button></form>
           <button type="button" onClick={() => move(columns)} disabled={!total || page.start >= total - 1}>Next row</button>
-        </div>
+        </div> : null}
       </div>
-      <input className="yy-solution-range" aria-label="Solution position" type="range" min="0" max={Math.max(0, total - 1)} step={Math.max(1, columns)} value={Math.min(page.start, Math.max(0, total - 1))} onChange={(event) => onRequest(Number(event.target.value))} disabled={!total} />
+      {paged ? <input className="yy-solution-range" aria-label="Solution position" type="range" min="0" max={Math.max(0, total - 1)} step={Math.max(1, columns)} value={Math.min(page.start, Math.max(0, total - 1))} onChange={(event) => onRequest(Number(event.target.value))} disabled={!total} /> : null}
       <div
         ref={viewport}
-        className={`yy-solution-viewport${loading ? " is-loading" : ""}`}
+        className={`yy-solution-viewport${loading ? " is-loading" : ""}${paged ? "" : " is-static"}`}
         tabIndex={0}
-        aria-label="All matching solutions. Scroll to move through the complete result set."
+        aria-label={paged ? "All matching solutions. Scroll to move through the complete result set." : "Solutions retained by the live constrained search."}
         onWheel={(event) => {
+          if (!paged) return;
           event.preventDefault();
           const now = performance.now();
           if (now - lastWheel.current < 42) return;
@@ -120,10 +134,10 @@ function SolutionBrowser({ rows, cols, total, page, selected, loading, onRequest
       >
         {page.items.length ? <div className="yy-solution-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{page.items.map((hex, offset) => {
           const index = page.start + offset;
-          return <button type="button" key={`${index}-${hex}`} className={hex === selected ? "is-selected" : ""} onClick={() => onSelect(hex, index)} aria-label={`Select solution ${format.format(index + 1)}`}><Board rows={hexRows(hex, rows, cols)} label={`Solution ${format.format(index + 1)}`} small /><span>{format.format(index + 1)}</span></button>;
+          return <button type="button" key={`${index}-${hex}`} className={hex === selected ? "is-selected" : ""} onClick={() => onSelect(hex, index)} aria-label={`Select solution ${format.format(index + 1)}`}><Board rows={hexRows(hex, rows, cols)} clues={clues} label={`Solution ${format.format(index + 1)}`} small /><span>{format.format(index + 1)}</span></button>;
         })}</div> : <div className="yy-solution-empty"><b>{loading ? "Loading the visible solution window" : "No solution matches these pieces"}</b><span>{loading ? "The catalog stays outside the page while this window is prepared." : "Remove one or more pieces and search again."}</span></div>}
       </div>
-      <p className="yy-scroll-help">Scroll over the boards, use the keyboard, drag the position control, or jump to an exact solution number. Only the visible window is kept in the page.</p>
+      <p className="yy-scroll-help">{paged ? "Scroll over the boards, use the keyboard, drag the position control, or jump to an exact solution number. Only the visible window is kept in the page." : "These are the solutions retained by the live constrained search. Add more pieces when a large board needs a smaller result space."}</p>
     </div>
   );
 }
@@ -146,12 +160,14 @@ export function YinYangExplorer() {
 
   function launchSearch(nextRows: number, nextCols: number, nextClues: Cell[]) {
     worker.current?.terminate();
-    const nextWorker = new Worker("/workers/yinyang-catalog.js");
+    const board = `${nextRows}x${nextCols}`;
+    const catalogMode = completeBoards.has(board);
+    const nextWorker = new Worker(catalogMode ? "/workers/yinyang-catalog.js" : "/workers/yinyang-clue-solver.js");
     worker.current = nextWorker;
     const requestId = ++searchId.current;
     setState("running"); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setSelectedIndex(0); setError(""); setProgress({ checked: 0, solutions: 0, elapsedMs: 0 });
     nextWorker.onmessage = ({ data }) => {
-      if (data.type === "page") {
+      if (catalogMode && data.type === "page") {
         if (data.searchId !== searchId.current || data.requestId !== pageRequestId.current) return;
         setPage({ start: data.start, items: data.items });
         return;
@@ -159,13 +175,13 @@ export function YinYangExplorer() {
       if (data.requestId !== searchId.current) return;
       if (data.type === "progress") { setProgress({ checked: data.checked, solutions: data.solutions, elapsedMs: data.elapsedMs }); return; }
       if (data.type === "error") { setError(data.message); setState("error"); return; }
-      const nextPage = data.page as ResultPage;
-      setResult({ solutions: data.solutions, keyMatches: data.keyMatches, checked: data.checked, elapsedMs: data.elapsedMs });
+      const nextPage = catalogMode ? data.page as ResultPage : { start: 0, items: data.samples as string[] };
+      setResult({ solutions: data.solutions, keyMatches: data.keyMatches, checked: data.checked, elapsedMs: data.elapsedMs, truncated: data.truncated });
       setProgress({ checked: data.checked, solutions: data.solutions, elapsedMs: data.elapsedMs });
-      setPage(nextPage); setSelected(nextPage.items[0] ?? ""); setSelectedIndex(0); setState("complete");
+      setPage(nextPage); setSelected(nextPage.items[0] ?? ""); setSelectedIndex(0); setState(data.type === "timeout" ? "timeout" : "complete");
     };
     nextWorker.onerror = () => { setError("The browser calculation stopped unexpectedly."); setState("error"); };
-    nextWorker.postMessage({ type: "search", rows: nextRows, cols: nextCols, clues: nextClues, requestId });
+    nextWorker.postMessage({ type: "search", rows: nextRows, cols: nextCols, clues: nextClues, requestId, timeoutMs: 1_800_000 });
   }
 
   useEffect(() => {
@@ -177,7 +193,8 @@ export function YinYangExplorer() {
     const [nextRows, nextCols] = board.split("x").map(Number);
     const nextClues = empty(nextRows, nextCols);
     setRows(nextRows); setCols(nextCols); setClues(nextClues);
-    launchSearch(nextRows, nextCols, nextClues);
+    if (completeBoards.has(board)) launchSearch(nextRows, nextCols, nextClues);
+    else { worker.current?.terminate(); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setSelectedIndex(0); setState("idle"); setProgress({ checked: 0, solutions: 0, elapsedMs: 0 }); setError(""); }
   }
 
   function requestPage(start: number) {
@@ -188,6 +205,10 @@ export function YinYangExplorer() {
   }
 
   const puzzleRows = asRows(clues, rows, cols);
+  const board = `${rows}x${cols}`;
+  const currentOption = boardOptions.find((option) => option.board === board)!;
+  const catalogMode = currentOption.mode === "catalog";
+  const exactTotal = currentOption.solutions ? Number(currentOption.solutions) : undefined;
   const selectedRows = useMemo(() => selected ? hexRows(selected, rows, cols) : [], [cols, rows, selected]);
   const orbit = useMemo(() => {
     if (!selectedRows.length) return [];
@@ -204,22 +225,28 @@ export function YinYangExplorer() {
       <header className="yy-tool-hero yy-lab-hero">
         <p>Puzzle laboratory</p>
         <h1>Yin Yang puzzle viewer</h1>
-        <div><p>Select any catalog from the original Flutter viewer, inspect every solution, and place black or white pieces to filter the complete set. The boards are loaded in small windows so even the largest catalog stays responsive.</p><span>49 complete catalogs</span></div>
+        <div><p>Edit square and rectangular boards through 15 by 15. Complete catalogs keep the full virtual scroll, while larger boards use live constrained search with a strict 30 minute limit.</p><span>91 board sizes through 15 × 15</span></div>
       </header>
 
       <section className="yy-catalog-workspace">
         <aside className="yy-editor-card">
-          <div className="yy-card-head"><div><p className="yy-eyebrow">Puzzle editor</p><h2>{rows} by {cols}</h2></div><label>Catalog<select value={`${rows}x${cols}`} onChange={(event) => chooseBoard(event.target.value)}>{yinYangEnumerations.map((record) => <option key={record.board} value={record.board}>{record.rows} × {record.cols} · {format.format(record.solutions)}</option>)}</select></label></div>
+          <div className="yy-card-head"><div><p className="yy-eyebrow">Puzzle editor</p><h2>{rows} by {cols}</h2></div><label>Board size<select value={board} onChange={(event) => chooseBoard(event.target.value)}>
+            <optgroup label="Complete scrolling catalogs">{boardOptions.filter((option) => option.mode === "catalog").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
+            <optgroup label="Exact totals with live clue search">{boardOptions.filter((option) => option.mode === "exact").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
+            <optgroup label="Large live clue search">{boardOptions.filter((option) => option.mode === "live").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols}</option>)}</optgroup>
+          </select></label></div>
+          <div className={`yy-mode-note is-${currentOption.mode}`}><b>{catalogMode ? "Complete catalog" : currentOption.mode === "exact" ? "Exact total with live clue search" : "Large live clue search"}</b><span>{catalogMode ? "Every solution is available in the virtual scroll." : exactTotal !== undefined ? `${format.format(exactTotal)} valid boards are known exactly. Add pieces before starting a live search.` : "This board is available in the editor. Add enough pieces to make the live search practical."}</span></div>
           <div className="yy-tool-palette" aria-label="Piece tool">{(["1", "0", "."] as Tool[]).map((value) => <button key={value} className={`${tool === value ? "is-active" : ""} value-${value === "." ? "empty" : value}`} onClick={() => setTool(value)}><i />{value === "1" ? "Black" : value === "0" ? "White" : "Remove"}</button>)}</div>
           <div className="yy-editor-board"><Board rows={puzzleRows} clues={clues} editable tool={tool} onCell={(index, value) => { const next = clues.slice(); next[index] = value; setClues(next); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setState("idle"); }} label="Editable Yin Yang puzzle" /></div>
-          <div className="yy-editor-actions"><button className="yy-primary" onClick={() => launchSearch(rows, cols, clues)} disabled={state === "running"}>{state === "running" ? "Searching…" : "Find all solutions"}</button><button onClick={() => { const next = empty(rows, cols); setClues(next); launchSearch(rows, cols, next); }}>Clear and show all</button></div>
+          <div className="yy-editor-actions"><button className="yy-primary" onClick={() => launchSearch(rows, cols, clues)} disabled={state === "running"}>{state === "running" ? "Searching…" : catalogMode ? "Find all solutions" : "Search matching solutions"}</button><button onClick={() => { const next = empty(rows, cols); setClues(next); if (catalogMode) launchSearch(rows, cols, next); else { worker.current?.terminate(); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setState("idle"); } }}>{catalogMode ? "Clear and show all" : "Clear board"}</button></div>
           <div className="yy-result-meta"><span>Status <b>{state}</b></span><span>Keys checked <b>{format.format(progress.checked)}</b></span><span>Time <b>{progress.elapsedMs < 1000 ? `${progress.elapsedMs.toFixed(0)} ms` : `${(progress.elapsedMs / 1000).toFixed(2)} s`}</b></span></div>
+          {state === "timeout" ? <p className="yy-warning">The 30 minute limit was reached. The visualized boards were found before the search stopped.</p> : null}
           {error ? <p className="yy-warning">{error}</p> : null}
         </aside>
 
         <div className="yy-solution-panel">
-          <div className="yy-card-head"><div><p className="yy-eyebrow">Complete solution catalog</p><h2>{result ? format.format(result.solutions) : state === "running" ? format.format(progress.solutions) : "Place pieces, then search"}</h2></div>{result ? <span>{format.format(result.keyMatches)} symmetry groups</span> : null}</div>
-          <SolutionBrowser rows={rows} cols={cols} total={result?.solutions ?? 0} page={page} selected={selected} loading={state === "running"} onRequest={requestPage} onSelect={(hex, index) => { setSelected(hex); setSelectedIndex(index); }} />
+          <div className="yy-card-head"><div><p className="yy-eyebrow">{catalogMode ? "Complete solution catalog" : "Large board search"}</p><h2>{result ? format.format(result.solutions) : state === "running" ? format.format(progress.solutions) : exactTotal !== undefined ? format.format(exactTotal) : "Add pieces, then search"}</h2></div>{catalogMode && result?.keyMatches !== undefined ? <span>{format.format(result.keyMatches)} symmetry groups</span> : <span>{currentOption.mode === "exact" ? "Exact board total" : "Live constrained search"}</span>}</div>
+          {!catalogMode && !result && state !== "running" ? <div className="yy-large-search-intro"><b>The editor is ready.</b><p>A complete stored list is not used for this size. Place black and white pieces, then the browser will search the remaining state space for up to 30 minutes.</p></div> : <SolutionBrowser rows={rows} cols={cols} clues={clues} total={catalogMode ? result?.solutions ?? 0 : page.items.length} reportedTotal={result?.solutions} page={page} selected={selected} loading={state === "running"} paged={catalogMode} onRequest={requestPage} onSelect={(hex, index) => { setSelected(hex); setSelectedIndex(index); }} />}
         </div>
       </section>
 
@@ -230,7 +257,7 @@ export function YinYangExplorer() {
 
       <RectangleCountMap />
 
-      <footer className="yy-tool-footer"><p>The catalog picker contains the same 49 calculated board sizes as the Flutter viewer. Filtering and scrolling use the compact symmetry catalogs generated from the complete GPU output.</p><div><a href="https://arash-san.github.io/Yin-Yang-viewer/" target="_blank" rel="noreferrer">Open the original Flutter viewer ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
+      <footer className="yy-tool-footer"><p>The editor includes every distinct rectangle from 3 by 3 through 15 by 15. The 49 Flutter era sizes use complete catalogs. Larger boards use exact totals when available and live clue search.</p><div><a href="https://arash-san.github.io/Yin-Yang-viewer/" target="_blank" rel="noreferrer">Open the original Flutter viewer ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
     </div>
   );
 }
