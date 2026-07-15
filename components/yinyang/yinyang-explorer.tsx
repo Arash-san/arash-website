@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { yinYangEnumerations } from "@/lib/yinyang-enumeration-data";
 import { RectangleCountMap } from "@/components/yinyang/rectangle-count-map";
 import rectangleCounts from "@/public/yinyang/rectangle-counts.json";
+import decisionGraphs from "@/public/yinyang/graphs/manifest.json";
 
 type Cell = "." | "0" | "1";
 type Tool = Cell;
 type SearchState = "idle" | "running" | "complete" | "timeout" | "error";
-type Result = { solutions: number; keyMatches?: number; checked: number; elapsedMs: number; truncated?: boolean };
+type Result = { solutions: number; keyMatches?: number; checked: number; elapsedMs: number; truncated?: boolean; graphNodes?: number; graphEdges?: number };
 type ResultPage = { start: number; items: string[] };
-type BoardMode = "catalog" | "exact" | "live";
+type BoardMode = "catalog" | "graph" | "live";
 type BoardOption = { board: string; rows: number; cols: number; mode: BoardMode; solutions?: string };
 
 const format = new Intl.NumberFormat("en-US");
@@ -18,12 +19,13 @@ const pageSize = 160;
 const orbitLabels = ["Original", "Rotate 180", "Flip left to right", "Flip top to bottom", "Rotate 90", "Rotate 270", "Main diagonal", "Other diagonal"];
 const completeBoards = new Set(yinYangEnumerations.map((record) => record.board));
 const exactCounts = new Map(rectangleCounts.records.map((record) => [record.board, record.solutions]));
+const graphRecords = new Map(decisionGraphs.records.map((record) => [record.board, record]));
 const boardOptions: BoardOption[] = Array.from({ length: 13 }, (_, rowIndex) => rowIndex + 3).flatMap((rows) =>
   Array.from({ length: 16 - rows }, (_, colIndex) => {
     const cols = rows + colIndex;
     const board = `${rows}x${cols}`;
     const solutions = exactCounts.get(board);
-    return { board, rows, cols, solutions, mode: completeBoards.has(board) ? "catalog" as const : solutions ? "exact" as const : "live" as const };
+    return { board, rows, cols, solutions, mode: completeBoards.has(board) ? "catalog" as const : graphRecords.has(board) ? "graph" as const : "live" as const };
   }),
 );
 
@@ -162,12 +164,14 @@ export function YinYangExplorer() {
     worker.current?.terminate();
     const board = `${nextRows}x${nextCols}`;
     const catalogMode = completeBoards.has(board);
-    const nextWorker = new Worker(catalogMode ? "/workers/yinyang-catalog.js" : "/workers/yinyang-clue-solver.js");
+    const graphMode = graphRecords.has(board) && !catalogMode;
+    const pagedMode = catalogMode || graphMode;
+    const nextWorker = new Worker(catalogMode ? "/workers/yinyang-catalog.js" : graphMode ? "/workers/yinyang-graph.js" : "/workers/yinyang-clue-solver.js");
     worker.current = nextWorker;
     const requestId = ++searchId.current;
     setState("running"); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setSelectedIndex(0); setError(""); setProgress({ checked: 0, solutions: 0, elapsedMs: 0 });
     nextWorker.onmessage = ({ data }) => {
-      if (catalogMode && data.type === "page") {
+      if (pagedMode && data.type === "page") {
         if (data.searchId !== searchId.current || data.requestId !== pageRequestId.current) return;
         setPage({ start: data.start, items: data.items });
         return;
@@ -175,8 +179,8 @@ export function YinYangExplorer() {
       if (data.requestId !== searchId.current) return;
       if (data.type === "progress") { setProgress({ checked: data.checked, solutions: data.solutions, elapsedMs: data.elapsedMs }); return; }
       if (data.type === "error") { setError(data.message); setState("error"); return; }
-      const nextPage = catalogMode ? data.page as ResultPage : { start: 0, items: data.samples as string[] };
-      setResult({ solutions: data.solutions, keyMatches: data.keyMatches, checked: data.checked, elapsedMs: data.elapsedMs, truncated: data.truncated });
+      const nextPage = pagedMode ? data.page as ResultPage : { start: 0, items: data.samples as string[] };
+      setResult({ solutions: data.solutions, keyMatches: data.keyMatches, checked: data.checked, elapsedMs: data.elapsedMs, truncated: data.truncated, graphNodes: data.graphNodes, graphEdges: data.graphEdges });
       setProgress({ checked: data.checked, solutions: data.solutions, elapsedMs: data.elapsedMs });
       setPage(nextPage); setSelected(nextPage.items[0] ?? ""); setSelectedIndex(0); setState(data.type === "timeout" ? "timeout" : "complete");
     };
@@ -193,7 +197,7 @@ export function YinYangExplorer() {
     const [nextRows, nextCols] = board.split("x").map(Number);
     const nextClues = empty(nextRows, nextCols);
     setRows(nextRows); setCols(nextCols); setClues(nextClues);
-    if (completeBoards.has(board)) launchSearch(nextRows, nextCols, nextClues);
+    if (completeBoards.has(board) || graphRecords.has(board)) launchSearch(nextRows, nextCols, nextClues);
     else { worker.current?.terminate(); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setSelectedIndex(0); setState("idle"); setProgress({ checked: 0, solutions: 0, elapsedMs: 0 }); setError(""); }
   }
 
@@ -208,6 +212,8 @@ export function YinYangExplorer() {
   const board = `${rows}x${cols}`;
   const currentOption = boardOptions.find((option) => option.board === board)!;
   const catalogMode = currentOption.mode === "catalog";
+  const graphMode = currentOption.mode === "graph";
+  const pagedMode = catalogMode || graphMode;
   const exactTotal = currentOption.solutions ? Number(currentOption.solutions) : undefined;
   const selectedRows = useMemo(() => selected ? hexRows(selected, rows, cols) : [], [cols, rows, selected]);
   const orbit = useMemo(() => {
@@ -225,28 +231,28 @@ export function YinYangExplorer() {
       <header className="yy-tool-hero yy-lab-hero">
         <p>Puzzle laboratory</p>
         <h1>Yin Yang puzzle viewer</h1>
-        <div><p>Edit square and rectangular boards through 15 by 15. Complete catalogs keep the full virtual scroll, while larger boards use live constrained search with a strict 30 minute limit.</p><span>91 board sizes through 15 × 15</span></div>
+        <div><p>Edit square and rectangular boards through 15 by 15. Stored catalogs and compressed decision graphs provide complete virtual scrolling. Boards beyond the exact graph boundary use live constrained search.</p><span>91 board sizes through 15 × 15</span></div>
       </header>
 
       <section className="yy-catalog-workspace">
         <aside className="yy-editor-card">
           <div className="yy-card-head"><div><p className="yy-eyebrow">Puzzle editor</p><h2>{rows} by {cols}</h2></div><label>Board size<select value={board} onChange={(event) => chooseBoard(event.target.value)}>
             <optgroup label="Complete scrolling catalogs">{boardOptions.filter((option) => option.mode === "catalog").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
-            <optgroup label="Exact totals with live clue search">{boardOptions.filter((option) => option.mode === "exact").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
+            <optgroup label="Complete compressed graph catalogs">{boardOptions.filter((option) => option.mode === "graph").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
             <optgroup label="Large live clue search">{boardOptions.filter((option) => option.mode === "live").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols}</option>)}</optgroup>
           </select></label></div>
-          <div className={`yy-mode-note is-${currentOption.mode}`}><b>{catalogMode ? "Complete catalog" : currentOption.mode === "exact" ? "Exact total with live clue search" : "Large live clue search"}</b><span>{catalogMode ? "Every solution is available in the virtual scroll." : exactTotal !== undefined ? `${format.format(exactTotal)} valid boards are known exactly. Add pieces before starting a live search.` : "This board is available in the editor. Add enough pieces to make the live search practical."}</span></div>
+          <div className={`yy-mode-note is-${currentOption.mode}`}><b>{catalogMode ? "Complete catalog" : graphMode ? "Complete decision graph" : "Large live clue search"}</b><span>{catalogMode ? "Every solution is available in the virtual scroll." : graphMode ? `${format.format(exactTotal ?? 0)} solutions share ${format.format(graphRecords.get(board)?.nodes ?? 0)} graph states. Every solution remains directly accessible.` : "This board is available in the editor. Add enough pieces to make the live search practical."}</span></div>
           <div className="yy-tool-palette" aria-label="Piece tool">{(["1", "0", "."] as Tool[]).map((value) => <button key={value} className={`${tool === value ? "is-active" : ""} value-${value === "." ? "empty" : value}`} onClick={() => setTool(value)}><i />{value === "1" ? "Black" : value === "0" ? "White" : "Remove"}</button>)}</div>
           <div className="yy-editor-board"><Board rows={puzzleRows} clues={clues} editable tool={tool} onCell={(index, value) => { const next = clues.slice(); next[index] = value; setClues(next); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setState("idle"); }} label="Editable Yin Yang puzzle" /></div>
-          <div className="yy-editor-actions"><button className="yy-primary" onClick={() => launchSearch(rows, cols, clues)} disabled={state === "running"}>{state === "running" ? "Searching…" : catalogMode ? "Find all solutions" : "Search matching solutions"}</button><button onClick={() => { const next = empty(rows, cols); setClues(next); if (catalogMode) launchSearch(rows, cols, next); else { worker.current?.terminate(); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setState("idle"); } }}>{catalogMode ? "Clear and show all" : "Clear board"}</button></div>
+          <div className="yy-editor-actions"><button className="yy-primary" onClick={() => launchSearch(rows, cols, clues)} disabled={state === "running"}>{state === "running" ? "Searching…" : pagedMode ? "Find all solutions" : "Search matching solutions"}</button><button onClick={() => { const next = empty(rows, cols); setClues(next); if (pagedMode) launchSearch(rows, cols, next); else { worker.current?.terminate(); setResult(null); setPage({ start: 0, items: [] }); setSelected(""); setState("idle"); } }}>{pagedMode ? "Clear and show all" : "Clear board"}</button></div>
           <div className="yy-result-meta"><span>Status <b>{state}</b></span><span>Keys checked <b>{format.format(progress.checked)}</b></span><span>Time <b>{progress.elapsedMs < 1000 ? `${progress.elapsedMs.toFixed(0)} ms` : `${(progress.elapsedMs / 1000).toFixed(2)} s`}</b></span></div>
           {state === "timeout" ? <p className="yy-warning">The 30 minute limit was reached. The visualized boards were found before the search stopped.</p> : null}
           {error ? <p className="yy-warning">{error}</p> : null}
         </aside>
 
         <div className="yy-solution-panel">
-          <div className="yy-card-head"><div><p className="yy-eyebrow">{catalogMode ? "Complete solution catalog" : "Large board search"}</p><h2>{result ? format.format(result.solutions) : state === "running" ? format.format(progress.solutions) : exactTotal !== undefined ? format.format(exactTotal) : "Add pieces, then search"}</h2></div>{catalogMode && result?.keyMatches !== undefined ? <span>{format.format(result.keyMatches)} symmetry groups</span> : <span>{currentOption.mode === "exact" ? "Exact board total" : "Live constrained search"}</span>}</div>
-          {!catalogMode && !result && state !== "running" ? <div className="yy-large-search-intro"><b>The editor is ready.</b><p>A complete stored list is not used for this size. Place black and white pieces, then the browser will search the remaining state space for up to 30 minutes.</p></div> : <SolutionBrowser rows={rows} cols={cols} clues={clues} total={catalogMode ? result?.solutions ?? 0 : page.items.length} reportedTotal={result?.solutions} page={page} selected={selected} loading={state === "running"} paged={catalogMode} onRequest={requestPage} onSelect={(hex, index) => { setSelected(hex); setSelectedIndex(index); }} />}
+          <div className="yy-card-head"><div><p className="yy-eyebrow">{catalogMode ? "Complete solution catalog" : graphMode ? "Complete solution graph" : "Large board search"}</p><h2>{result ? format.format(result.solutions) : state === "running" ? format.format(progress.solutions) : exactTotal !== undefined ? format.format(exactTotal) : "Add pieces, then search"}</h2></div>{catalogMode && result?.keyMatches !== undefined ? <span>{format.format(result.keyMatches)} symmetry groups</span> : graphMode ? <span>{format.format(result?.graphNodes ?? graphRecords.get(board)?.nodes ?? 0)} shared states</span> : <span>Live constrained search</span>}</div>
+          {!pagedMode && !result && state !== "running" ? <div className="yy-large-search-intro"><b>The editor is ready.</b><p>A complete graph is not available beyond 100 cells yet. Place black and white pieces, then the browser will search the remaining state space for up to 30 minutes.</p></div> : <SolutionBrowser rows={rows} cols={cols} clues={clues} total={pagedMode ? result?.solutions ?? 0 : page.items.length} reportedTotal={result?.solutions} page={page} selected={selected} loading={state === "running"} paged={pagedMode} onRequest={requestPage} onSelect={(hex, index) => { setSelected(hex); setSelectedIndex(index); }} />}
         </div>
       </section>
 
@@ -257,7 +263,7 @@ export function YinYangExplorer() {
 
       <RectangleCountMap />
 
-      <footer className="yy-tool-footer"><p>The editor includes every distinct rectangle from 3 by 3 through 15 by 15. The 49 Flutter era sizes use complete catalogs. Larger boards use exact totals when available and live clue search.</p><div><a href="https://arash-san.github.io/Yin-Yang-viewer/" target="_blank" rel="noreferrer">Open the original Flutter viewer ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
+      <footer className="yy-tool-footer"><p>The editor includes every distinct rectangle from 3 by 3 through 15 by 15. Stored catalogs cover the Flutter era sizes. Ranked decision graphs provide complete scrolling through every exact board with at most 100 cells. Larger boards continue with live clue search.</p><div><a href="https://arash-san.github.io/Yin-Yang-viewer/" target="_blank" rel="noreferrer">Open the original Flutter viewer ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
     </div>
   );
 }
