@@ -1,0 +1,16 @@
+{
+  "name": "Get Your Shit Together",
+  "short_name": "GYST",
+  "description": "Arash's daily command center",
+  "start_url": "/life/",
+  "display": "standalone",
+  "background_color": "#f7f8f9",
+  "theme_color": "#0c66e4",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
