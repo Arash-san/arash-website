@@ -1,0 +1,391 @@
+{
+  "generatedBy": "gpt-5.6-luna",
+  "reasoningEffort": "xhigh",
+  "generatedAt": "2026-08-25T18:59:02.090Z",
+  "items": [
+    {
+      "id": "morning-balanced-stuck",
+      "period": "morning",
+      "mode": "balanced",
+      "progress": "stuck",
+      "headline": "Arash, Unfurl the Morning",
+      "nudge": "Pick one open task; the rest can wait outside the sunbeam."
+    },
+    {
+      "id": "morning-balanced-moving",
+      "period": "morning",
+      "mode": "balanced",
+      "progress": "moving",
+      "headline": "Arash, Keep the Whiskers Up",
+      "nudge": "One task is done; choose the next useful bite, not the loudest one."
+    },
+    {
+      "id": "morning-balanced-clear",
+      "period": "morning",
+      "mode": "balanced",
+      "progress": "clear",
+      "headline": "Arash, Bask in the Quiet",
+      "nudge": "Your list is clear; enjoy the suspiciously peaceful patch of floor."
+    },
+    {
+      "id": "morning-focus-stuck",
+      "period": "morning",
+      "mode": "focus",
+      "progress": "stuck",
+      "headline": "Arash, Crown One Priority",
+      "nudge": "Choose one open task and guard it fiercely from every shiny interruption."
+    },
+    {
+      "id": "morning-focus-moving",
+      "period": "morning",
+      "mode": "focus",
+      "progress": "moving",
+      "headline": "Arash, Protect the Winning Thread",
+      "nudge": "Keep the finished momentum small; give one important task your undivided paws."
+    },
+    {
+      "id": "morning-focus-clear",
+      "period": "morning",
+      "mode": "focus",
+      "progress": "clear",
+      "headline": "Arash, One Quiet Victory",
+      "nudge": "Nothing remains open; use this calm to jot tomorrow's single priority."
+    },
+    {
+      "id": "morning-social-stuck",
+      "period": "morning",
+      "mode": "social",
+      "progress": "stuck",
+      "headline": "Arash, Send One Gentle Ping",
+      "nudge": "Reply to one person with three honest lines; your inbox is not a haunted house."
+    },
+    {
+      "id": "morning-social-moving",
+      "period": "morning",
+      "mode": "social",
+      "progress": "moving",
+      "headline": "Arash, Share the Tiny Win",
+      "nudge": "Tell someone what moved today, then ask one easy question and exit gracefully."
+    },
+    {
+      "id": "morning-social-clear",
+      "period": "morning",
+      "mode": "social",
+      "progress": "clear",
+      "headline": "Arash, Let Someone In",
+      "nudge": "With nothing open, send a warm hello before the cat claims all conversation."
+    },
+    {
+      "id": "morning-recovery-stuck",
+      "period": "morning",
+      "mode": "recovery",
+      "progress": "stuck",
+      "headline": "Arash, Lower the Tiny Bar",
+      "nudge": "Choose the gentlest next step; today does not need a heroic performance."
+    },
+    {
+      "id": "morning-recovery-moving",
+      "period": "morning",
+      "mode": "recovery",
+      "progress": "moving",
+      "headline": "Arash, Keep the Soft Pace",
+      "nudge": "One thing is complete; stop there for a breath, then continue only if kindness agrees."
+    },
+    {
+      "id": "morning-recovery-clear",
+      "period": "morning",
+      "mode": "recovery",
+      "progress": "clear",
+      "headline": "Arash, Rest Without Negotiating",
+      "nudge": "Nothing is open; take the win and let your nervous system sit by the window."
+    },
+    {
+      "id": "afternoon-balanced-stuck",
+      "period": "afternoon",
+      "mode": "balanced",
+      "progress": "stuck",
+      "headline": "Arash, Rescue the Afternoon",
+      "nudge": "Name the one task still tugging your sleeve, then give it fifteen quiet minutes."
+    },
+    {
+      "id": "afternoon-balanced-moving",
+      "period": "afternoon",
+      "mode": "balanced",
+      "progress": "moving",
+      "headline": "Arash, Keep the Middle Moving",
+      "nudge": "You have completed something; use that evidence to pick a sensible next step."
+    },
+    {
+      "id": "afternoon-balanced-clear",
+      "period": "afternoon",
+      "mode": "balanced",
+      "progress": "clear",
+      "headline": "Arash, Enjoy the Empty Bowl",
+      "nudge": "No tasks are open; spend this pocket on maintenance, curiosity, or excellent snacks."
+    },
+    {
+      "id": "afternoon-focus-stuck",
+      "period": "afternoon",
+      "mode": "focus",
+      "progress": "stuck",
+      "headline": "Arash, Tame One Loose Thread",
+      "nudge": "Select one open task, close the tabs, and let everything else become background furniture."
+    },
+    {
+      "id": "afternoon-focus-moving",
+      "period": "afternoon",
+      "mode": "focus",
+      "progress": "moving",
+      "headline": "Arash, Guard the Deep Work",
+      "nudge": "A task is finished; protect the next focused block from your charmingly unnecessary detours."
+    },
+    {
+      "id": "afternoon-focus-clear",
+      "period": "afternoon",
+      "mode": "focus",
+      "progress": "clear",
+      "headline": "Arash, Close the Notebook",
+      "nudge": "Everything is closed; capture one idea, then leave the workday's imaginary courtroom."
+    },
+    {
+      "id": "afternoon-social-stuck",
+      "period": "afternoon",
+      "mode": "social",
+      "progress": "stuck",
+      "headline": "Arash, Unclog One Conversation",
+      "nudge": "Answer one waiting person plainly; brevity is a perfectly respectable social skill."
+    },
+    {
+      "id": "afternoon-social-moving",
+      "period": "afternoon",
+      "mode": "social",
+      "progress": "moving",
+      "headline": "Arash, Pass the Good Pebble",
+      "nudge": "Mention one completed thing to someone you trust and ask how their day is behaving."
+    },
+    {
+      "id": "afternoon-social-clear",
+      "period": "afternoon",
+      "mode": "social",
+      "progress": "clear",
+      "headline": "Arash, Spend the Spare Bandwidth",
+      "nudge": "Your tasks are clear; send one thoughtful reply without accidentally founding a committee."
+    },
+    {
+      "id": "afternoon-recovery-stuck",
+      "period": "afternoon",
+      "mode": "recovery",
+      "progress": "stuck",
+      "headline": "Arash, Make the Afternoon Smaller",
+      "nudge": "Pick the easiest open task and shrink it until even a sleepy cat can start."
+    },
+    {
+      "id": "afternoon-recovery-moving",
+      "period": "afternoon",
+      "mode": "recovery",
+      "progress": "moving",
+      "headline": "Arash, Keep What Worked",
+      "nudge": "Something is complete; pause before adding another obligation to the pile."
+    },
+    {
+      "id": "afternoon-recovery-clear",
+      "period": "afternoon",
+      "mode": "recovery",
+      "progress": "clear",
+      "headline": "Arash, Claim the Soft Landing",
+      "nudge": "Nothing is open; switch gently to rest, errands, or an unapologetic little treat."
+    },
+    {
+      "id": "evening-balanced-stuck",
+      "period": "evening",
+      "mode": "balanced",
+      "progress": "stuck",
+      "headline": "Arash, Unsnarl the Evening",
+      "nudge": "Choose one open task to finish or deliberately defer; ambiguity is the real litter box."
+    },
+    {
+      "id": "evening-balanced-moving",
+      "period": "evening",
+      "mode": "balanced",
+      "progress": "moving",
+      "headline": "Arash, Land the Day Gracefully",
+      "nudge": "You finished at least one thing; settle the next step, then stop before midnight auditions."
+    },
+    {
+      "id": "evening-balanced-clear",
+      "period": "evening",
+      "mode": "balanced",
+      "progress": "clear",
+      "headline": "Arash, Admire the Clean Trail",
+      "nudge": "Your tasks are clear; review tomorrow lightly, then let tonight belong to you."
+    },
+    {
+      "id": "evening-focus-stuck",
+      "period": "evening",
+      "mode": "focus",
+      "progress": "stuck",
+      "headline": "Arash, Give One Task Nightlight",
+      "nudge": "Choose one open task for a short closing sprint, with the rest safely ignored."
+    },
+    {
+      "id": "evening-focus-moving",
+      "period": "evening",
+      "mode": "focus",
+      "progress": "moving",
+      "headline": "Arash, Finish the Right Thing",
+      "nudge": "One task is done; finish one meaningful thread or park it with a clear note."
+    },
+    {
+      "id": "evening-focus-clear",
+      "period": "evening",
+      "mode": "focus",
+      "progress": "clear",
+      "headline": "Arash, Retire the Laser Beam",
+      "nudge": "Nothing is open; turn off focus mode and let your brain stop hunting."
+    },
+    {
+      "id": "evening-social-stuck",
+      "period": "evening",
+      "mode": "social",
+      "progress": "stuck",
+      "headline": "Arash, Send the Low Stakes Reply",
+      "nudge": "Reply to one person with a simple truth; elaborate emotional essays can wait until daylight."
+    },
+    {
+      "id": "evening-social-moving",
+      "period": "evening",
+      "mode": "social",
+      "progress": "moving",
+      "headline": "Arash, Share Before You Snooze",
+      "nudge": "Tell someone one thing you finished today, then invite a tiny, easy response."
+    },
+    {
+      "id": "evening-social-clear",
+      "period": "evening",
+      "mode": "social",
+      "progress": "clear",
+      "headline": "Arash, Close the Social Loop",
+      "nudge": "Nothing is open; send one goodnight message and leave the rest gloriously unanswered."
+    },
+    {
+      "id": "evening-recovery-stuck",
+      "period": "evening",
+      "mode": "recovery",
+      "progress": "stuck",
+      "headline": "Arash, Permission to Pause",
+      "nudge": "Open tasks can wait; choose rest tonight, because tired brains make dreadful bargains."
+    },
+    {
+      "id": "evening-recovery-moving",
+      "period": "evening",
+      "mode": "recovery",
+      "progress": "moving",
+      "headline": "Arash, Keep the Evening Kind",
+      "nudge": "You completed something; let that be enough for now and soften the remaining edges."
+    },
+    {
+      "id": "evening-recovery-clear",
+      "period": "evening",
+      "mode": "recovery",
+      "progress": "clear",
+      "headline": "Arash, Fold the Day Away",
+      "nudge": "Nothing is open; close the loop with water, quiet, and absolutely no bonus chores."
+    },
+    {
+      "id": "late-night-balanced-stuck",
+      "period": "late-night",
+      "mode": "balanced",
+      "progress": "stuck",
+      "headline": "Arash, Deflate the Midnight List",
+      "nudge": "Choose whether one open task truly matters tonight; the others can nap in the queue."
+    },
+    {
+      "id": "late-night-balanced-moving",
+      "period": "late-night",
+      "mode": "balanced",
+      "progress": "moving",
+      "headline": "Arash, Bank the Small Win",
+      "nudge": "You completed something; note the next step and let tomorrow inherit the rest."
+    },
+    {
+      "id": "late-night-balanced-clear",
+      "period": "late-night",
+      "mode": "balanced",
+      "progress": "clear",
+      "headline": "Arash, Leave the List Sleeping",
+      "nudge": "Nothing is open; protect the clean finish and resist inventing a midnight sequel."
+    },
+    {
+      "id": "late-night-focus-stuck",
+      "period": "late-night",
+      "mode": "focus",
+      "progress": "stuck",
+      "headline": "Arash, One Last Tiny Target",
+      "nudge": "Pick one open task that fits ten minutes, then shut the mental door."
+    },
+    {
+      "id": "late-night-focus-moving",
+      "period": "late-night",
+      "mode": "focus",
+      "progress": "moving",
+      "headline": "Arash, Park the Cleverness",
+      "nudge": "One task is complete; write down the next action and stop polishing the moon."
+    },
+    {
+      "id": "late-night-focus-clear",
+      "period": "late-night",
+      "mode": "focus",
+      "progress": "clear",
+      "headline": "Arash, Power Down the Pointer",
+      "nudge": "Your list is clear; end the hunt and give your attention back to sleep."
+    },
+    {
+      "id": "late-night-social-stuck",
+      "period": "late-night",
+      "mode": "social",
+      "progress": "stuck",
+      "headline": "Arash, Send the Tiny Goodnight",
+      "nudge": "Reply to one person with warmth, then let the rest of the world wait until tomorrow."
+    },
+    {
+      "id": "late-night-social-moving",
+      "period": "late-night",
+      "mode": "social",
+      "progress": "moving",
+      "headline": "Arash, Share the Last Win",
+      "nudge": "Tell someone one completed thing, keep it brief, and let the night stay quiet."
+    },
+    {
+      "id": "late-night-social-clear",
+      "period": "late-night",
+      "mode": "social",
+      "progress": "clear",
+      "headline": "Arash, Whisper Goodnight",
+      "nudge": "Nothing is open; send a soft goodnight and retire from the internet's nonsense."
+    },
+    {
+      "id": "late-night-recovery-stuck",
+      "period": "late-night",
+      "mode": "recovery",
+      "progress": "stuck",
+      "headline": "Arash, Let Tomorrow Handle It",
+      "nudge": "Open tasks can wait until morning; tonight's assignment is simply becoming horizontal."
+    },
+    {
+      "id": "late-night-recovery-moving",
+      "period": "late-night",
+      "mode": "recovery",
+      "progress": "moving",
+      "headline": "Arash, Keep the Victory Small",
+      "nudge": "You completed something; count it gently, then stop before your brain requests an encore."
+    },
+    {
+      "id": "late-night-recovery-clear",
+      "period": "late-night",
+      "mode": "recovery",
+      "progress": "clear",
+      "headline": "Arash, Sleep on the Victory",
+      "nudge": "Nothing is open; leave the command center dim and let rest do its quiet work."
+    }
+  ]
+}

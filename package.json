@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cms": "node scripts/blog-cms.mjs"
+    "cms": "node scripts/blog-cms.mjs",
+    "life:copy": "node scripts/generate-life-greetings.mjs"
   },
   "dependencies": {
     "@atlaskit/app-provider": "^5.4.0",
@@ -20,6 +21,7 @@
     "@atlaskit/textarea": "^10.1.0",
     "@atlaskit/tokens": "^16.8.0",
     "@atlaskit/tooltip": "^24.2.0",
+    "@openai/codex-sdk": "^0.149.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
     "motion": "^13.1.1",
