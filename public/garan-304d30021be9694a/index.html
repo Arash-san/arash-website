@@ -31,7 +31,7 @@
 </form></div>
 <script>
 (() => {
-  const SALT = Uint8Array.from(atob("bmy8tZxBJO6lBODl/2IFDg=="), (c) => c.charCodeAt(0)), ITER = 250000;
+  const SALT = Uint8Array.from(atob("HLd0QBgw8nO3EoZiF76BGw=="), (c) => c.charCodeAt(0)), ITER = 250000;
   const TYPES = { webp: "image/webp", mp3: "audio/mpeg", json: "application/json" };
   const q = (s) => document.querySelector(s);
 
@@ -39,8 +39,10 @@
     const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw.trim().toLowerCase()), "PBKDF2", false, ["deriveKey"]);
     return crypto.subtle.deriveKey({ name: "PBKDF2", salt: SALT, iterations: ITER, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
   }
+  // Tag every request with this build's salt so a rebuild (new password) never reuses cached files from the last one.
+  const BUILD = encodeURIComponent("HLd0QBgw8nO3EoZiF76BGw==");
   async function getDec(key, url) {
-    const r = await fetch(url);
+    const r = await fetch(url + "?v=" + BUILD);
     if (!r.ok) throw new Error("missing " + url);
     const b = new Uint8Array(await r.arrayBuffer());
     return crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(0, 12) }, key, b.slice(12));
@@ -50,6 +52,11 @@
     const key = await deriveKey(pw);
     const html = new TextDecoder().decode(await getDec(key, "app.enc")); // throws OperationError on a wrong password
     try { sessionStorage.setItem("garden-pw", pw); } catch {}
+    try { await render(key, html); }
+    catch (err) { throw new Error("load failed after unlock: " + (err && err.message)); } // never reported as a wrong password
+  }
+
+  async function render(key, html) {
     const type = (u) => TYPES[u.split(".").pop()] || "application/octet-stream";
     window.efetch = async (u) => new Response(await getDec(key, u + ".enc"), { headers: { "Content-Type": type(u) } });
     window.blobUrl = async (u) => URL.createObjectURL(new Blob([await getDec(key, u + ".enc")], { type: type(u) }));
