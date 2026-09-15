@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>🌱</title>
+<style id="gate-style">
+  html,body{margin:0;height:100%;background:#0f1a14;color:#f6efe1;font-family:Georgia,serif}
+  #gate{position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 35%,#24402f,#0f1a14 70%)}
+  #gate form{width:min(100%,360px);text-align:center}
+  #gate .sprout{font-size:44px;margin-bottom:10px}
+  #gate h1{font-weight:500;font-size:26px;margin:0 0 22px;color:#fbf5e8}
+  #gate input{width:100%;box-sizing:border-box;padding:14px 18px;border-radius:999px;border:1px solid rgba(246,239,225,.25);background:rgba(246,239,225,.08);color:#fbf5e8;font:18px system-ui,sans-serif;text-align:center;outline:none}
+  #gate input:focus{border-color:#f2c66d}
+  #gate button{margin-top:12px;width:100%;padding:14px;border:0;border-radius:999px;background:#f2c66d;color:#2b2410;font:700 18px system-ui,sans-serif;cursor:pointer}
+  #gate button[disabled]{opacity:.6}
+  #gate .err{min-height:22px;margin-top:12px;font:15px system-ui,sans-serif;color:#f3c2d0}
+</style>
+</head>
+<body>
+<div id="gate"><form id="gf" autocomplete="off">
+  <div class="sprout">🌱</div>
+  <h1>This garden is private</h1>
+  <input id="pw" type="password" placeholder="Password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Password" autofocus>
+  <button id="go" type="submit">Open</button>
+  <div class="err" id="err" role="alert"></div>
+</form></div>
+<script>
+(() => {
+  const SALT = Uint8Array.from(atob("4vtl+pbFjJVRS3kJbCjdFQ=="), (c) => c.charCodeAt(0)), ITER = 250000;
+  const TYPES = { webp: "image/webp", mp3: "audio/mpeg", json: "application/json" };
+  const q = (s) => document.querySelector(s);
+
+  async function deriveKey(pw) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw.trim().toLowerCase()), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt: SALT, iterations: ITER, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  }
+  async function getDec(key, url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("missing " + url);
+    const b = new Uint8Array(await r.arrayBuffer());
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(0, 12) }, key, b.slice(12));
+  }
+
+  async function unlock(pw) {
+    const key = await deriveKey(pw);
+    const html = new TextDecoder().decode(await getDec(key, "app.enc")); // throws OperationError on a wrong password
+    try { sessionStorage.setItem("garden-pw", pw); } catch {}
+    const type = (u) => TYPES[u.split(".").pop()] || "application/octet-stream";
+    window.efetch = async (u) => new Response(await getDec(key, u + ".enc"), { headers: { "Content-Type": type(u) } });
+    window.blobUrl = async (u) => URL.createObjectURL(new Blob([await getDec(key, u + ".enc")], { type: type(u) }));
+    const [loading, title] = await Promise.all([blobUrl("img/scene_loading.webp"), blobUrl("img/scene_title.webp")]);
+    document.documentElement.style.setProperty("--loadimg", `url(${loading})`);
+    document.documentElement.style.setProperty("--titleimg", `url(${title})`);
+
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    document.title = doc.title;
+    for (const el of doc.head.querySelectorAll("style,link")) document.head.appendChild(document.importNode(el, true));
+    const code = [...doc.querySelectorAll("script")].map((s) => s.textContent).join("\n");
+    doc.querySelectorAll("script").forEach((s) => s.remove());
+    q("#gate-style").remove();
+    document.body.innerHTML = doc.body.innerHTML;
+    const s = document.createElement("script");
+    s.textContent = code;
+    document.body.appendChild(s);
+  }
+
+  q("#gf").onsubmit = async (e) => {
+    e.preventDefault();
+    const pw = q("#pw").value;
+    if (!pw.trim()) return;
+    const go = q("#go");
+    go.disabled = true; go.textContent = "Opening…"; q("#err").textContent = "";
+    try { await unlock(pw); }
+    catch (err) {
+      go.disabled = false; go.textContent = "Open";
+      q("#err").textContent = err && err.name === "OperationError" ? "That's not the password." : "Couldn't load. Check the connection and try again.";
+      q("#pw").select();
+    }
+  };
+
+  // "start over" reloads the page; don't ask again in the same tab.
+  let saved = null;
+  try { saved = sessionStorage.getItem("garden-pw"); } catch {}
+  if (saved) unlock(saved).catch(() => { try { sessionStorage.removeItem("garden-pw"); } catch {} });
+})();
+</script>
+</body>
+</html>
