@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Large Language Models for Measurement &amp; Automation · Arash Ahmadi</title>
+<meta name="description" content="Guest lecture by Arash Ahmadi (INQUIRE Lab, The University of Oklahoma): what an LLM computes, how it sees a sine wave, and how to use LLM agents with lab instruments safely.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Large Language Models for Measurement & Automation">
+<meta property="og:description" content="How an LLM sees a sine wave, and how to put one to work in the lab. Guest lecture by Arash Ahmadi.">
+<meta property="og:image" content="https://arash-ahmadi.com/automation-presentation/preview.jpg">
+<meta property="og:url" content="https://arash-ahmadi.com/automation-presentation/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico">
+<style>
+  :root { --crimson: #841617; --ink: #1f2328; --muted: #5b636e; --line: #e4e6ea; --bg: #f7f7f8; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif; }
+  .top { height: 6px; background: var(--crimson); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+  header h1 { margin: 6px 0 6px; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; color: var(--crimson); letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 17px; line-height: 1.5; }
+  header .who { margin-top: 10px; font-size: 15px; }
+  header .who a { color: var(--ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 22px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .btn.primary { background: var(--crimson); color: #fff; border-color: var(--crimson); }
+  .btn:hover { filter: brightness(0.96); }
+  .viewer { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(20, 20, 40, .08); }
+  .viewer img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #fff; user-select: none; }
+  .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 0; background: rgba(31, 35, 40, .55); color: #fff; font-size: 22px; cursor: pointer; display: grid; place-items: center; }
+  .nav:hover { background: rgba(132, 22, 23, .85); }
+  .nav.prev { left: 12px; } .nav.next { right: 12px; }
+  @media (max-width: 640px) { .nav { width: 30px; height: 30px; font-size: 16px; background: rgba(31, 35, 40, .35); } .nav.prev { left: 4px; } .nav.next { right: 4px; } }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 14px; }
+  .count { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 22px; }
+  .thumbs button { padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: #fff; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .thumbs button.on { border-color: var(--crimson); }
+  .thumbs img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  footer { margin-top: 34px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  footer a { color: var(--ink); }
+  .viewer:fullscreen { background: #000; display: grid; place-items: center; border-radius: 0; }
+  .viewer:fullscreen img { width: 100vw; height: 100vh; background: #000; }
+</style>
+</head>
+<body>
+<div class="top"></div>
+<main class="wrap">
+  <header>
+    <h1>Large Language Models for Measurement &amp; Automation</h1>
+    <p>How an LLM sees a sine wave, and how to put one to work in the lab. A 45 minute guest lecture covering the math of language models, how they read measurement data, and how LLM agents can run instruments safely.</p>
+    <p class="who"><strong>Arash Ahmadi</strong>, Ph.D. Student, Electrical and Computer Engineering · INQUIRE Lab, The University of Oklahoma · Guest lecture for Dr. Sarah Sharif's class</p>
+  </header>
+
+  <div class="actions">
+    <a class="btn primary" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi.pdf" download>Download PDF (5 MB)</a>
+    <button class="btn" id="fs" type="button">Full screen</button>
+    <a class="btn" href="/">arash-ahmadi.com</a>
+  </div>
+
+  <section class="viewer" id="viewer" aria-label="Slides">
+    <img id="slide" src="slides/01.jpg" alt="Slide 1">
+    <button class="nav prev" id="prev" type="button" aria-label="Previous slide">&#8249;</button>
+    <button class="nav next" id="next" type="button" aria-label="Next slide">&#8250;</button>
+  </section>
+  <div class="bar"><span>Use the arrow keys, swipe, or click a thumbnail.</span><span class="count" id="count">1 / 17</span></div>
+
+  <div class="thumbs" id="thumbs"></div>
+
+  <footer>
+    Questions or comments: <a href="mailto:arash.ahmadi@ou.edu">arash.ahmadi@ou.edu</a>.
+    Slide 8 illustrates the idea from Gruver et al., "Large Language Models Are Zero-Shot Time Series Forecasters," NeurIPS 2023.
+  </footer>
+</main>
+<script>
+(() => {
+  const N = 17, img = document.getElementById("slide"), count = document.getElementById("count"), thumbs = document.getElementById("thumbs");
+  const src = (i) => `slides/${String(i).padStart(2, "0")}.jpg`;
+  let cur = 1;
+  for (let i = 1; i <= N; i++) {
+    const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", `Slide ${i}`);
+    b.innerHTML = `<img src="${src(i)}" alt="" loading="lazy">`; b.onclick = () => show(i); thumbs.appendChild(b);
+  }
+  function show(i) {
+    cur = Math.min(N, Math.max(1, i));
+    img.src = src(cur); img.alt = `Slide ${cur}`; count.textContent = `${cur} / ${N}`;
+    [...thumbs.children].forEach((b, k) => b.classList.toggle("on", k + 1 === cur));
+    history.replaceState(null, "", `#${cur}`);
+    if (cur < N) new Image().src = src(cur + 1);
+  }
+  document.getElementById("prev").onclick = () => show(cur - 1);
+  document.getElementById("next").onclick = () => show(cur + 1);
+  document.getElementById("fs").onclick = () => document.getElementById("viewer").requestFullscreen?.();
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+    if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+    if (e.key === "Home") show(1); if (e.key === "End") show(N);
+  });
+  let x0 = null;
+  img.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+  img.addEventListener("touchend", (e) => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1)); x0 = null; });
+  img.addEventListener("click", () => show(cur + 1));
+  show(parseInt(location.hash.slice(1), 10) || 1);
+})();
+</script>
+</body>
+</html>
