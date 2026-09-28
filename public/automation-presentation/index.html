@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Large Language Models for Measurement &amp; Automation · Arash Ahmadi</title>
-<meta name="description" content="Guest lecture by Arash Ahmadi (INQUIRE Lab, The University of Oklahoma): what an LLM computes, how it sees a sine wave, and how to use LLM agents with lab instruments safely.">
+<meta name="description" content="Guest lecture for ECE 4433/5433 Measurement and Automation at The University of Oklahoma by Arash Ahmadi (INQUIRE Lab): what an LLM computes, how it sees a sine wave, and how LLMs fit next to PLCs and LabVIEW.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Large Language Models for Measurement & Automation">
 <meta property="og:description" content="How an LLM sees a sine wave, and how to put one to work in the lab. Guest lecture by Arash Ahmadi.">
@@ -49,14 +49,14 @@
 <main class="wrap">
   <header>
     <h1>Large Language Models for Measurement &amp; Automation</h1>
-    <p>How an LLM sees a sine wave, and how to put one to work in the lab. A 45 minute guest lecture covering the math of language models, how they read measurement data, and how LLM agents can run instruments safely.</p>
-    <p class="who"><strong>Arash Ahmadi</strong>, Ph.D. Student, Electrical and Computer Engineering · INQUIRE Lab, The University of Oklahoma · Guest lecture for Dr. Sarah Sharif's class</p>
+    <p>How an LLM sees a sine wave, and how to put one to work in the lab. A 45 minute guest lecture covering the math of language models, how they read measurement data, and how LLMs fit next to PLCs, LabVIEW and lab instruments.</p>
+    <p class="who"><strong>Arash Ahmadi</strong>, Ph.D. Student, Electrical and Computer Engineering · INQUIRE Lab, The University of Oklahoma · Guest lecture for ECE 4433/5433 Measurement and Automation, Dr. Sarah Sharif</p>
   </header>
 
   <div class="actions">
-    <a class="btn primary" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi.pdf" download>Download PDF (5 MB)</a>
-    <a class="btn" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi.pptx" download>PowerPoint with speaker notes (4 MB)</a>
-    <a class="btn" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi_transcript.docx" download>Full transcript (Word, 4 MB)</a>
+    <a class="btn primary" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi.pdf" download>Download PDF (6 MB)</a>
+    <a class="btn" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi.pptx" download>PowerPoint with speaker notes (5 MB)</a>
+    <a class="btn" href="LLMs-for-Measurement-and-Automation_Arash-Ahmadi_transcript.docx" download>Full transcript (Word, 5 MB)</a>
     <button class="btn" id="fs" type="button">Full screen</button>
     <a class="btn" href="/">arash-ahmadi.com</a>
   </div>
@@ -66,7 +66,7 @@
     <button class="nav prev" id="prev" type="button" aria-label="Previous slide">&#8249;</button>
     <button class="nav next" id="next" type="button" aria-label="Next slide">&#8250;</button>
   </section>
-  <div class="bar"><span>Use the arrow keys, swipe, or click a thumbnail.</span><span class="count" id="count">1 / 17</span></div>
+  <div class="bar"><span>Use the arrow keys, swipe, or click a thumbnail.</span><span class="count" id="count">1 / 18</span></div>
 
   <div class="thumbs" id="thumbs"></div>
 
@@ -78,7 +78,7 @@
 </main>
 <script>
 (() => {
-  const N = 17, img = document.getElementById("slide"), count = document.getElementById("count"), thumbs = document.getElementById("thumbs");
+  const N = 18, img = document.getElementById("slide"), count = document.getElementById("count"), thumbs = document.getElementById("thumbs");
   const src = (i) => `slides/${String(i).padStart(2, "0")}.jpg`;
   let cur = 1;
   for (let i = 1; i <= N; i++) {
