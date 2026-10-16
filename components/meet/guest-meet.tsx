@@ -98,7 +98,6 @@ export function GuestMeet({ token }: { token: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
-  const [step, setStep] = useState<"intro" | "grid">("intro");
   const [tab, setTab] = useState<"mine" | "group">("mine");
   const [mine, setMine] = useState<Set<string>>(new Set());
   const [dirty, setDirty] = useState(false);
@@ -130,7 +129,6 @@ export function GuestMeet({ token }: { token: string }) {
       setSaved(me);
       setName(me.name);
       setEmail(me.email || "");
-      setStep("grid");
     }
     load().then((r) => {
       if (r && me) {
@@ -154,7 +152,7 @@ export function GuestMeet({ token }: { token: string }) {
 
   const busy = useMemo(() => new Set(m?.arashBusy ?? []), [m]);
   const others = useMemo(() => (m ? m.responses.filter((r) => r.id !== saved?.id) : []), [m, saved]);
-  const everyone = useMemo(() => [...others, { id: "me", name: name || "You", slots: [...mine], updatedAt: "" }], [others, name, mine]);
+  const everyone = useMemo(() => [...others, { id: "me", name: m?.forName.trim() || name.trim() || "You", slots: [...mine], updatedAt: "" }], [others, name, mine, m]);
   const best = useMemo(() => (m ? bestWindows(m, everyone.filter((p) => p.slots.length), 4) : []), [m, everyone]);
   const total = everyone.filter((p) => p.slots.length).length;
 
@@ -162,6 +160,9 @@ export function GuestMeet({ token }: { token: string }) {
   if (!m) return <Loading />;
 
   const locked = m.status !== "open" || !!m.booking;
+  // A link made for one person carries their name; they can't change it. Group links (no name) ask for one.
+  const fixedName = m.forName.trim();
+  const who = fixedName || name.trim();
   const firstDay = m.dates[0];
   const lastDay = m.dates[m.dates.length - 1];
   const dateRange = firstDay === lastDay ? `${dayName(firstDay)}, ${monthDay(firstDay)}` : `${monthDay(firstDay)} – ${monthDay(lastDay)}`;
@@ -176,18 +177,18 @@ export function GuestMeet({ token }: { token: string }) {
       if (saved) {
         const r = await call<{ meeting: PublicMeeting }>(`/api/m/${token}/responses/${saved.id}`, {
           method: "PUT",
-          body: { editKey: saved.editKey, name, email, note: note || undefined, slots: [...mine] },
+          body: { editKey: saved.editKey, name: who, email, note: note || undefined, slots: [...mine] },
         });
         setM(r.meeting);
-        const me = { ...saved, name, email };
+        const me = { ...saved, name: who, email };
         localStorage.setItem(storeKey, JSON.stringify(me));
         setSaved(me);
       } else {
         const r = await call<{ id: string; editKey: string; meeting: PublicMeeting }>(`/api/m/${token}/responses`, {
           method: "POST",
-          body: { name, email, note, slots: [...mine] },
+          body: { name: who, email, note, slots: [...mine] },
         });
-        const me = { id: r.id, editKey: r.editKey, name, email };
+        const me = { id: r.id, editKey: r.editKey, name: who, email };
         localStorage.setItem(storeKey, JSON.stringify(me));
         setSaved(me);
         setM(r.meeting);
@@ -263,41 +264,6 @@ export function GuestMeet({ token }: { token: string }) {
         <AnimatePresence mode="wait">
           {m.booking ? (
             <Booked key="booked" m={m} reduced={reduced} />
-          ) : step === "intro" ? (
-            <motion.section
-              key="intro"
-              className="meet-card mt-8 sm:mt-10 max-w-xl p-5 sm:p-7"
-              initial={reduced ? false : { opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE, delay: 0.15 } }}
-              exit={{ opacity: 0, y: -16, transition: { duration: 0.25 } }}
-            >
-              <h2 className="text-xl font-bold text-black">First, who are you?</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Then you paint the times that work for you. Arash&apos;s calendar is already on the grid, so you&apos;ll only see times he can do.
-              </p>
-              <form
-                className="mt-5 space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (name.trim()) setStep("grid");
-                }}
-              >
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-600">Your name</span>
-                  <input className="meet-input mt-1" value={name} onChange={(e) => setName(e.target.value)} autoFocus maxLength={60} placeholder={m.forName || "Your name"} autoComplete="name" />
-                </label>
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-600">Email <span className="font-normal text-gray-400">(optional, for the calendar invite)</span></span>
-                  <input className="meet-input mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} placeholder="you@example.com" autoComplete="email" />
-                </label>
-                <div className="pt-2 flex items-center gap-3">
-                  <button className="meet-btn crimson" disabled={!name.trim()}>
-                    Pick my times →
-                  </button>
-                  {locked && <span className="text-sm text-gray-500">This meeting is closed.</span>}
-                </div>
-              </form>
-            </motion.section>
           ) : (
             <motion.section
               key="grid"
@@ -362,15 +328,42 @@ export function GuestMeet({ token }: { token: string }) {
               <aside className="space-y-4 lg:sticky lg:top-6">
                 <div className="meet-card p-4 sm:p-5">
                   <div className="flex items-center gap-3">
-                    <Avatar name={name || "You"} size={36} />
-                    <div className="min-w-0">
-                      <div className="font-semibold text-black truncate">{name}</div>
-                      <div className="text-xs text-gray-500 truncate">{email || "No email given"}</div>
+                    <Avatar name={who || "You"} size={36} />
+                    <div className="min-w-0 flex-1">
+                      {fixedName ? (
+                        <div className="font-semibold text-black truncate">{fixedName}</div>
+                      ) : (
+                        <input
+                          className="meet-input !py-1.5 text-sm"
+                          value={name}
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            setDirty(true);
+                          }}
+                          maxLength={60}
+                          placeholder="Your name"
+                          autoComplete="name"
+                          disabled={locked}
+                        />
+                      )}
                     </div>
-                    <button className="ml-auto text-xs text-gray-500 hover:text-black underline" onClick={() => setStep("intro")}>
-                      edit
-                    </button>
                   </div>
+                  <label className="mt-3 block">
+                    <span className="text-xs font-semibold text-gray-600">Your email <span className="font-normal text-gray-400">(for the calendar invite)</span></span>
+                    <input
+                      className="meet-input mt-1 text-sm"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setDirty(true);
+                      }}
+                      maxLength={120}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      disabled={locked}
+                    />
+                  </label>
                   <div className="mt-4 flex items-baseline gap-2">
                     <motion.span key={mine.size} initial={reduced ? false : { y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-3xl font-bold text-black tabular-nums">
                       {((mine.size * m.slotMin) / 60).toFixed(mine.size * m.slotMin % 60 ? 1 : 0)}
@@ -415,7 +408,7 @@ export function GuestMeet({ token }: { token: string }) {
                     />
                   )}
                   <div className="relative mt-4">
-                    <button className="meet-btn crimson w-full" onClick={save} disabled={saving || locked || (!dirty && !!saved) || !name.trim()}>
+                    <button className="meet-btn crimson w-full" onClick={save} disabled={saving || locked || (!dirty && !!saved) || !who}>
                       {saving ? "Saving…" : saved ? (dirty ? "Save changes" : <>{Icon.check()} Saved</>) : "Send my times to Arash"}
                     </button>
                     <AnimatePresence>{flash > 0 && <Burst key={flash} seed={flash} />}</AnimatePresence>
@@ -490,7 +483,7 @@ export function GuestMeet({ token }: { token: string }) {
 
       {/* phone: sticky save bar while there are unsaved changes */}
       <AnimatePresence>
-        {step === "grid" && dirty && !m.booking && (
+        {dirty && !m.booking && (
           <motion.div
             className="fixed inset-x-0 bottom-0 z-40 lg:hidden p-3 pb-[max(12px,env(safe-area-inset-bottom))]"
             initial={{ y: 90 }}
@@ -498,7 +491,7 @@ export function GuestMeet({ token }: { token: string }) {
             exit={{ y: 90 }}
             transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
           >
-            <button className="meet-btn crimson w-full py-3.5 text-base" onClick={save} disabled={saving || !name.trim()}>
+            <button className="meet-btn crimson w-full py-3.5 text-base" onClick={save} disabled={saving || !who}>
               {saving ? "Saving…" : saved ? "Save changes" : "Send my times to Arash"}
             </button>
           </motion.div>
