@@ -1,0 +1,303 @@
+/* Meet with Arash: same language as the home page (white, dot grid, black pills, crimson accent), plus the grid. */
+@layer components {
+
+.meet-root {
+  --crimson: #dc143c;
+  --crimson-soft: rgba(220, 20, 60, 0.12);
+  --ink: #111;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.16);
+  min-height: 100dvh;
+  color: #1f2937;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.meet-card {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 18px 44px -26px rgba(0, 0, 0, 0.35);
+}
+
+.meet-input {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px; /* phones zoom in on smaller fields */
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.meet-input:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+@media (min-width: 640px) {
+  .meet-input { font-size: 15px; }
+}
+
+.meet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 14px;
+  background: #111;
+  color: #fff;
+  transition: transform 0.15s, background 0.2s, opacity 0.2s, box-shadow 0.2s;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.6);
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+.meet-btn:hover { background: #000; transform: translateY(-1px); }
+.meet-btn:active { transform: translateY(0) scale(0.98); }
+.meet-btn:disabled { opacity: 0.45; pointer-events: none; }
+.meet-btn.crimson { background: var(--crimson); box-shadow: 0 12px 26px -14px rgba(220, 20, 60, 0.8); }
+.meet-btn.crimson:hover { background: #c01034; }
+.meet-btn.ghost { background: transparent; color: #111; box-shadow: none; border: 1px solid var(--line-strong); }
+.meet-btn.ghost:hover { background: rgba(0, 0, 0, 0.04); }
+.meet-btn.small { padding: 6px 12px; font-size: 13px; }
+
+.meet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.05);
+  color: #374151;
+  white-space: nowrap;
+}
+
+/* ---------- grid ---------- */
+.tg {
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+}
+.tg-cols {
+  display: grid;
+  gap: 0 4px;
+}
+.tg-head {
+  text-align: center;
+  padding-bottom: 8px;
+  line-height: 1.15;
+}
+.tg-head b { display: block; font-size: 13px; color: #111; }
+.tg-head span { font-size: 11px; color: #6b7280; }
+.tg-head.today b { color: var(--crimson); }
+.tg-col {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.tg-cell {
+  position: relative;
+  border-top: 1px dashed rgba(0, 0, 0, 0.06);
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.tg-cell.hour { border-top: 1px solid rgba(0, 0, 0, 0.1); }
+.tg-cell:first-child { border-top: 0; }
+.tg.paint .tg-cell.open { cursor: pointer; }
+.tg.paint .tg-cell.open:hover { background: rgba(220, 20, 60, 0.07); }
+.tg-cell.mine {
+  background: var(--crimson) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.tg-cell.mine { animation: tg-pop 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.tg-cell.erase { animation: tg-erase 0.28s ease; }
+@keyframes tg-pop {
+  0% { transform: scale(0.82); filter: brightness(1.25); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes tg-erase {
+  0% { background: rgba(220, 20, 60, 0.35); }
+  100% { background: transparent; }
+}
+.tg-cell.busy {
+  background-image: repeating-linear-gradient(135deg, rgba(17, 17, 17, 0.11) 0 2px, transparent 2px 7px);
+  background-color: rgba(17, 17, 17, 0.035);
+  cursor: not-allowed;
+}
+.tg-cell.past {
+  background-color: rgba(0, 0, 0, 0.035);
+  cursor: not-allowed;
+}
+.tg-cell.past.mine { opacity: 0.4; }
+.tg.heat .tg-cell { cursor: default; }
+.tg.heat.pickable .tg-cell.open { cursor: pointer; }
+.tg-cell.hl { box-shadow: inset 0 0 0 2px #111; }
+.tg-cell.hover-row { box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.55); }
+
+.tg-gutter {
+  position: relative;
+  font-size: 10.5px;
+  color: #9ca3af;
+  text-align: right;
+  padding-right: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.tg-gutter span {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.tg-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--crimson);
+  z-index: 3;
+  pointer-events: none;
+}
+.tg-now::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--crimson);
+  animation: tg-pulse 2s infinite;
+}
+@keyframes tg-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(220, 20, 60, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0); }
+}
+
+.tg-pick {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 8px;
+  border: 2px solid #111;
+  background: rgba(17, 17, 17, 0.08);
+  z-index: 4;
+  pointer-events: none;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.8), 0 10px 24px -10px rgba(0, 0, 0, 0.5);
+}
+.tg-pick.booked { border-color: #111; background: rgba(255, 255, 255, 0.28); }
+
+.tg-tip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  min-width: 170px;
+  max-width: 260px;
+  background: #111;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.6);
+}
+.tg-tip .dim { color: rgba(255, 255, 255, 0.55); }
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  display: inline-block;
+}
+.legend-swatch.busy {
+  background-image: repeating-linear-gradient(135deg, rgba(17, 17, 17, 0.25) 0 2px, transparent 2px 6px);
+}
+.heat-bar {
+  height: 10px;
+  width: 90px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fff, rgba(220, 20, 60, 0.25), var(--crimson));
+  border: 1px solid var(--line-strong);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: inline-block;
+  animation: live 2.2s infinite;
+}
+.live-dot.stale { background: #f59e0b; animation: none; }
+@keyframes live {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5); }
+  70% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+.mini-cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.mini-cal button {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  touch-action: none;
+}
+.mini-cal button:hover:not(:disabled) { background: rgba(0, 0, 0, 0.06); }
+.mini-cal button.on { background: #111; color: #fff; }
+.mini-cal button.on:hover { background: #000; }
+.mini-cal button:disabled { color: #d1d5db; }
+.mini-cal button.today { box-shadow: inset 0 0 0 1.5px var(--crimson); }
+
+.shimmer {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.09) 37%, rgba(0, 0, 0, 0.05) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 10px;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.toggle {
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.15);
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle.on { background: #111; }
+.toggle i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.toggle.on i { transform: translateX(16px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-cell.mine, .tg-cell.erase, .tg-now::before, .live-dot, .shimmer { animation: none !important; }
+}
+
+}
