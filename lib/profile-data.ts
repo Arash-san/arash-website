@@ -60,7 +60,7 @@ export const news: NewsItem[] = [
     title: "LLM Engineering Club officially approved at OU",
     body:
       "The club I founded is now a registered student organization: hands-on LLM engineering, study groups, responsible-AI discussions, and workshops with cluster access for local model training.",
-    href: "https://ou.campuslabs.com/engage/organization/llm-club",
+    href: "https://inquirelab.ai/llm-club",
     tag: "Community",
   },
   {
@@ -204,7 +204,7 @@ export const featured = [
   {
     title: "LLM Engineering Club",
     role: "Founder · Registered OU student organization",
-    href: "https://ou.campuslabs.com/engage/organization/llm-club",
+    href: "https://inquirelab.ai/llm-club",
     body:
       "A place for OU students to learn LLM engineering by doing: study groups, AI-news discussions, responsible-use conversations, and workshops where students train small models on a real computing cluster.",
   },

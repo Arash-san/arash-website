@@ -337,7 +337,7 @@ export default function Home() {
       <p>
         {compact ? "I'm" : "My name is Arash Ahmadi. I'm"} currently a PhD student at the{" "}
         <a href="https://www.ou.edu/" className="text-[#DC143C] underline">University Of Oklahoma</a>{" "}
-        working at <a href="https://inquirelab.ai/" className="text-red-700 underline" target="_blank" rel="noopener noreferrer">InquireLab</a> in electrical and computer engineering. In my studies, I&apos;m focusing on the utilization of Large Language Models (LLMs) in different domains, and also working on the interpretability side of them.
+        working at <a href="https://inquirelab.ai/" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">InquireLab</a> in electrical and computer engineering. In my studies, I&apos;m focusing on the utilization of Large Language Models (LLMs) in different domains, and also working on the interpretability side of them.
       </p>
       {socialLinks(compact ? "h-6 w-6" : "h-7 w-7")}
       {scrollHint}
@@ -365,7 +365,7 @@ export default function Home() {
       ))}
       <p className="text-xs text-gray-500">
         More on the{" "}
-        <a href="https://inquirelab.ai/news" target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
+        <a href="https://inquirelab.ai/news" target="_blank" rel="noopener noreferrer" className="text-[#DC143C] underline">
           InquireLab news page
         </a>
         .
@@ -377,22 +377,22 @@ export default function Home() {
     <>
       <p>
         I completed my bachelors at The University Of Kurdistan with a GPA of 3.89/4. For my final project, I
-        <a href="https://doi.org/10.1007/s11227-023-05565-w" className="text-green-700 underline mx-1" target="_blank" rel="noopener noreferrer">published a paper</a>
+        <a href="https://doi.org/10.1007/s11227-023-05565-w" className="text-[#DC143C] underline mx-1" target="_blank" rel="noopener noreferrer">published a paper</a>
         {" "}about designing an efficient algorithm for solving the Yin-Yang puzzle.
       </p>
       <p>
         Then I got accepted to a direct PhD position at OU! Since then I&apos;ve defended my{" "}
-        <a href="https://inquirelab.ai/news" className="text-purple-700 underline" target="_blank" rel="noopener noreferrer">master&apos;s thesis</a>
+        <a href="https://inquirelab.ai/news" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">master&apos;s thesis</a>
         {" "}(April 2026) and published 7 papers and preprints, including a journal paper in{" "}
-        <a href="https://doi.org/10.1016/j.eswa.2026.132963" className="text-red-700 underline" target="_blank" rel="noopener noreferrer">Expert Systems with Applications</a>
+        <a href="https://doi.org/10.1016/j.eswa.2026.132963" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">Expert Systems with Applications</a>
         {" "}and a paper I presented at{" "}
-        <a href="https://doi.org/10.2514/6.2026-1195" className="text-blue-700 underline" target="_blank" rel="noopener noreferrer">AIAA SciTech 2026</a>
+        <a href="https://doi.org/10.2514/6.2026-1195" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">AIAA SciTech 2026</a>
         {" "}in Orlando. You can see all of them on my{" "}
-        <a href="https://scholar.google.com/citations?user=RR1oK4sAAAAJ&hl=en" className="text-blue-700 underline" target="_blank" rel="noopener noreferrer">google scholar</a>.
+        <a href="https://scholar.google.com/citations?user=RR1oK4sAAAAJ&hl=en" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">google scholar</a>.
       </p>
       <p>
         I also founded the{" "}
-        <a href="https://ou.campuslabs.com/engage/organization/llm-club" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">LLM Engineering Club</a>
+        <a href="https://inquirelab.ai/llm-club" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">LLM Engineering Club</a>
         {" "}at OU, a registered student org for hands-on LLM engineering.
       </p>
     </>
