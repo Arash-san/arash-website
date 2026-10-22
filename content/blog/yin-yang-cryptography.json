@@ -12,6 +12,11 @@
   "featured": true,
   "blocks": [
     {
+      "type": "callout",
+      "label": "How this post was made",
+      "text": "This article was made with GPT 5.6 Sol."
+    },
+    {
       "type": "paragraph",
       "text": "So, what is a Yin Yang puzzle in the first place? It is a grid that we fill with black and white cells. All black cells must connect to each other, all white cells must also connect to each other, and no 2 by 2 square can have only one color. Some cells are given as clues. The remaining cells are the puzzle that we need to solve."
     },
@@ -257,7 +262,7 @@
     },
     {
       "type": "paragraph",
-      "text": "The cryptographic direction, puzzle key idea, symmetry idea, and research questions came from the researcher. GPT 5.6 soul high was used to explore the protocol, implement the interactive system faster, test failure cases, and help turn the idea into this blog post."
+      "text": "The cryptographic direction, puzzle key idea, symmetry idea, and research questions came from the researcher. GPT 5.6 Sol high was used to explore the protocol, implement the interactive system faster, test failure cases, and help turn the idea into this blog post."
     },
     {
       "type": "paragraph",

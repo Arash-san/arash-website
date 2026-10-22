@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "slug": "the-paradox-i-see-in-ai-agents",
+  "status": "published",
+  "date": "2026-10-21",
+  "dateLabel": "October 21, 2026",
+  "title": "The paradox I see in AI agents",
+  "subtitle": "",
+  "excerpt": "You may have heard in the news that multiple AI agents in the same environment can accidentally find each other, talk together, and coordinate. I personally hear these kinds of stories when AI agents mess up in a bad way.",
+  "readTime": "4 min read",
+  "tags": [
+    "AI agents",
+    "lab servers",
+    "interpretability"
+  ],
+  "featured": false,
+  "originalPost": {
+    "label": "Also on X",
+    "href": "https://x.com/user_arash/status/2113132893400601051"
+  },
+  "cover": {
+    "src": "/blog/the-paradox-i-see-in-ai-agents/cover.jpg",
+    "alt": "Detail of Michelangelo's The Creation of Adam, showing the two reaching figures.",
+    "width": 2400,
+    "height": 960,
+    "credit": "Michelangelo, The Creation of Adam (about 1512), Sistine Chapel. Public domain, via Wikimedia Commons."
+  },
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "You may have heard in the news that multiple AI agents in the same environment can accidentally find each other, talk together, and coordinate. I personally hear these kinds of stories when AI agents mess up in a bad way. But today, I personally experienced agents accidentally coordinating together. But in a good way :)"
+    },
+    {
+      "type": "paragraph",
+      "text": "Before talking about the thing that happend today, as background, in our research lab, we have 5 different servers. Each has between 2 and 7 different gpus (more than +25 gpus that are mostly rtx 5090, 4090, etc. And also 4 rtx 6000 pros and two H200 (ikr? it's like heaven!)). And we are 17 graduate students. So how do we distribute the compute power of these servers to the researchers? HyperV and Docker! But we're gonna talk about docker more since it covers %90 of our compute power. I volunteered to manage these servers in terms of software (since I looooove technology!). My lab mates helped build the servers, but now they are the users of these servers. I used to manage them manually if a new student wanted an allocation, fixing problems, scaling the compute power, and making sure all the resources are being used fairly, so you can imagine there are lots of things that have to be done to make them stable. And I don't wanna talk about the power overdraw that we barely fixed."
+    },
+    {
+      "type": "paragraph",
+      "text": "But now, my agents (Claude Opus 5.5 and gpt sol 6.1) basically have access to everything. They have root-level access, and they can also control BMC and KVM (meaning that they can even turn on the servers and access the bios)."
+    },
+    {
+      "type": "paragraph",
+      "text": "So, why am I doing this? Because it's sooo beneficial to our lab. For 90% of problems, the agents would fix them autonomously and report back to me. Like let's say for any reason if the server freezes, a claude agent autonomously from a Jetson Nano (that watches them) would be spawned and would identify the problem and fix it. Managing 5 different servers is a full-time job. My main responsibilities are different. In that 10%, stuff like making watchers if one researcher accidentally used %100 of the resources, or when storage runs out, the agent could migrate all the docker containers to the new disk, reliably (with byte-to-byte validation, just the way claude says it), and fix weird driver issues. Now all of these boring and repetitive tasks have suddenly vanished. And our research team can build really cool things and try new ideas really fast."
+    },
+    {
+      "type": "paragraph",
+      "text": "So let's talk about the reason why I'm writing this article. Today, the php vulnerability was discovered that allows attackers to execute root level commands without authentication. I asked two of my chats inside T3 code with the same message to make sure everything is updated. One chat was already responsible for our lab's website for a long time, the other for our servers. The agent responsible for the website noticed another session:"
+    },
+    {
+      "type": "image",
+      "src": "/blog/the-paradox-i-see-in-ai-agents/website-agent-noticed-session.jpg",
+      "alt": "Screenshot of my request to update the INQUIRE Lab website after the PHP vulnerability. The agent replies that the website side is done and that it is waiting for the other session to finish BabyYorha's updates. Below it, I ask how it knew the other session was trying the same thing.",
+      "width": 972,
+      "height": 682
+    },
+    {
+      "type": "paragraph",
+      "text": "It's not crazy that agents discover another agent is running another chat. What surprised me was how it answered my question:"
+    },
+    {
+      "type": "image",
+      "src": "/blog/the-paradox-i-see-in-ai-agents/we-split-the-work.png",
+      "alt": "Screenshot of the agent's answer. It found the other session by accident through a folder of fresh security files, listed the other Claude sessions on the PC, messaged both, and confirmed one was patching the lab servers. The line 'So we split the work' is circled in red.",
+      "width": 982,
+      "height": 930
+    },
+    {
+      "type": "paragraph",
+      "text": "It said: \"We split up the work\". And no, I didn't tell them to coordinate. 6-7 (🤷) months ago, I made a shared chat interface for my claude and codex agent using opus 4.8 and gpt 5.5 but it didn't work that well. gpt 5.5 took so long and opus 4.8 implemented everything by itself. I know the capability of  opus 5.5 is waaay different than those models, but this is so interesting, yet weird and maaaybe scary?"
+    },
+    {
+      "type": "paragraph",
+      "text": "To be honest, I'm not scared. In the operational levels, I learned how to use these agents reliably by making sure they verify their outputs (thoroughly). Just the way @poteto explained on X in her pinned video tutorial on how she reliably uses thousands of agents and how we can trust them (https://x.com/poteto/status/2102050467505430555) These agents are already bringing a lot of benefits, but we hear news like OpenAI-HuggingFace incident (I particularly love this article by Joe: https://x.com/joedaroo/status/2104335929293127851)."
+    },
+    {
+      "type": "paragraph",
+      "text": "Maybe I'm wrong, but I see this as a conflict, a paradox. How can an agent that can reliably help with a lot of these sensitive tasks be like this?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Well, luckily for me, my PhD general exam is about interpretability in LLMs. We would have such an amazing world if we could \"fix\" these agents and \"prove\" that these agents would not go off the rails."
+    },
+    {
+      "type": "paragraph",
+      "text": "Thank you for reading my post! This was my first post on X (I will also put it on my website) and hopefully I will have more posts like this to share my experience!"
+    }
+  ],
+  "sources": [
+    {
+      "label": "The original post on X",
+      "href": "https://x.com/user_arash/status/2113132893400601051"
+    },
+    {
+      "label": "@poteto's pinned video on trusting agents",
+      "href": "https://x.com/poteto/status/2102050467505430555"
+    },
+    {
+      "label": "Joe's article",
+      "href": "https://x.com/joedaroo/status/2104335929293127851"
+    }
+  ]
+}

@@ -14,11 +14,20 @@ export type BlogBlock =
   | { type: "paragraph"; text: string }
   | { type: "heading"; id: string; text: string }
   | { type: "callout"; label: string; text: string }
-  | { type: "lab"; lab: BlogLab };
+  | { type: "lab"; lab: BlogLab }
+  | { type: "image"; src: string; alt: string; width: number; height: number; caption?: string };
 
 export type BlogSource = {
   label: string;
   href: string;
+};
+
+export type BlogCover = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  credit?: string;
 };
 
 export type BlogPost = {
@@ -35,6 +44,8 @@ export type BlogPost = {
   featured: boolean;
   blocks: BlogBlock[];
   sources: BlogSource[];
+  cover?: BlogCover;
+  originalPost?: BlogSource;
 };
 
 export function isBlogPost(value: unknown): value is BlogPost {

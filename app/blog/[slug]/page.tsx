@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleContent } from "@/components/blog/article-content";
@@ -20,7 +21,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${post.title} | Arash Ahmadi`,
     description: post.excerpt,
     alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: { type: "article", title: post.title, description: post.excerpt, publishedTime: post.date },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.excerpt,
+      publishedTime: post.date,
+      ...(post.cover ? { images: [{ url: post.cover.src, width: post.cover.width, height: post.cover.height, alt: post.cover.alt }] } : {}),
+    },
   };
 }
 
@@ -42,11 +49,20 @@ export default async function BlogPostPage({ params }: PageProps) {
             <span>{post.dateLabel}</span>
             <span>{post.readTime}</span>
             {post.status === "draft" && <span>Local draft</span>}
+            {post.originalPost && (
+              <a href={post.originalPost.href} target="_blank" rel="noopener noreferrer">{post.originalPost.label} ↗</a>
+            )}
           </div>
           <h1>{post.title}</h1>
-          <p>{post.subtitle}</p>
+          {post.subtitle && <p>{post.subtitle}</p>}
           <div className="article-tags">{post.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
         </header>
+        {post.cover && (
+          <figure className="article-cover">
+            <Image src={post.cover.src} alt={post.cover.alt} width={post.cover.width} height={post.cover.height} sizes="(max-width: 1120px) 100vw, 1120px" priority />
+            {post.cover.credit && <figcaption>{post.cover.credit}</figcaption>}
+          </figure>
+        )}
         <ArticleContent blocks={post.blocks} />
         <footer className="article-sources">
           <p className="blog-kicker">Sources and project links</p>
