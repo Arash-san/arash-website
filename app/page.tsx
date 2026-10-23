@@ -31,6 +31,11 @@ const TOUCH_DISTANCE = 0.32; // share of the screen height for a full change by 
 const COMMIT = 0.22; // share of the way that finishes a change on release
 const GESTURE_GAP = 220; // ms without wheel events that ends a gesture
 const MOUSE_STEP = 50; // a single wheel event this large is a mouse notch
+// Fast scrolling stops at the end of a long section's text. Only after a
+// pause this long does a new wheel gesture or swipe move to the next section.
+const END_HOLD = 450; // ms
+const TOUCH_SLOW = 0.4; // px/ms: a finger slower than this carries on past the text
+const FLING_DECAY = 0.9975; // speed kept per ms while text coasts after a swipe
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (v: number) => v * v * (3 - 2 * v);
@@ -74,7 +79,7 @@ function HomeSection({
         data-bottom="true"
         onScroll={(e) => onScroll(e.currentTarget)}
       >
-        <div className="my-auto w-full space-y-3 py-2">{children}</div>
+        <div className="my-auto w-full space-y-3 py-2 pr-4">{children}</div>
       </div>
     </motion.div>
   );
@@ -90,6 +95,8 @@ export default function Home() {
   const p = useMotionValue(0);
   const anim = useRef<AnimationPlaybackControls | null>(null);
   const animating = useRef(false);
+  const textScrolledAt = useRef(0); // when the active box's text last moved
+  const flingRef = useRef(0);
   const reducedRef = useRef(false);
   reducedRef.current = reduced;
 
@@ -125,6 +132,20 @@ export default function Home() {
     el.dataset.bottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight - 1 ? "true" : "false";
   }
 
+  function onBoxScroll(el: HTMLDivElement) {
+    markEdges(el);
+    // Section changes reset the arriving box; only the reader's scrolling counts.
+    if (el === scrollers.current[activeRef.current] && !animating.current) textScrolledAt.current = performance.now();
+  }
+
+  /** Stop a touch fling; true if one was running. */
+  function stopFling() {
+    if (!flingRef.current) return false;
+    cancelAnimationFrame(flingRef.current);
+    flingRef.current = 0;
+    return true;
+  }
+
   /** Can the active section's box still scroll in this direction? */
   function boxCanScroll(dir: number) {
     const el = scrollers.current[activeRef.current];
@@ -144,6 +165,10 @@ export default function Home() {
   function settle(target: number, from = activeRef.current) {
     const clamped = Math.max(0, Math.min(N - 1, target));
     anim.current?.stop();
+    // A stopped animation never completes, so clear the flag here. Otherwise
+    // a tab tap at the very end of a spring-back would block scrolling.
+    animating.current = false;
+    stopFling();
     if (clamped !== from) prepare(clamped, Math.sign(clamped - from));
     if (clamped !== activeRef.current) {
       activeRef.current = clamped;
@@ -209,7 +234,10 @@ export default function Home() {
         gesture.done = true;
         return;
       }
-      if (fresh) gesture = { dir, inside: boxCanScroll(dir), acc: 0, done: false };
+      // Right after the text was scrolling, a new gesture also stays with the
+      // text, so fast scrolling stops at its end. A pause, then a new scroll,
+      // moves on to the next section.
+      if (fresh) gesture = { dir, inside: boxCanScroll(dir) || now - textScrolledAt.current < END_HOLD, acc: 0, done: false };
       if (gesture.done && !gesture.inside) {
         e.preventDefault();
         return;
@@ -218,6 +246,8 @@ export default function Home() {
       // when it reaches the end of the box. A new gesture moves sections.
       if (gesture.acc === 0 && !gesture.inside && boxCanScroll(dir)) gesture.inside = true;
       if (gesture.inside) {
+        // Still pushing against the end of the text keeps the stop.
+        if (!boxCanScroll(dir)) textScrolledAt.current = now;
         const box = scrollers.current[activeRef.current];
         // Over the portrait or tabs the browser would scroll nothing, so move
         // the text box directly; over the box itself, let it scroll natively.
@@ -253,63 +283,153 @@ export default function Home() {
   }, []);
 
   // --- Touch ----------------------------------------------------------------
+  // The text boxes are scrolled here rather than by the browser, so one slow
+  // finger can scroll the text to its end and carry on into the next section.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+    let mode: "idle" | "pending" | "text" | "section" = "idle";
     let startY = 0;
     let lastY = 0;
-    let lastT = 0;
-    let velocity = 0;
-    let mode: "idle" | "pending" | "text" | "section" = "idle";
     let startedInBox = false;
+    let caught = false; // this touch stopped a text fling
+    let textPos = 0; // the box scroll position, kept unrounded
+    let past = 0; // finger pixels past the end of the text, moving the section
+    let samples: { y: number; t: number }[] = [];
+    const distance = () => window.innerHeight * TOUCH_DISTANCE;
+
+    /** Finger speed over the last 100 ms in px/ms. Above 0 is up, toward the next section. */
+    const speed = () => {
+      const now = performance.now();
+      const recent = samples.filter((s) => now - s.t <= 100);
+      if (recent.length < 2) return 0;
+      return (recent[0].y - recent[recent.length - 1].y) / Math.max(16, now - recent[0].t);
+    };
+
+    /** Coast after a swipe. A fling stops at the end of the text and never changes the section. */
+    const fling = (v: number) => {
+      const box = scrollers.current[activeRef.current];
+      if (!box || Math.abs(v) < 0.08) return;
+      const max = box.scrollHeight - box.clientHeight;
+      let pos = box.scrollTop;
+      let last = performance.now();
+      const step = (t: number) => {
+        const dt = Math.min(48, Math.max(0, t - last));
+        last = t;
+        pos = Math.max(0, Math.min(max, pos + v * dt));
+        box.scrollTop = pos;
+        v *= Math.pow(FLING_DECAY, dt);
+        if (pos <= 0 || pos >= max || Math.abs(v) < 0.02) {
+          flingRef.current = 0;
+          return;
+        }
+        flingRef.current = requestAnimationFrame(step);
+      };
+      flingRef.current = requestAnimationFrame(step);
+    };
+
+    /** Move the text by d pixels; at its end, a slow finger moves the section instead. */
+    const moveText = (d: number) => {
+      const box = scrollers.current[activeRef.current];
+      if (!box) return;
+      const hadPast = past !== 0;
+      let rest = d;
+      // Turning back first undoes any section movement, then scrolls text again.
+      if (past !== 0) {
+        const next = past + rest;
+        if (Math.sign(next) === Math.sign(past)) {
+          past = next;
+          rest = 0;
+        } else {
+          past = 0;
+          rest = next;
+        }
+      }
+      if (rest !== 0) {
+        const max = box.scrollHeight - box.clientHeight;
+        const want = textPos + rest;
+        textPos = Math.max(0, Math.min(max, want));
+        box.scrollTop = textPos;
+        const over = want - textPos;
+        if (Math.abs(over) > 0.01) {
+          if (Math.abs(speed()) < TOUCH_SLOW) {
+            past = over;
+            prepare(activeRef.current + Math.sign(over), Math.sign(over));
+          } else {
+            // A fast finger stops at the end of the text, and pushing on keeps the stop.
+            textScrolledAt.current = performance.now();
+          }
+        }
+      }
+      if (past !== 0 || hadPast) dragTo(past / distance());
+    };
 
     const onStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) {
+      caught = stopFling();
+      // A touch during a section change is ignored; the change finishes first.
+      if (e.touches.length !== 1 || animating.current) {
         mode = "idle";
         return;
       }
-      if (animating.current) anim.current?.stop();
-      animating.current = false;
       startY = lastY = e.touches[0].clientY;
-      lastT = performance.now();
+      samples = [{ y: startY, t: performance.now() }];
       const box = scrollers.current[activeRef.current];
       startedInBox = !!box && e.target instanceof Node && box.contains(e.target);
-      velocity = 0;
+      past = 0;
       mode = "pending";
     };
     const onMove = (e: TouchEvent) => {
-      if (mode === "idle" || mode === "text") return;
+      if (mode === "idle") return;
+      if (e.touches.length !== 1) return;
       const y = e.touches[0].clientY;
-      const dy = startY - y; // > 0 is a swipe up, toward the next section
+      const now = performance.now();
+      samples.push({ y, t: now });
+      if (samples.length > 12) samples.shift();
       if (mode === "pending") {
-        if (Math.abs(dy) < 6) return;
-        const dir = Math.sign(dy);
-        // Inside the text box, the text scrolls first. A swipe that starts on
-        // the portrait or the tabs always changes the section.
-        if (startedInBox && boxCanScroll(dir)) {
+        const total = startY - y; // > 0 is a swipe up, toward the next section
+        if (Math.abs(total) < 6) return;
+        const dir = Math.sign(total);
+        const box = scrollers.current[activeRef.current];
+        const long = !!box && box.scrollHeight > box.clientHeight + 1;
+        // Inside a long section the text moves first. Right after the text was
+        // moving, a swipe at its end stays a text swipe: fast, it stops there;
+        // slow, it carries on to the next section. A swipe that starts on the
+        // portrait or the tabs always changes the section.
+        const justScrolled = caught || now - textScrolledAt.current < END_HOLD;
+        if (box && startedInBox && long && (boxCanScroll(dir) || justScrolled)) {
           mode = "text";
-          return;
+          textPos = box.scrollTop;
+        } else {
+          mode = "section";
+          prepare(activeRef.current + dir, dir);
         }
-        mode = "section";
-        prepare(activeRef.current + dir, dir);
-        startY = y + dy; // keep the full movement so far
+        lastY = startY; // apply the full movement so far
       }
       e.preventDefault();
-      const now = performance.now();
-      velocity = (lastY - y) / Math.max(1, now - lastT);
+      const d = lastY - y;
       lastY = y;
-      lastT = now;
-      dragTo(dy / (window.innerHeight * TOUCH_DISTANCE));
+      if (mode === "text") {
+        moveText(d);
+        return;
+      }
+      past += d;
+      dragTo(past / distance());
     };
-    const onEnd = () => {
-      if (mode === "section") {
-        const offset = p.get() - activeRef.current;
+    const onEnd = (e: TouchEvent) => {
+      if (e.touches.length > 0) return;
+      const v = speed();
+      const was = mode;
+      mode = "idle";
+      if (was === "section" || (was === "text" && past !== 0)) {
         const base = activeRef.current;
-        const flick = Math.abs(velocity) > 0.45 ? Math.sign(velocity) : 0;
+        const offset = p.get() - base;
+        const flick = Math.abs(v) > 0.45 ? Math.sign(v) : 0;
         if (flick && Math.sign(offset) === flick) settleRef.current(base + flick);
         else settleRef.current(Math.abs(offset) >= COMMIT ? base + Math.sign(offset) : base);
+      } else if (was === "text") {
+        fling(v);
       }
-      mode = "idle";
+      past = 0;
     };
     root.addEventListener("touchstart", onStart, { passive: true });
     root.addEventListener("touchmove", onMove, { passive: false });
@@ -320,6 +440,7 @@ export default function Home() {
       root.removeEventListener("touchmove", onMove);
       root.removeEventListener("touchend", onEnd);
       root.removeEventListener("touchcancel", onEnd);
+      stopFling();
     };
   }, [p]);
 
@@ -413,7 +534,7 @@ export default function Home() {
   );
 
   const progressDots = (
-    <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2.5">
+    <div className="fixed right-2 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2.5">
       {SECTIONS.map((label, i) => (
         <button
           key={label}
@@ -699,7 +820,7 @@ export default function Home() {
               scrollerRef={(el) => {
                 scrollers.current[i] = el;
               }}
-              onScroll={markEdges}
+              onScroll={onBoxScroll}
             >
               {titles[i]}
               <div className="space-y-2 text-sm lg:text-lg text-gray-700 leading-relaxed">{bodies[i]}</div>

@@ -54,9 +54,6 @@ body {
   background-clip: content-box;
 }
 
-/* Inner section scrollbars use their familiar right edge on larger screens.
-   On phones they move left, away from the page progress control. A mask
-   appears after the first few pixels and softens the top edge of long sections. */
 /* Home page. The portrait is pinned on top; sections live in one box and
    change by gesture, while long sections scroll inside the box. */
 .home-root {
@@ -91,16 +88,18 @@ body {
 }
 .home-viewport {
   position: absolute;
-  left: 24px;
-  right: 24px;
+  /* The right side leaves room between the text box scrollbar and the
+     section dots. */
+  left: 20px;
+  right: 36px;
   top: calc(var(--ph-now) + 84px);
   bottom: max(12px, env(safe-area-inset-bottom));
   max-width: 384px;
   margin: 0 auto;
 }
+/* Touch scrolling of the text is handled in page.tsx. */
 .home-scroller {
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
+  touch-action: none;
 }
 /* Soft fades at the box edges, only where more text is hidden. */
 .home-scroller[data-top="false"][data-bottom="true"] {
