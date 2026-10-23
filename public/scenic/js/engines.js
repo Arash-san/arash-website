@@ -184,24 +184,28 @@ export async function getScenicFeatures(box) {
   if (hit && Date.now() - hit.time < CACHE_TTL_MS) return hit.promise;
 
   const promise = (async () => {
-    let lastErr;
-    let data = null;
-    for (const url of OVERPASS_ENDPOINTS) {
-      try {
+    // Ask every mirror at once and keep the first good answer; one slow or
+    // failing mirror no longer holds up the others.
+    const controller = new AbortController();
+    const stop = setTimeout(() => controller.abort(), 30000);
+    let data;
+    try {
+      data = await Promise.any(OVERPASS_ENDPOINTS.map(async (url) => {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: 'data=' + encodeURIComponent(overpassQuery(box)),
-          signal: timeout(35000),
+          signal: controller.signal,
         });
         if (!res.ok) throw new Error(`Overpass ${res.status}`);
-        data = await res.json();
-        break;
-      } catch (err) {
-        lastErr = err;
-      }
+        return res.json();
+      }));
+    } catch {
+      throw new Error('Scenery servers did not respond.');
+    } finally {
+      clearTimeout(stop);
+      controller.abort();
     }
-    if (!data) throw lastErr;
 
     const out = { green: [], water: [], historic: [] };
     for (const el of data.elements || []) {

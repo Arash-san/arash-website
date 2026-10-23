@@ -57,102 +57,72 @@ body {
 /* Inner section scrollbars use their familiar right edge on larger screens.
    On phones they move left, away from the page progress control. A mask
    appears after the first few pixels and softens the top edge of long sections. */
-.section-scroll {
-  direction: ltr;
-  padding-right: 12px;
-  scrollbar-gutter: stable;
+/* Home page: native scrolling with scroll-linked reveals */
+html.home-snap {
+  scroll-snap-type: y proximity;
 }
-.section-scroll-content {
-  direction: ltr;
+html.home-snap .home-section {
+  scroll-snap-align: start;
 }
-.section-scroll[data-scrolled="true"] {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 100%);
+.home-reveal {
+  will-change: transform, opacity;
+}
+.hint-bounce {
+  animation: hint-bounce 1.6s ease-in-out infinite;
+}
+@keyframes hint-bounce {
+  50% { transform: translateY(5px); }
+}
+.home-title {
+  will-change: transform;
 }
 
-@media (max-width: 640px) {
-  .section-scroll {
-    direction: rtl;
-    padding-right: 0;
-    padding-left: 12px;
+/* A soft frosted patch behind each section's text. The dots behind the words
+   blur and fade, and the patch feathers out at its edges so there is no box. */
+.reading-glass {
+  position: absolute;
+  inset: -36px -48px;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.66);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent),
+    linear-gradient(to bottom, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent),
+    linear-gradient(to bottom, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+  mask-composite: intersect;
+  will-change: transform, opacity;
+}
+@media (max-width: 1023px) {
+  .reading-glass {
+    inset: -28px -24px;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent),
+      linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent),
+      linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.home-snap {
+    scroll-snap-type: none;
+  }
+  .hint-bounce {
+    animation: none;
   }
 }
 
-/* Blog preview on the portfolio */
-.home-blog-preview {
-  display: grid;
-  gap: 14px;
-}
-.home-blog-preview article {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.14);
-  border-top: 1px solid rgba(0, 0, 0, 0.14);
-  padding: 16px 0;
-}
-.home-blog-list article + article {
-  border-top: 0;
-}
-.home-blog-preview article[data-open="true"] {
-  border-color: rgba(0, 0, 0, 0.24);
-}
-.home-blog-toggle {
-  display: flex;
-  width: 100%;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  cursor: pointer;
-  text-align: left;
-}
-.home-blog-toggle > span:first-child {
-  display: grid;
-  gap: 4px;
-}
-.home-blog-toggle small {
-  color: #6b7280;
-  font-size: 12px;
-  font-weight: 400;
-}
-.home-blog-toggle strong {
-  color: #1f2937;
-  font-size: 16px;
-  line-height: 1.35;
-}
-.home-blog-toggle > span:last-child {
-  color: #b91c1c;
-  font-size: 24px;
-  font-weight: 300;
-  line-height: 1;
-}
-.home-blog-details {
-  display: grid;
-  gap: 10px;
-  padding-top: 12px;
-  font-size: 13px;
-}
-.home-blog-details > div,
 .article-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.home-blog-details > div span,
 .article-tags span {
   border: 1px solid rgba(0, 0, 0, 0.13);
   border-radius: 999px;
   color: #4b5563;
   font-size: 11px;
   padding: 3px 8px;
-}
-.home-blog-details a,
-.home-blog-all {
-  color: #991b1b;
-  font-size: 12px;
-  font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.home-blog-all {
-  width: max-content;
 }
 
 /* Blog and technical report */
@@ -626,6 +596,16 @@ body {
 .article-sources > div a:hover,
 .article-sources > a {
   color: #991b1b;
+}
+
+.blog-index-wrap::before,
+.article-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0 -56px;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.9) 56px, rgba(255, 255, 255, 0.9) calc(100% - 56px), rgba(255, 255, 255, 0));
 }
 
 /* Local blog CMS */

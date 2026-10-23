@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState, type CSSProperties, type UIEvent } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
@@ -17,42 +17,20 @@ const SECTION_LABELS: Record<(typeof SECTIONS)[number], string> = {
   blog: "blog posts",
   interests: "interests",
 };
-const N = SECTIONS.length;
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const smooth = (v: number) => v * v * (3 - 2 * v);
 
 export default function Home() {
   const [active, setActive] = useState(0);
   const [reduced, setReduced] = useState(false);
-
   const activeRef = useRef(0);
-  activeRef.current = active;
-  const lastStep = useRef(0);
-  const wheelAccum = useRef(0);
-  const lastWheel = useRef(0);
-  const wheelDirection = useRef(0);
-  const wheelStartedInside = useRef(false);
-  const touchStartY = useRef<number | null>(null);
-  const touchDirection = useRef(0);
-  const touchStartedInside = useRef(false);
-  const swipeConsumed = useRef(false);
-  const dRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const mRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // The page never scrolls natively: sections step on wheel/swipe/keys and
-  // long content scrolls inside each section. This is what makes the scroll
-  // deterministic: no half-faded states, no snap fighting the user.
-  useEffect(() => {
-    const html = document.documentElement;
-    const prevOverflow = html.style.overflow;
-    const prevOverscroll = html.style.overscrollBehavior;
-    html.style.overflow = "hidden";
-    html.style.overscrollBehavior = "none";
-    window.scrollTo(0, 0);
-    return () => {
-      html.style.overflow = prevOverflow;
-      html.style.overscrollBehavior = prevOverscroll;
-    };
-  }, []);
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const glassRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const titleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -62,149 +40,120 @@ export default function Home() {
     return () => rm.removeEventListener("change", update);
   }, []);
 
-  // Deep links: /#news etc., on load and when the hash changes in-page.
+  // Gentle snapping: after the reader stops scrolling, the page settles on
+  // the nearest section, but slow scrolling still scrubs the fade freely.
   useEffect(() => {
-    const idx = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
-    if (idx > 0) setActive(idx);
+    const html = document.documentElement;
+    html.classList.add("home-snap");
+    return () => html.classList.remove("home-snap");
+  }, []);
+
+  // Scroll-linked reveal. Each section's content rises and fades in as it
+  // enters, then keeps rising and fades out as it leaves, in step with the
+  // scroll position rather than on a timer. Positions are read from the
+  // untransformed wrapper, and only opacity and transform are written, so
+  // the loop never forces a layout.
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      const span = vh * 0.38;
+      // Read every position first, then write. Interleaving reads and writes
+      // would make the browser recompute styles once per section per frame.
+      const rects = blockRefs.current.map((block) => block?.getBoundingClientRect() ?? null);
+      let best = 0;
+      let bestV = -1;
+      rects.forEach((r, i) => {
+        const content = contentRefs.current[i];
+        const glass = glassRefs.current[i];
+        const title = titleRefs.current[i];
+        if (!r || !content) return;
+        let enter: number;
+        let exit: number;
+        if (r.height <= vh * 0.75) {
+          // Short sections fade with their center: fully clear only when
+          // centered, so every bit of scrolling moves the fade a little.
+          const c = r.top + r.height / 2;
+          enter = clamp01((vh - c) / (vh * 0.5));
+          exit = clamp01(c / (vh * 0.5));
+        } else {
+          // Tall sections stay readable while they fill the screen and only
+          // fade as their first or last lines reach the screen edge.
+          enter = clamp01((vh * 0.94 - r.top) / span);
+          exit = clamp01((r.bottom - vh * 0.06) / span);
+        }
+        const v = smooth(Math.min(enter, exit));
+        if (v > bestV + 0.001) {
+          bestV = v;
+          best = i;
+        }
+        if (reduced) {
+          content.style.opacity = "";
+          content.style.transform = "";
+          if (glass) glass.style.opacity = "";
+          if (title) title.style.transform = "";
+          return;
+        }
+        const y = exit < enter ? -(1 - smooth(exit)) * 64 : (1 - smooth(enter)) * 64;
+        const t = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+        const o = v.toFixed(3);
+        // Sections far off screen settle at the same values every frame; skip
+        // rewriting identical styles.
+        if (content.style.transform === t && content.style.opacity === o) return;
+        content.style.opacity = o;
+        content.style.transform = t;
+        if (glass) {
+          glass.style.opacity = o;
+          glass.style.transform = t;
+        }
+        // The title moves a little ahead of the body for a sense of depth.
+        if (title) title.style.transform = `translate3d(0, ${(exit < enter ? y * 0.45 : -y * 0.25).toFixed(1)}px, 0)`;
+      });
+      if (best !== activeRef.current) {
+        activeRef.current = best;
+        startTransition(() => setActive(best));
+        window.history.replaceState(null, "", best === 0 ? window.location.pathname : `#${SECTIONS[best]}`);
+      }
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    const ro = new ResizeObserver(schedule);
+    blockRefs.current.forEach((b) => b && ro.observe(b));
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      ro.disconnect();
+    };
+  }, [reduced]);
+
+  function scrollToSection(index: number, instant = false) {
+    const el = sectionRefs.current[index];
+    if (!el) return;
+    window.scrollTo({ top: index === 0 ? 0 : el.getBoundingClientRect().top + window.scrollY, behavior: instant || reduced ? "auto" : "smooth" });
+  }
+  const scrollRef = useRef(scrollToSection);
+  scrollRef.current = scrollToSection;
+
+  // Deep links such as /#news, on load and when the hash changes.
+  useEffect(() => {
+    const go = () => {
+      const i = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
+      if (i > 0) scrollRef.current(i, true);
+    };
+    go();
     const onHash = () => {
       const i = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
-      if (i >= 0) goToRef.current(i);
+      if (i >= 0) scrollRef.current(i);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-
-  function goTo(index: number) {
-    const clamped = Math.max(0, Math.min(N - 1, index));
-    if (clamped === activeRef.current) return;
-    const dScroller = dRefs.current[clamped];
-    const mScroller = mRefs.current[clamped];
-    if (dScroller) {
-      dScroller.scrollTop = 0;
-      dScroller.dataset.scrolled = "false";
-    }
-    if (mScroller) {
-      mScroller.scrollTop = 0;
-      mScroller.dataset.scrolled = "false";
-    }
-    lastStep.current = performance.now();
-    setActive(clamped);
-    window.history.replaceState(null, "", clamped === 0 ? "#" : `#${SECTIONS[clamped]}`);
-  }
-  const goToRef = useRef(goTo);
-  goToRef.current = goTo;
-
-  /** The scroller of the currently visible layout (desktop or mobile). */
-  function activeScroller() {
-    const i = activeRef.current;
-    const candidates = [dRefs.current[i], mRefs.current[i]];
-    return candidates.find((el) => el && el.clientHeight > 0) || null;
-  }
-
-  function updateScrollFade(event: UIEvent<HTMLDivElement>) {
-    event.currentTarget.dataset.scrolled = event.currentTarget.scrollTop > 8 ? "true" : "false";
-  }
-
-  function scrollerConsumes(dir: number) {
-    const el = activeScroller();
-    if (!el || el.scrollHeight <= el.clientHeight + 1) return false;
-    const atTop = el.scrollTop <= 0;
-    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
-    return (dir > 0 && !atBottom) || (dir < 0 && !atTop);
-  }
-
-  // Keep the gesture that reaches an inner scroll boundary inside that section.
-  // A pause between wheel events marks release, so only a fresh gesture that
-  // starts at the boundary can advance to the next or previous section.
-  const onWheel = (e: React.WheelEvent) => {
-    const dir = Math.sign(e.deltaY);
-    if (dir === 0) return;
-
-    const now = performance.now();
-    const isNewGesture = now - lastWheel.current > 220 || wheelDirection.current !== dir;
-    if (isNewGesture) {
-      wheelAccum.current = 0;
-      wheelDirection.current = dir;
-      wheelStartedInside.current = scrollerConsumes(dir);
-    }
-    lastWheel.current = now;
-
-    if (scrollerConsumes(dir) || wheelStartedInside.current) return;
-    if (now - lastStep.current < 700) return;
-    wheelAccum.current += e.deltaY;
-    if (Math.abs(wheelAccum.current) > 50) {
-      wheelAccum.current = 0;
-      goToRef.current(activeRef.current + dir);
-    }
-  };
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-    touchDirection.current = 0;
-    touchStartedInside.current = false;
-    swipeConsumed.current = false;
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current == null || swipeConsumed.current) return;
-    const dy = touchStartY.current - e.touches[0].clientY; // > 0 = swipe up = next
-    const dir = Math.sign(dy);
-    if (dir === 0 || Math.abs(dy) < 4) return;
-    if (touchDirection.current === 0) {
-      touchDirection.current = dir;
-      touchStartedInside.current = scrollerConsumes(dir);
-    }
-    if (scrollerConsumes(dir) || touchStartedInside.current) return;
-    if (Math.abs(dy) > 56 && performance.now() - lastStep.current > 500) {
-      swipeConsumed.current = true;
-      goToRef.current(activeRef.current + dir);
-    }
-  };
-
-  const onTouchEnd = () => {
-    touchStartY.current = null;
-    touchDirection.current = 0;
-    touchStartedInside.current = false;
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown" || e.key === "PageDown") {
-        e.preventDefault();
-        goToRef.current(activeRef.current + 1);
-      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
-        e.preventDefault();
-        goToRef.current(activeRef.current - 1);
-      } else if (e.key === "Home") {
-        e.preventDefault();
-        goToRef.current(0);
-      } else if (e.key === "End") {
-        e.preventDefault();
-        goToRef.current(N - 1);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // --- Animation variants -------------------------------------------------
-  const sectionV = {
-    active: {
-      opacity: 1,
-      y: 0,
-      transition: reduced
-        ? { duration: 0 }
-        : { duration: 0.5, ease: EASE, staggerChildren: 0.06, delayChildren: 0.04 },
-    },
-    above: { opacity: 0, y: -28, transition: reduced ? { duration: 0 } : { duration: 0.32, ease: EASE } },
-    below: { opacity: 0, y: 28, transition: reduced ? { duration: 0 } : { duration: 0.32, ease: EASE } },
-  };
-  const itemV = {
-    active: { opacity: 1, y: 0, transition: reduced ? { duration: 0 } : { duration: 0.45, ease: EASE } },
-    above: { opacity: 0, y: -12 },
-    below: { opacity: 0, y: 12 },
-  };
-  const stateOf = (i: number) => (i === active ? "active" : i < active ? "above" : "below");
 
   // --- Nav tabs with sliding pill ------------------------------------------
   function NavTabs({ layout }: { layout: "d" | "m" }) {
@@ -218,15 +167,11 @@ export default function Home() {
               role="tab"
               aria-selected={isActive}
               aria-current={isActive ? "page" : undefined}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                goTo(idx);
-              }}
               onClick={(e) => {
                 e.preventDefault();
-                goTo(idx);
+                scrollToSection(idx);
               }}
-              className="relative px-1.5 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-sm active:opacity-90"
+              className="relative whitespace-nowrap px-1.5 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-sm active:opacity-90"
               style={{ touchAction: "manipulation" }}
             >
               {isActive && (
@@ -254,12 +199,12 @@ export default function Home() {
   // --- Progress dots --------------------------------------------------------
   function ProgressDots() {
     return (
-      <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2.5">
+      <div className="fixed right-2 sm:right-5 top-1/2 -translate-y-1/2 z-20 hidden sm:flex flex-col items-center gap-2.5">
         {SECTIONS.map((label, i) => (
           <button
             key={label}
             aria-label={`Go to ${SECTION_LABELS[label]}`}
-            onClick={() => goTo(i)}
+            onClick={() => scrollToSection(i)}
             className="group p-1"
             style={{ touchAction: "manipulation" }}
           >
@@ -278,7 +223,8 @@ export default function Home() {
   }
 
   // --- Content blocks (original voice) --------------------------------------
-  const socialLinks = (iconSize: string) => (
+  const iconSize = "h-6 w-6 lg:h-7 lg:w-7";
+  const socialLinks = (
     <div className="flex flex-wrap items-start justify-start gap-6 pt-2">
       <a href="https://github.com/arash-san" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-gray-700 hover:text-black transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconSize}><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/></svg>
@@ -310,9 +256,9 @@ export default function Home() {
   );
 
   const scrollHint = (
-    <p className="font-bold flex items-center gap-2">
+    <button type="button" onClick={() => scrollToSection(1)} className="font-bold flex items-center gap-2 pt-1">
       Scroll to see more!
-      <motion.svg
+      <svg
         width="16"
         height="16"
         viewBox="0 0 24 24"
@@ -322,30 +268,29 @@ export default function Home() {
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        animate={reduced ? undefined : { y: [0, 5, 0] }}
-        transition={reduced ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+        className="hint-bounce"
       >
         <path d="M12 5v14" />
         <path d="m19 12-7 7-7-7" />
-      </motion.svg>
-    </p>
+      </svg>
+    </button>
   );
 
-  const homeBody = (compact: boolean) => (
+  const homeBody = (
     <>
       <p>Welcome to my personal website!</p>
       <p>
-        {compact ? "I'm" : "My name is Arash Ahmadi. I'm"} currently a PhD student at the{" "}
+        My name is Arash Ahmadi. I&apos;m currently a PhD student at the{" "}
         <a href="https://www.ou.edu/" className="text-[#DC143C] underline">University Of Oklahoma</a>{" "}
         working at <a href="https://inquirelab.ai/" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">InquireLab</a> in electrical and computer engineering. In my studies, I&apos;m focusing on the utilization of Large Language Models (LLMs) in different domains, and also working on the interpretability side of them.
       </p>
-      {socialLinks(compact ? "h-6 w-6" : "h-7 w-7")}
+      {socialLinks}
       {scrollHint}
     </>
   );
 
-  const newsBody = (compact: boolean) => (
-    <div className="space-y-3">
+  const newsBody = (
+    <div className="space-y-4">
       {news.map((item) => (
         <a
           key={item.title}
@@ -357,10 +302,10 @@ export default function Home() {
           <p className="text-xs text-gray-500">
             {item.dateLabel} · <span className="text-red-700">{item.tag}</span>
           </p>
-          <p className={cn("font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors", compact ? "text-sm" : "text-base")}>
+          <p className="font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors text-[15px] lg:text-base leading-snug">
             {item.title}
           </p>
-          {compact && <p className="text-xs text-gray-600 mt-0.5">{item.body}</p>}
+          <p className="text-xs lg:text-sm text-gray-600 mt-0.5 leading-relaxed">{item.body}</p>
         </a>
       ))}
       <p className="text-xs text-gray-500">
@@ -409,7 +354,7 @@ export default function Home() {
       name: "Scenic Routes",
       href: "/scenic/",
       tag: "web app · live",
-      desc: "Finds the most beautiful driving route instead of the fastest one, scored by greenery, water, landmarks and quiet streets from OpenStreetMap data. Runs fully in your browser.",
+      desc: "Finds the most beautiful driving route instead of the fastest one, scored by parks, water, landmarks and quiet streets from OpenStreetMap data. Runs fully in your browser.",
     },
     {
       name: "MCP Bridge",
@@ -437,11 +382,9 @@ export default function Home() {
     },
   ];
 
-  const toolsBody = (compact: boolean) => (
-    <div className="space-y-3">
-      <p className={compact ? "text-xs" : "text-sm"}>
-        Things I build outside of research, free for anyone to use.
-      </p>
+  const toolsBody = (
+    <div className="space-y-4">
+      <p className="text-[15px] lg:text-base">Things I build outside of research, free for anyone to use.</p>
       {tools.map((item) => (
         <a
           key={item.name}
@@ -453,16 +396,14 @@ export default function Home() {
           <p className="text-xs text-gray-500">
             <span className="text-red-700">{item.tag}</span>
           </p>
-          <p className={cn("font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors", compact ? "text-sm" : "text-base")}>
+          <p className="font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors text-[15px] lg:text-base">
             {item.name}
           </p>
-          <p className="text-xs text-gray-600 mt-0.5">{item.desc}</p>
+          <p className="text-xs lg:text-sm text-gray-600 mt-0.5 leading-relaxed">{item.desc}</p>
         </a>
       ))}
     </div>
   );
-
-  const blogBody = (compact: boolean) => <HomeBlogPreview compact={compact} />;
 
   const interestsBody = (
     <>
@@ -489,65 +430,57 @@ export default function Home() {
     </>
   );
 
-  const titles = {
-    d: [
-      <h1 key="t0" className="text-5xl xl:text-6xl font-bold">
-        <span className="text-gray-600">Hi! I&apos;m </span>
-        <span className="text-black">Arash</span>
-        <span className="text-gray-600"> :)</span>
-      </h1>,
-      <h1 key="t1" className="text-5xl xl:text-6xl font-bold text-black">Recent News</h1>,
-      <h1 key="t2" className="text-5xl xl:text-6xl font-bold text-black">Academic Background</h1>,
-      <h1 key="t3" className="text-5xl xl:text-6xl font-bold text-black">My Custom Tools</h1>,
-      <h1 key="t4" className="text-5xl xl:text-6xl font-bold text-black">Blog posts</h1>,
-      <h1 key="t5" className="text-5xl xl:text-6xl font-bold text-black">My Interests</h1>,
-    ],
-    m: [
-      <h1 key="t0" className="text-2xl font-bold">
-        <span className="text-gray-600">Hi! I&apos;m </span>
-        <span className="text-black">Arash</span>
-        <span className="text-gray-600"> :)</span>
-      </h1>,
-      <h1 key="t1" className="text-2xl font-bold text-black">Recent News</h1>,
-      <h1 key="t2" className="text-2xl font-bold text-black">Academic Background</h1>,
-      <h1 key="t3" className="text-2xl font-bold text-black">My Custom Tools</h1>,
-      <h1 key="t4" className="text-2xl font-bold text-black">Blog posts</h1>,
-      <h1 key="t5" className="text-2xl font-bold text-black">My Interests</h1>,
-    ],
-  };
-  const bodies = {
-    d: [homeBody(false), newsBody(false), academicBody, toolsBody(false), blogBody(false), interestsBody],
-    m: [homeBody(true), newsBody(true), academicBody, toolsBody(true), blogBody(true), interestsBody],
-  };
+  const titleClass = "text-[28px] leading-tight lg:text-5xl xl:text-6xl font-bold";
+  const titles = [
+    <h1 key="t0" className={titleClass}>
+      <span className="text-gray-600">Hi! I&apos;m </span>
+      <span className="text-black">Arash</span>
+      <span className="text-gray-600"> :)</span>
+    </h1>,
+    <h2 key="t1" className={cn(titleClass, "text-black")}>Recent News</h2>,
+    <h2 key="t2" className={cn(titleClass, "text-black")}>Academic Background</h2>,
+    <h2 key="t3" className={cn(titleClass, "text-black")}>My Custom Tools</h2>,
+    <h2 key="t4" className={cn(titleClass, "text-black")}>Blog posts</h2>,
+    <h2 key="t5" className={cn(titleClass, "text-black")}>My Interests</h2>,
+  ];
+  const bodies = [homeBody, newsBody, academicBody, toolsBody, <HomeBlogPreview key="blog" />, interestsBody];
+
+  const portrait = (className: string, sizes: string) => (
+    <div className={cn("relative overflow-hidden rounded-xl", className)}>
+      <Image
+        src="/portrait.jpg"
+        alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma"
+        fill
+        sizes={sizes}
+        className="object-cover"
+        priority
+      />
+    </div>
+  );
 
   return (
-    <div className="bg-white">
-      <div
-        className="fixed inset-0 z-0 overflow-hidden"
-        style={{ "--ph": "min(360px, 44dvh)" } as CSSProperties}
-        onWheel={onWheel}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onTouchCancel={onTouchEnd}
-      >
-        <DotPattern
-          width={20}
-          height={20}
-          cx={1}
-          cy={1}
-          cr={1}
-          className={cn(
-            "pointer-events-none [mask-image:radial-gradient(800px_circle_at_center,white,transparent)]"
-          )}
-        />
+    <div className="relative min-h-screen bg-white [overflow-x:clip]">
+      <DotPattern
+        width={20}
+        height={20}
+        cx={1}
+        cy={1}
+        cr={1}
+        className="!fixed z-0 [mask-image:radial-gradient(900px_circle_at_center,white,transparent)]"
+      />
 
-        <ProgressDots />
+      <ProgressDots />
 
-        {/* --- Desktop layout --- */}
-        <div className="absolute inset-0 hidden lg:flex items-center justify-center">
+      {/* Phone navigation bar */}
+      <header className="lg:hidden fixed top-0 inset-x-0 z-30 flex justify-center px-2 pt-[max(10px,env(safe-area-inset-top))] pb-2.5 bg-white/80 backdrop-blur-md [mask-image:linear-gradient(to_bottom,#000_78%,transparent)]">
+        <NavTabs layout="m" />
+      </header>
+
+      <div className="relative z-10 mx-auto flex max-w-[900px] justify-center gap-10 px-6">
+        {/* Desktop: portrait and tabs stay put while the sections glide past. */}
+        <aside className="hidden lg:flex sticky top-0 h-[100svh] shrink-0 flex-col items-center justify-center">
           <motion.div
-            className="flex flex-col items-center justify-start"
+            className="flex flex-col items-center"
             initial={reduced ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE }}
@@ -556,108 +489,64 @@ export default function Home() {
               <NavTabs layout="d" />
             </div>
             <motion.div
-              className="relative w-80 h-[420px] rounded-xl overflow-hidden flex-shrink-0 shadow-[0_18px_44px_-18px_rgba(0,0,0,0.3)]"
+              className="w-80 shadow-[0_18px_44px_-18px_rgba(0,0,0,0.3)] rounded-xl"
               whileHover={reduced ? undefined : { scale: 1.015 }}
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             >
-              <Image
-                src="/portrait.jpg"
-                alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma"
-                fill
-                className="object-cover"
-                priority
-              />
+              {portrait("w-80 h-[420px]", "320px")}
             </motion.div>
           </motion.div>
-          <div className="relative w-[500px] ml-10 h-[30rem]">
-            {SECTIONS.map((label, i) => (
-              <motion.div
-                key={label}
-                variants={sectionV}
-                initial={false}
-                animate={stateOf(i)}
-                className="absolute inset-0"
-                style={{ pointerEvents: i === active ? "auto" : "none" }}
-                aria-hidden={i !== active}
+        </aside>
+
+        <main className="w-full max-w-[520px] lg:w-[500px] lg:max-w-none">
+          {SECTIONS.map((label, i) => (
+            <section
+              key={label}
+              id={label}
+              ref={(el) => {
+                sectionRefs.current[i] = el;
+              }}
+              aria-label={SECTION_LABELS[label]}
+              className="home-section flex min-h-[100svh] items-center pt-20 pb-14 lg:py-16"
+            >
+              <div
+                ref={(el) => {
+                  blockRefs.current[i] = el;
+                }}
+                className="relative w-full"
               >
                 <div
                   ref={(el) => {
-                    dRefs.current[i] = el;
+                    glassRefs.current[i] = el;
                   }}
-                  className="section-scroll h-full overflow-y-auto slim-scroll flex"
-                  data-scrolled="false"
-                  onScroll={updateScrollFade}
-                  style={{ overscrollBehavior: "contain" }}
+                  aria-hidden="true"
+                  className="reading-glass"
+                />
+                <div
+                  ref={(el) => {
+                    contentRefs.current[i] = el;
+                  }}
+                  className="home-reveal relative space-y-3"
                 >
-                  <div className="section-scroll-content my-auto w-full space-y-3 py-2">
-                    <motion.div variants={itemV}>{titles.d[i]}</motion.div>
-                    <motion.div variants={itemV} className="space-y-2 max-w-lg text-lg text-gray-700 leading-relaxed">
-                      {bodies.d[i]}
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* --- Mobile layout --- */}
-        <div className="lg:hidden">
-          <motion.div
-            className="absolute top-4 inset-x-0 z-10 flex flex-col items-center gap-2"
-            initial={reduced ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          >
-            <NavTabs layout="m" />
-            <div
-              className="relative rounded-xl overflow-hidden shadow-[0_14px_34px_-16px_rgba(0,0,0,0.3)]"
-              style={{ height: "var(--ph)", width: "calc(var(--ph) * 0.8)" }}
-            >
-              <Image
-                src="/portrait.jpg"
-                alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          </motion.div>
-          <div className="absolute inset-x-0 px-6" style={{ top: "calc(var(--ph) + 84px)" }}>
-            <div className="relative max-w-sm mx-auto" style={{ height: "calc(100dvh - var(--ph) - 100px)" }}>
-              {SECTIONS.map((label, i) => (
-                <motion.div
-                  key={label}
-                  variants={sectionV}
-                  initial={false}
-                  animate={stateOf(i)}
-                  className="absolute inset-0"
-                  style={{ pointerEvents: i === active ? "auto" : "none" }}
-                  aria-hidden={i !== active}
-                >
+                  {i === 0 &&
+                    portrait(
+                      "lg:hidden mx-auto mb-6 w-[min(62vw,250px)] aspect-[4/5] shadow-[0_14px_34px_-16px_rgba(0,0,0,0.3)]",
+                      "250px"
+                    )}
                   <div
                     ref={(el) => {
-                      mRefs.current[i] = el;
+                      titleRefs.current[i] = el;
                     }}
-                    className="section-scroll h-full overflow-y-auto slim-scroll text-left space-y-3"
-                    data-scrolled="false"
-                    onScroll={updateScrollFade}
-                    style={{
-                      overscrollBehavior: "contain",
-                      touchAction: "pan-y",
-                      WebkitOverflowScrolling: "touch",
-                    }}
+                    className="home-title"
                   >
-                    <motion.div variants={itemV} className="section-scroll-content">{titles.m[i]}</motion.div>
-                    <motion.div variants={itemV} className="section-scroll-content space-y-2 text-sm text-gray-700 leading-relaxed pb-4">
-                      {bodies.m[i]}
-                    </motion.div>
+                    {titles[i]}
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
+                  <div className="space-y-2.5 text-[15px] lg:text-lg text-gray-700 leading-relaxed">{bodies[i]}</div>
+                </div>
+              </div>
+            </section>
+          ))}
+        </main>
       </div>
     </div>
   );

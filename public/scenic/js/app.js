@@ -1,137 +1,272 @@
 import { geocode, resolveSuggestion, reverseGeocode } from './engines.js';
 import { findRoutes } from './routes.js';
 
+/* ---------- icons ---------- */
+
+const ICONS = {
+  locate: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+  swap: '<svg viewBox="0 0 24 24"><path d="M7 4v16M7 4 3.5 7.5M7 4l3.5 3.5M17 20V4M17 20l-3.5-3.5M17 20l3.5-3.5"/></svg>',
+  sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>',
+  leaf: '<svg viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15"/><path d="M5 19c3-4 6-6 9-8"/></svg>',
+  drop: '<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+  landmark: '<svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10l10-6 10 6z"/></svg>',
+  house: '<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24"><path d="M3 7h4c4 0 6 10 10 10h4M3 17h4c1.5 0 2.7-1.4 3.7-3.2M14 10.2C15 8.4 16 7 17.5 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>',
+  pin: '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+};
+document.querySelectorAll('[data-icon]').forEach((el) => { el.outerHTML = ICONS[el.dataset.icon]; });
+document.getElementById('locate-btn').innerHTML = ICONS.locate;
+document.getElementById('start-save').innerHTML = ICONS.star;
+document.getElementById('end-save').innerHTML = ICONS.star;
+document.getElementById('swap-btn').innerHTML = ICONS.swap;
+
 /* ---------- persisted state ---------- */
 
-const STORE_KEY = 'scenic.state.v2';
+const STORE_KEY = 'scenic.state.v3';
 const RECENTS_KEY = 'scenic.recents.v1';
 const FAVS_KEY = 'scenic.favorites.v1';
 
 function loadStore(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-  catch { return fallback; }
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }
-const saved = loadStore(STORE_KEY, {});
+// Carry over places and settings saved by the previous version of the app.
+const saved = loadStore(STORE_KEY, null) || loadStore('scenic.state.v2', {});
 const recents = loadStore(RECENTS_KEY, []);
 const favorites = loadStore(FAVS_KEY, []);
 
-// The app's purpose is unusual routes, so "avoid main roads", "different
-// path", and avoiding freeways/highways are on by default. Apply these once
-// for returning users whose saved settings predate the defaults, without
-// touching their start/end, favorites, or theme.
-const DEFAULTS_REV = 4;
-if (Object.keys(saved).length > 0 && saved.defaultsRev !== DEFAULTS_REV) {
-  if (saved.prefs) {
-    saved.prefs.quietStreets = true;
-    saved.prefs.preferDifferent = true;
-  }
-  saved.highway = 0; // avoid freeways & highways by default
-}
+const state = {
+  start: saved.start || null,
+  end: saved.end || null, // [lat, lon]
+  myLocation: null,
+  markers: { start: null, end: null },
+  routes: [],
+  selected: -1,
+  theme: saved.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+  prefs: Object.assign({ greenery: true, water: false, historic: false, quietStreets: true, preferDifferent: true }, saved.prefs),
+};
 
-function saveFavorites() {
-  localStorage.setItem(FAVS_KEY, JSON.stringify(favorites));
-}
+const $ = (id) => document.getElementById(id);
+const startInput = $('start-input');
+const endInput = $('end-input');
+const highwayInput = $('highway');
+const budgetInput = $('budget');
+const inputs = { start: startInput, end: endInput };
 
 function persist() {
+  const c = map.getCenter();
   localStorage.setItem(STORE_KEY, JSON.stringify({
     prefs: state.prefs,
-    defaultsRev: DEFAULTS_REV,
     highway: Number(highwayInput.value),
     budget: Number(budgetInput.value),
     theme: state.theme,
     start: state.start, end: state.end,
     startLabel: startInput.value, endLabel: endInput.value,
-    view: { center: [map.getCenter().lat, map.getCenter().lng], zoom: map.getZoom() },
+    view: { center: [c.lat, c.lng], zoom: map.getZoom() },
   }));
 }
 
 function addRecent(item) {
-  const filtered = recents.filter(r => r.label !== item.label);
-  filtered.unshift(item);
+  const next = [item, ...recents.filter((r) => r.label !== item.label)].slice(0, 6);
   recents.length = 0;
-  recents.push(...filtered.slice(0, 6));
+  recents.push(...next);
   localStorage.setItem(RECENTS_KEY, JSON.stringify(recents));
 }
 
-/* ---------- map + theme ---------- */
+/* ---------- map ---------- */
 
-const initView = saved.view || { center: [35.2226, -97.4395], zoom: 13 }; // Norman, OK
-const map = L.map('map', { zoomControl: false }).setView(initView.center, initView.zoom);
-L.control.zoom({ position: 'topright' }).addTo(map);
-
-// One tile source for both themes; dark mode dims and inverts the tiles via
-// a CSS filter so the map keeps the exact same detail (street names
-// included), just in muted grey.
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
-
-function applyTheme(theme) {
-  state.theme = theme;
-  document.documentElement.dataset.theme = theme;
-  document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
-}
-
-const startInput = document.getElementById('start-input');
-const endInput = document.getElementById('end-input');
-const highwayInput = document.getElementById('highway');
-const budgetInput = document.getElementById('budget');
-
-const state = {
-  start: saved.start || null, end: saved.end || null,   // [lat, lon]
-  myLocation: null,
-  startMarker: null, endMarker: null,
-  routeLayers: [],
-  routes: [],
-  theme: saved.theme ||
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-  prefs: Object.assign(
-    { greenery: true, water: false, historic: false, quietStreets: true, preferDifferent: true },
-    saved.prefs),
+const STYLES = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
 };
+const ROUTE_COLORS = ['#dc143c', '#0f8b8d', '#b7791f'];
+const FASTEST_COLOR = '#7b8494';
+const isPhone = () => matchMedia('(max-width: 760px)').matches;
 
-applyTheme(state.theme);
+const initView = saved.view || { center: [35.2226, -97.4395], zoom: 12.5 }; // Norman, OK
+const map = new maplibregl.Map({
+  container: 'map',
+  style: STYLES[state.theme],
+  center: [initView.center[1], initView.center[0]],
+  zoom: initView.zoom,
+  attributionControl: { compact: true },
+  dragRotate: false,
+  pitchWithRotate: false,
+});
+map.touchZoomRotate.disableRotation();
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }), 'top-right');
 map.on('moveend', persist);
-document.getElementById('theme-btn').addEventListener('click', () => {
-  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
-  persist();
+
+const empty = { type: 'FeatureCollection', features: [] };
+function addOverlay() {
+  if (map.getSource('routes')) return;
+  map.addSource('scenery', { type: 'geojson', data: sceneryGeoJSON() });
+  map.addSource('routes', { type: 'geojson', data: routesGeoJSON() });
+  const dark = state.theme === 'dark';
+  map.addLayer({
+    id: 'scenery-glow', type: 'line', source: 'scenery', filter: ['==', ['geometry-type'], 'LineString'],
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': ['match', ['get', 'kind'], 'water', dark ? '#4f97e3' : '#3d8bdc', dark ? '#4cc282' : '#2fa866'],
+      'line-width': ['interpolate', ['linear'], ['zoom'], 9, 20, 14, 38],
+      'line-opacity': dark ? 0.5 : 0.42,
+      'line-blur': 7,
+    },
+  });
+  map.addLayer({
+    id: 'route-casing', type: 'line', source: 'routes', layout: { 'line-join': 'round', 'line-cap': 'round', 'line-sort-key': ['get', 'order'] },
+    paint: { 'line-color': dark ? '#0e1013' : '#ffffff', 'line-width': ['case', ['get', 'selected'], 11, 7], 'line-opacity': ['case', ['get', 'selected'], 1, 0.75] },
+  });
+  map.addLayer({
+    id: 'route-line', type: 'line', source: 'routes', layout: { 'line-join': 'round', 'line-cap': 'round', 'line-sort-key': ['get', 'order'] },
+    paint: { 'line-color': ['get', 'color'], 'line-width': ['case', ['get', 'selected'], 6.5, 4], 'line-opacity': ['case', ['get', 'selected'], 1, 0.5] },
+  });
+  map.addLayer({
+    id: 'landmark-dot', type: 'circle', source: 'scenery', filter: ['==', ['geometry-type'], 'Point'],
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.5, 15, 6],
+      'circle-color': dark ? '#e0a656' : '#b7791f',
+      'circle-stroke-color': dark ? '#17191e' : '#ffffff',
+      'circle-stroke-width': 2,
+    },
+  });
+}
+let routeEventsWired = false;
+map.on('style.load', () => {
+  addOverlay();
+  if (routeEventsWired) return;
+  routeEventsWired = true;
+  map.on('click', 'route-line', (e) => { if (e.features?.length) selectRoute(e.features[0].properties.idx); });
+  map.on('mouseenter', 'route-line', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'route-line', () => { map.getCanvas().style.cursor = ''; });
+  const popup = new maplibregl.Popup({ closeButton: false, offset: 10 });
+  map.on('mouseenter', 'landmark-dot', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+    popup.setLngLat(e.features[0].geometry.coordinates).setText(e.features[0].properties.name).addTo(map);
+  });
+  map.on('mouseleave', 'landmark-dot', () => { map.getCanvas().style.cursor = ''; popup.remove(); });
+  map.on('click', 'landmark-dot', (e) => {
+    popup.setLngLat(e.features[0].geometry.coordinates).setText(e.features[0].properties.name).addTo(map);
+  });
 });
 
-function makeMarker(latlng, kind) {
-  const color = kind === 'start' ? '#2f7d32' : '#c62828';
-  return L.circleMarker(latlng, {
-    radius: 8, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1,
-  }).addTo(map);
+const toLngLat = ([lat, lon]) => [lon, lat];
+
+function routesGeoJSON() {
+  return {
+    type: 'FeatureCollection',
+    features: state.routes.map((r, idx) => ({
+      type: 'Feature',
+      properties: { idx, color: r.color, selected: idx === state.selected, order: idx === state.selected ? 99 : r.isFastest ? 0 : 10 - idx },
+      geometry: { type: 'LineString', coordinates: r.coords.map(toLngLat) },
+    })),
+  };
 }
+
+function sceneryGeoJSON() {
+  const r = state.routes[state.selected];
+  if (!r) return empty;
+  return {
+    type: 'FeatureCollection',
+    features: [
+      ...r.metrics.segments.map((seg) => ({
+        type: 'Feature',
+        properties: { kind: seg.kind },
+        geometry: { type: 'LineString', coordinates: seg.coords.map(toLngLat) },
+      })),
+      ...r.metrics.landmarks.map((lm) => ({
+        type: 'Feature',
+        properties: { name: lm.name },
+        geometry: { type: 'Point', coordinates: toLngLat(lm.at) },
+      })),
+    ],
+  };
+}
+
+function refreshOverlay() {
+  // During a theme switch the old style is gone and the new one is loading;
+  // the style.load handler redraws the overlay from state once it is ready.
+  if (!map.style || !map.getSource('routes')) return;
+  map.getSource('routes').setData(routesGeoJSON());
+  map.getSource('scenery').setData(sceneryGeoJSON());
+}
+
+function fitPadding() {
+  if (isPhone()) {
+    const visible = window.innerHeight - sheetOffset();
+    return { top: 70, left: 28, right: 28, bottom: Math.min(visible + 24, window.innerHeight * 0.6) };
+  }
+  return { top: 60, right: 70, bottom: 60, left: $('panel').offsetWidth + 60 };
+}
+
+/* ---------- theme ---------- */
+
+function applyTheme(theme, { restyle = true } = {}) {
+  state.theme = theme;
+  document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#17191e' : '#ffffff';
+  $('theme-btn').innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
+  $('theme-btn').title = theme === 'dark' ? 'Light map' : 'Dark map';
+  if (restyle) map.setStyle(STYLES[theme]);
+}
+applyTheme(state.theme, { restyle: false });
+$('theme-btn').addEventListener('click', () => { applyTheme(state.theme === 'dark' ? 'light' : 'dark'); persist(); });
+
+/* ---------- start / end points ---------- */
+
+const coordLabel = (p) => `${p[0].toFixed(5)}, ${p[1].toFixed(5)}`;
+const shortLabel = (s) => s.split(',').slice(0, 3).join(',');
 
 function setPoint(kind, lat, lon, label) {
   state[kind] = [lat, lon];
-  const mk = kind + 'Marker';
-  if (state[mk]) state[mk].remove();
-  state[mk] = makeMarker([lat, lon], kind);
-  if (label) document.getElementById(kind + '-input').value = label;
+  if (!state.markers[kind]) {
+    const el = document.createElement('div');
+    el.className = `mk mk-${kind}`;
+    const marker = new maplibregl.Marker({ element: el, draggable: true }).setLngLat([lon, lat]).addTo(map);
+    marker.on('dragend', async () => {
+      const { lat: la, lng: lo } = marker.getLngLat();
+      state[kind] = [la, lo];
+      inputs[kind].value = coordLabel(state[kind]);
+      persist();
+      try { inputs[kind].value = shortLabel(await reverseGeocode(la, lo)); persist(); } catch { /* keep coordinates */ }
+    });
+    state.markers[kind] = marker;
+  } else {
+    state.markers[kind].setLngLat([lon, lat]);
+  }
+  if (label) inputs[kind].value = label;
+  updateSaveButtons();
   persist();
 }
 
-// Restore saved points; fall back to coordinates if the label was lost.
-const coordLabel = p => `${p[0].toFixed(5)}, ${p[1].toFixed(5)}`;
+function clearPoint(kind) {
+  state[kind] = null;
+  state.markers[kind]?.remove();
+  state.markers[kind] = null;
+}
+
 if (state.start) setPoint('start', state.start[0], state.start[1], saved.startLabel || coordLabel(state.start));
 if (state.end) setPoint('end', state.end[0], state.end[1], saved.endLabel || coordLabel(state.end));
 
-// Right-click / long-press to set points.
-map.on('contextmenu', async (e) => {
-  const kind = !state.start ? 'start' : 'end';
-  const { lat, lng } = e.latlng;
+async function dropPoint(lngLat) {
+  const kind = !state.start ? 'start' : !state.end ? 'end' : 'end';
+  const { lat, lng } = lngLat;
   setPoint(kind, lat, lng, coordLabel([lat, lng]));
-  try {
-    const label = await reverseGeocode(lat, lng);
-    document.getElementById(kind + '-input').value = shortLabel(label);
-    persist();
-  } catch { /* coordinates already shown */ }
-});
+  try { inputs[kind].value = shortLabel(await reverseGeocode(lat, lng)); persist(); } catch { /* coordinates stay */ }
+}
+map.on('contextmenu', (e) => dropPoint(e.lngLat));
 
-function shortLabel(s) { return s.split(',').slice(0, 3).join(','); }
+// Press and hold on touch screens.
+let holdTimer = null;
+map.on('touchstart', (e) => {
+  if (e.originalEvent.touches.length !== 1) return;
+  clearTimeout(holdTimer);
+  holdTimer = setTimeout(() => { navigator.vibrate?.(15); dropPoint(e.lngLat); }, 550);
+});
+for (const ev of ['touchend', 'touchcancel', 'touchmove', 'movestart', 'zoomstart']) map.on(ev, () => clearTimeout(holdTimer));
 
 function biasPoint() {
   if (state.myLocation) return state.myLocation;
@@ -139,226 +274,321 @@ function biasPoint() {
   return [c.lat, c.lng];
 }
 
-/* ---------- geocoding: autocomplete + recents ---------- */
+/* ---------- autocomplete ---------- */
 
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// Saved places matching the typed text (matches name or label substring).
 function matchingFavorites(q) {
   const needle = q.toLowerCase();
   return favorites
-    .filter(f => !needle || f.name.toLowerCase().includes(needle) || f.label.toLowerCase().includes(needle))
-    .map(f => ({ label: f.name, sub: f.label, lat: f.lat, lon: f.lon, distKm: 0, fav: true }));
-}
-
-function renderSuggestions(box, items, kind, isRecent) {
-  box.innerHTML = '';
-  if (!items.length) { box.style.display = 'none'; return; }
-  for (const r of items) {
-    const div = document.createElement('div');
-    const dist = r.distKm > 1 ? `<span class="dist">${r.distKm} km</span>` : '';
-    const tag = r.fav ? '<span class="fav-tag">⭐</span>'
-      : isRecent ? '<span class="recent-tag">↺</span>' : '';
-    div.innerHTML = `${tag}${escapeHtml(shortLabel(r.label))}${dist}`;
-    div.addEventListener('click', async () => {
-      box.style.display = 'none';
-      let item = r;
-      if (!Number.isFinite(item.lat)) {
-        // ArcGIS suggestion: resolve to coordinates on selection.
-        setStatus('Locating "' + shortLabel(item.label) + '"…');
-        try {
-          item = await resolveSuggestion(item, biasPoint());
-          setStatus('');
-        } catch (err) {
-          return setStatus(String(err.message || err), true);
-        }
-      }
-      setPoint(kind, item.lat, item.lon, shortLabel(item.label));
-      if (!item.fav) addRecent({ label: item.label, lat: item.lat, lon: item.lon, distKm: 0 });
-      map.panTo([item.lat, item.lon]);
-    });
-    box.appendChild(div);
-  }
-  box.style.display = 'block';
+    .filter((f) => !needle || f.name.toLowerCase().includes(needle) || f.label.toLowerCase().includes(needle))
+    .map((f) => ({ label: f.name, sub: f.label, lat: f.lat, lon: f.lon, fav: true }));
 }
 
 function wireAutocomplete(kind) {
-  const input = document.getElementById(kind + '-input');
-  const box = document.getElementById(kind + '-suggestions');
-  let timer = null;
+  const input = inputs[kind];
+  const box = $(`${kind}-suggestions`);
+  let items = [], active = -1, timer = null, seq = 0;
 
-  input.addEventListener('focus', () => {
-    if (input.value.trim().length < 3) {
-      renderSuggestions(box, [...matchingFavorites(''), ...recents], kind, true);
+  function close() {
+    box.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+    active = -1;
+  }
+
+  function render(list, mode) {
+    items = list;
+    active = -1;
+    box.innerHTML = '';
+    if (!list.length) {
+      if (mode === 'search') {
+        box.innerHTML = '<li class="s-empty">No places found. Try a nearby street or city.</li>';
+        box.classList.add('open');
+      } else close();
+      return;
     }
-  });
+    list.forEach((r, i) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      const icon = r.fav ? ICONS.star : r.recent ? ICONS.clock : ICONS.pin;
+      const main = r.fav ? r.label : shortLabel(r.label);
+      const sub = r.fav ? shortLabel(r.sub || '') : r.label.split(',').slice(3, 5).join(',').trim();
+      li.innerHTML = `${icon}<span class="s-text"><span class="s-main">${escapeHtml(main)}</span>${sub ? `<span class="s-sub">${escapeHtml(sub)}</span>` : ''}</span>${r.distKm > 1 ? `<span class="s-dist">${r.distKm} km</span>` : ''}`;
+      li.addEventListener('pointerdown', (e) => { e.preventDefault(); choose(i); });
+      box.appendChild(li);
+    });
+    box.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+  }
 
+  function highlight(i) {
+    active = (i + items.length) % items.length;
+    [...box.children].forEach((li, k) => li.setAttribute('aria-selected', String(k === active)));
+  }
+
+  async function choose(i) {
+    const r = items[i];
+    if (!r) return;
+    close();
+    let item = r;
+    if (!Number.isFinite(item.lat)) {
+      setStatus(`Locating ${shortLabel(item.label)}…`);
+      try { item = await resolveSuggestion(item, biasPoint()); setStatus(''); }
+      catch (err) { return setStatus(String(err.message || err), true); }
+    }
+    setPoint(kind, item.lat, item.lon, r.fav ? r.label : shortLabel(item.label));
+    if (!r.fav) addRecent({ label: item.label, lat: item.lat, lon: item.lon });
+    const other = kind === 'start' ? state.end : state.start;
+    if (other) fitPoints(); else map.easeTo({ center: [item.lon, item.lat], zoom: Math.max(map.getZoom(), 13) });
+    if (kind === 'start' && !state.end) endInput.focus();
+  }
+
+  const showSaved = () => render([...matchingFavorites(input.value.trim()), ...recents.map((r) => ({ ...r, recent: true }))].slice(0, 8), 'saved');
+
+  input.addEventListener('focus', () => { if (input.value.trim().length < 3 || /^-?\d/.test(input.value)) showSaved(); });
   input.addEventListener('input', () => {
     clearTimeout(timer);
     const q = input.value.trim();
-    if (q.length < 3) {
-      renderSuggestions(box, [...matchingFavorites(q), ...recents], kind, true);
-      return;
-    }
+    if (q.length < 3) return showSaved();
+    const mine = ++seq;
     timer = setTimeout(async () => {
       try {
         const results = await geocode(q, biasPoint());
-        renderSuggestions(box, [...matchingFavorites(q), ...results], kind, false);
-      } catch { box.style.display = 'none'; }
-    }, 350);
+        if (mine === seq) render([...matchingFavorites(q), ...results], 'search');
+      } catch { close(); }
+    }, 280);
   });
-  input.addEventListener('blur', () => setTimeout(() => { box.style.display = 'none'; }, 250));
+  input.addEventListener('keydown', (e) => {
+    if (!box.classList.contains('open') || !items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); highlight(active + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(active - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); choose(Math.max(0, active)); }
+    else if (e.key === 'Escape') close();
+  });
+  input.addEventListener('blur', () => setTimeout(close, 120));
 }
 wireAutocomplete('start');
 wireAutocomplete('end');
 
-// ⭐ Save the current start/end point as a named place, so complexes and
-// buildings missing from the map directories (e.g. apartment communities)
-// become searchable after saving them once.
+function fitPoints() {
+  if (!state.start || !state.end) return;
+  const b = new maplibregl.LngLatBounds(toLngLat(state.start), toLngLat(state.start)).extend(toLngLat(state.end));
+  map.fitBounds(b, { padding: fitPadding(), maxZoom: 14, duration: 700 });
+}
+
+/* ---------- saved places ---------- */
+
+function favoriteAt(point) {
+  return point && favorites.find((f) => Math.abs(f.lat - point[0]) < 1e-5 && Math.abs(f.lon - point[1]) < 1e-5);
+}
+function updateSaveButtons() {
+  for (const kind of ['start', 'end']) {
+    const fav = favoriteAt(state[kind]);
+    const btn = $(`${kind}-save`);
+    btn.classList.toggle('is-saved', !!fav);
+    btn.title = fav ? `Saved as "${fav.name}". Click to remove.` : 'Save this place with a name';
+  }
+}
 function wireSaveButton(kind) {
-  document.getElementById(kind + '-save').addEventListener('click', () => {
+  $(`${kind}-save`).addEventListener('click', () => {
     const point = state[kind];
-    if (!point) return setStatus('Set a ' + (kind === 'start' ? 'start' : 'destination') + ' point first, then save it.', true);
-    const current = document.getElementById(kind + '-input').value;
-    const name = window.prompt('Name this place (e.g. "Home", "Overlook"):', current);
-    if (!name) return;
+    if (!point) return setStatus(`Choose a ${kind === 'start' ? 'starting point' : 'destination'} first, then save it.`, true);
+    const existing = favoriteAt(point);
+    if (existing) {
+      favorites.splice(favorites.indexOf(existing), 1);
+      localStorage.setItem(FAVS_KEY, JSON.stringify(favorites));
+      updateSaveButtons();
+      return setStatus(`Removed "${existing.name}" from saved places.`);
+    }
+    const current = inputs[kind].value;
+    const name = window.prompt('Name this place (for example "Home"):', current);
+    if (!name || !name.trim()) return;
     const trimmed = name.trim();
-    const existing = favorites.findIndex(f => f.name.toLowerCase() === trimmed.toLowerCase());
-    if (existing >= 0) favorites.splice(existing, 1);
+    const same = favorites.findIndex((f) => f.name.toLowerCase() === trimmed.toLowerCase());
+    if (same >= 0) favorites.splice(same, 1);
     favorites.unshift({ name: trimmed, label: current, lat: point[0], lon: point[1] });
     if (favorites.length > 20) favorites.length = 20;
-    saveFavorites();
-    setStatus(`Saved ⭐ "${trimmed}" — it will show up when you search.`);
+    localStorage.setItem(FAVS_KEY, JSON.stringify(favorites));
+    updateSaveButtons();
+    setStatus(`Saved "${trimmed}". It now shows up when you search.`);
   });
 }
 wireSaveButton('start');
 wireSaveButton('end');
+updateSaveButtons();
 
-document.getElementById('locate-btn').addEventListener('click', () => {
-  if (!navigator.geolocation) return setStatus('Geolocation not supported by this browser.', true);
-  setStatus('Locating…');
+$('locate-btn').addEventListener('click', () => {
+  if (!navigator.geolocation) return setStatus('This browser cannot share your location.', true);
+  setStatus('Finding your location…');
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const { latitude: lat, longitude: lon } = pos.coords;
     state.myLocation = [lat, lon];
     setPoint('start', lat, lon, 'My location');
-    map.setView([lat, lon], 14);
+    map.easeTo({ center: [lon, lat], zoom: 14 });
     setStatus('');
-    try {
-      const label = await reverseGeocode(lat, lon);
-      startInput.value = shortLabel(label);
-      persist();
-    } catch { /* keep "My location" */ }
-  }, (err) => {
-    setStatus('Could not get location: ' + err.message +
-      (location.protocol === 'http:' ? ' (geolocation needs HTTPS)' : ''), true);
-  }, { enableHighAccuracy: true, timeout: 12000 });
+    try { startInput.value = shortLabel(await reverseGeocode(lat, lon)); persist(); } catch { /* keep "My location" */ }
+  }, (err) => setStatus(`Could not get your location: ${err.message}`, true), { enableHighAccuracy: true, timeout: 12000 });
 });
 
-document.getElementById('swap-btn').addEventListener('click', () => {
+$('swap-btn').addEventListener('click', () => {
   const [s, e] = [state.start, state.end];
   const [sl, el] = [startInput.value, endInput.value];
-  if (state.startMarker) state.startMarker.remove();
-  if (state.endMarker) state.endMarker.remove();
-  state.start = state.end = state.startMarker = state.endMarker = null;
+  clearPoint('start');
+  clearPoint('end');
   if (e) setPoint('start', e[0], e[1], el);
   if (s) setPoint('end', s[0], s[1], sl);
   startInput.value = el;
   endInput.value = sl;
+  updateSaveButtons();
   persist();
-});
-
-/* ---------- panel collapse: button, tap, and drag ---------- */
-
-const panel = document.getElementById('panel');
-const handle = document.getElementById('panel-handle');
-
-function setCollapsed(collapsed) {
-  panel.classList.toggle('collapsed', collapsed);
-}
-document.getElementById('collapse-btn').addEventListener('click',
-  () => setCollapsed(!panel.classList.contains('collapsed')));
-
-// The handle supports both tap (toggle) and drag (down = hide, up = show).
-let dragStartY = null, dragMoved = false;
-handle.addEventListener('pointerdown', (e) => {
-  dragStartY = e.clientY;
-  dragMoved = false;
-  handle.setPointerCapture(e.pointerId);
-});
-handle.addEventListener('pointermove', (e) => {
-  if (dragStartY === null) return;
-  const dy = e.clientY - dragStartY;
-  if (Math.abs(dy) > 12) dragMoved = true;
-  if (dy > 36) { setCollapsed(true); dragStartY = null; }
-  else if (dy < -36) { setCollapsed(false); dragStartY = null; }
-});
-handle.addEventListener('pointerup', () => {
-  if (dragStartY !== null && !dragMoved) {
-    setCollapsed(!panel.classList.contains('collapsed'));
-  }
-  dragStartY = null;
 });
 
 /* ---------- preferences ---------- */
 
-document.querySelectorAll('.chip').forEach(chip => {
+document.querySelectorAll('.chip').forEach((chip) => {
   const pref = chip.dataset.pref;
-  chip.classList.toggle('active', !!state.prefs[pref]);
+  chip.setAttribute('aria-pressed', String(!!state.prefs[pref]));
   chip.addEventListener('click', () => {
-    chip.classList.toggle('active');
-    state.prefs[pref] = chip.classList.contains('active');
+    state.prefs[pref] = chip.getAttribute('aria-pressed') !== 'true';
+    chip.setAttribute('aria-pressed', String(state.prefs[pref]));
     persist();
   });
 });
 
-function highwayLabel(v) {
-  if (v === 0) return 'avoid';
-  if (v >= 100) return 'no limit';
-  return `up to ${v}%`;
+function paintRange(input) {
+  const min = Number(input.min), max = Number(input.max);
+  input.style.setProperty('--fill', `${((Number(input.value) - min) / (max - min)) * 100}%`);
 }
-function updateHighwayNote(v) {
-  const note = document.getElementById('highway-note');
-  if (!note) return;
-  note.textContent = v === 0
-    ? "Only used if it's the only way within your extra-time budget."
-    : v >= 100 ? 'Freeways and highways are used freely.'
-    : 'A little freeway/highway is allowed to save time.';
+function updateSliders() {
+  const v = Number(highwayInput.value);
+  $('highway-label').textContent = v === 0 ? 'Avoid' : v >= 100 ? 'No limit' : `Up to ${v}%`;
+  $('highway-note').textContent = v === 0
+    ? 'Used only when no other road fits your time budget.'
+    : v >= 100 ? 'Freeways and highways are used freely.' : 'A little freeway driving is fine to save time.';
+  $('budget-label').textContent = `+${budgetInput.value}%`;
+  paintRange(highwayInput);
+  paintRange(budgetInput);
 }
 if (Number.isFinite(saved.highway)) highwayInput.value = saved.highway;
 if (Number.isFinite(saved.budget)) budgetInput.value = saved.budget;
-document.getElementById('highway-label').textContent = highwayLabel(Number(highwayInput.value));
-updateHighwayNote(Number(highwayInput.value));
-document.getElementById('budget-label').textContent = `+${budgetInput.value}%`;
+updateSliders();
+for (const el of [highwayInput, budgetInput]) el.addEventListener('input', () => { updateSliders(); persist(); });
 
-highwayInput.addEventListener('input', () => {
-  document.getElementById('highway-label').textContent = highwayLabel(Number(highwayInput.value));
-  updateHighwayNote(Number(highwayInput.value));
-  persist();
-});
-budgetInput.addEventListener('input', () => {
-  document.getElementById('budget-label').textContent = `+${budgetInput.value}%`;
-  persist();
-});
+/* ---------- bottom sheet on phones ---------- */
+
+const panel = $('panel');
+const SNAP = { peek: 0, half: 1, full: 2 };
+let sheetState = SNAP.full;
+
+function sheetHeights() {
+  const full = panel.offsetHeight;
+  const peek = Math.min(full, panel.querySelector('.panel-head').offsetHeight + 34);
+  const half = Math.min(full, Math.round(window.innerHeight * 0.52));
+  return [peek, half, full];
+}
+function sheetOffset() {
+  if (!isPhone()) return 0;
+  const heights = sheetHeights();
+  return panel.offsetHeight - heights[sheetState];
+}
+function setSheet(next) {
+  sheetState = next;
+  panel.style.setProperty('--sheet-offset', `${sheetOffset()}px`);
+}
+(() => {
+  let startY = null, startOffset = 0, lastY = 0, lastT = 0, velocity = 0;
+  const grabbers = [$('sheet-grip'), panel.querySelector('.panel-head')];
+  const onDown = (e) => {
+    if (!isPhone() || e.target.closest('button, a')) return;
+    startY = lastY = e.clientY;
+    lastT = performance.now();
+    startOffset = sheetOffset();
+    velocity = 0;
+    panel.classList.add('dragging');
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onMove = (e) => {
+    if (startY === null) return;
+    const now = performance.now();
+    velocity = (e.clientY - lastY) / Math.max(1, now - lastT);
+    lastY = e.clientY;
+    lastT = now;
+    const max = panel.offsetHeight - sheetHeights()[0];
+    const offset = Math.max(0, Math.min(max, startOffset + (e.clientY - startY)));
+    panel.style.setProperty('--sheet-offset', `${offset}px`);
+  };
+  const onUp = (e) => {
+    if (startY === null) return;
+    const moved = Math.abs(e.clientY - startY);
+    panel.classList.remove('dragging');
+    startY = null;
+    if (moved < 6) return setSheet(sheetState === SNAP.full ? SNAP.peek : SNAP.full);
+    const visible = panel.offsetHeight - parseFloat(panel.style.getPropertyValue('--sheet-offset'));
+    const heights = sheetHeights();
+    let best = 0;
+    // A quick flick moves one step in its direction; otherwise snap to nearest.
+    if (Math.abs(velocity) > 0.6) best = velocity > 0 ? Math.max(0, sheetState - 1) : Math.min(2, sheetState + 1);
+    else heights.forEach((h, i) => { if (Math.abs(h - visible) < Math.abs(heights[best] - visible)) best = i; });
+    setSheet(best);
+  };
+  for (const g of grabbers) {
+    g.addEventListener('pointerdown', onDown);
+    g.addEventListener('pointermove', onMove);
+    g.addEventListener('pointerup', onUp);
+    g.addEventListener('pointercancel', onUp);
+  }
+  addEventListener('resize', () => setSheet(sheetState));
+})();
 
 /* ---------- routing ---------- */
 
-const goBtn = document.getElementById('go-btn');
-const statusEl = document.getElementById('status');
-const resultsEl = document.getElementById('results');
+const goBtn = $('go-btn');
+const statusEl = $('status');
+const resultsEl = $('results');
+const progressEl = $('progress');
 
-function setStatus(msg, isError) {
+function setStatus(msg, isError = false) {
   statusEl.textContent = msg;
   statusEl.className = isError ? 'error' : '';
 }
 
+function setStage(stage, detail = {}) {
+  const order = ['routing', 'scenery', 'scoring', 'done'];
+  const at = order.indexOf(stage);
+  progressEl.hidden = stage === 'done';
+  progressEl.querySelectorAll('li').forEach((li) => {
+    const i = order.indexOf(li.dataset.stage);
+    li.className = i < at ? 'done' : i === at ? 'active' : '';
+    let small = li.querySelector('small');
+    if (li.dataset.stage === 'scenery' && stage === 'scenery' && detail.total) {
+      if (!small) li.appendChild((small = document.createElement('small')));
+      small.textContent = `${detail.done} of ${detail.total} map tiles`;
+    } else if (small && i !== at) small.remove();
+  });
+  if (stage === 'scenery' && detail.candidates) previewCandidates(detail.candidates);
+}
+
+// While scenery loads, show the candidate roads faintly so the map is not idle.
+function previewCandidates(lines) {
+  state.routes = lines.map((coords) => ({ coords, color: FASTEST_COLOR, isFastest: true, metrics: { segments: [], landmarks: [] } }));
+  state.selected = -1;
+  refreshOverlay();
+  fitRoutes(lines);
+}
+
+function fitRoutes(lines) {
+  const all = lines.flat();
+  if (!all.length) return;
+  const b = new maplibregl.LngLatBounds(toLngLat(all[0]), toLngLat(all[0]));
+  for (const p of all) b.extend(toLngLat(p));
+  map.fitBounds(b, { padding: fitPadding(), duration: 800 });
+}
+
 function fmtTime(sec) {
   const m = Math.round(sec / 60);
-  if (m < 60) return `${m} min`;
-  return `${Math.floor(m / 60)} h ${m % 60} min`;
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`;
 }
 function fmtDist(m) {
   const mi = m / 1609.34;
@@ -367,183 +597,143 @@ function fmtDist(m) {
 
 goBtn.addEventListener('click', async () => {
   if (!state.start || !state.end) {
-    return setStatus('Set both a start and a destination first.', true);
+    setStatus('Choose a starting point and a destination first.', true);
+    (state.start ? endInput : startInput).focus();
+    return;
   }
   goBtn.disabled = true;
-  setStatus('Finding routes and checking scenery along each one…');
+  goBtn.firstElementChild.textContent = 'Searching…';
+  setStatus('');
   resultsEl.innerHTML = '';
-  clearRoutes();
+  document.querySelectorAll('.note').forEach((n) => n.remove());
+  state.routes = [];
+  state.selected = -1;
+  refreshOverlay();
+  const t0 = performance.now();
   try {
     const data = await findRoutes({
-      start: state.start, end: state.end,
+      start: state.start,
+      end: state.end,
       prefs: { ...state.prefs, highwayUse: Number(highwayInput.value) / 100 },
       detourBudget: Number(budgetInput.value) / 100,
+      onStage: setStage,
     });
-    renderResults(data);
+    setStage('done');
+    renderResults(data, (performance.now() - t0) / 1000);
   } catch (err) {
+    setStage('done');
+    state.routes = [];
+    refreshOverlay();
     const raw = String(err.message || err);
-    // Translate low-level fetch/abort errors into something actionable.
-    const friendly = /timed out|timeout|aborted|network|failed to fetch/i.test(raw)
-      ? 'The map service took too long to respond. Please try again in a moment.'
-      : raw;
-    setStatus(friendly, true);
+    setStatus(/timed out|timeout|aborted|network|failed to fetch/i.test(raw)
+      ? 'A map service took too long to answer. Please try again in a moment.'
+      : raw, true);
   } finally {
     goBtn.disabled = false;
+    goBtn.firstElementChild.textContent = 'Find scenic routes';
   }
 });
 
-function clearRoutes() {
-  state.routeLayers.forEach(l => l.remove());
-  state.routeLayers = [];
-  state.routes = [];
-}
-
-// Google Maps directions link that approximates this route by pinning a few
-// intermediate waypoints along it. (Apple Maps and Waze URL schemes don't
-// support via-waypoints, so those links carry start/destination only.)
+// Google Maps can follow the route through a few pinned waypoints. Apple Maps
+// and Waze links carry the start and destination only.
 function googleMapsUrl(route) {
   const pts = route.coords;
   const n = Math.min(5, Math.max(1, Math.floor(pts.length / 40)));
   const waypoints = [];
   for (let i = 1; i <= n; i++) {
-    const p = pts[Math.floor(pts.length * i / (n + 1))];
+    const p = pts[Math.floor((pts.length * i) / (n + 1))];
     waypoints.push(`${p[0].toFixed(5)},${p[1].toFixed(5)}`);
   }
+  const a = pts[0], b = pts[pts.length - 1];
   const params = new URLSearchParams({
-    api: '1',
-    origin: `${pts[0][0].toFixed(5)},${pts[0][1].toFixed(5)}`,
-    destination: `${pts[pts.length - 1][0].toFixed(5)},${pts[pts.length - 1][1].toFixed(5)}`,
-    travelmode: 'driving',
-    waypoints: waypoints.join('|'),
+    api: '1', travelmode: 'driving', waypoints: waypoints.join('|'),
+    origin: `${a[0].toFixed(5)},${a[1].toFixed(5)}`, destination: `${b[0].toFixed(5)},${b[1].toFixed(5)}`,
   });
   return `https://www.google.com/maps/dir/?${params}`;
 }
-
 function appleMapsUrl(route) {
   const a = route.coords[0], b = route.coords[route.coords.length - 1];
-  return `https://maps.apple.com/?saddr=${a[0].toFixed(5)},${a[1].toFixed(5)}` +
-    `&daddr=${b[0].toFixed(5)},${b[1].toFixed(5)}&dirflg=d`;
+  return `https://maps.apple.com/?saddr=${a[0].toFixed(5)},${a[1].toFixed(5)}&daddr=${b[0].toFixed(5)},${b[1].toFixed(5)}&dirflg=d`;
 }
-
 function wazeUrl(route) {
   const b = route.coords[route.coords.length - 1];
   return `https://waze.com/ul?ll=${b[0].toFixed(5)},${b[1].toFixed(5)}&navigate=yes`;
 }
 
-const SCENIC_COLORS = ['#2f7d32', '#00838f', '#6a1b9a'];
-
-function renderResults(data) {
-  document.querySelectorAll('.status-note').forEach(n => n.remove());
-  const palette = SCENIC_COLORS;
-  const routes = [];
-  if (data.fastest) routes.push({ ...data.fastest, label: 'Fastest', color: '#546e7a' });
-  data.scenic.forEach((r, i) => routes.push({
-    ...r,
-    label: i === 0 ? 'Most scenic' : `Scenic option ${i + 1}`,
-    color: palette[i % palette.length],
-  }));
+function renderResults(data, seconds) {
+  const routes = data.scenic.map((r, i) => ({ ...r, label: i === 0 ? 'Most scenic' : `Scenic option ${i + 1}`, color: ROUTE_COLORS[i] }));
+  if (data.fastest) routes.push({ ...data.fastest, label: 'Fastest', color: FASTEST_COLOR });
   state.routes = routes;
 
-  if (data.scenic.length === 0) {
-    setStatus(data.overpassError
-      ? 'Scenery data was unavailable; showing the fastest route only.'
-      : 'No scenic alternative beat the fastest route within your time budget. Try allowing more extra time.', !!data.overpassError);
+  const f = data.featureCounts;
+  if (!data.scenic.length) {
+    setStatus(data.sceneryError
+      ? 'Scenery data was unavailable, so only the fastest route is shown.'
+      : 'No scenic alternative fit your time budget. Try allowing more extra time.', !!data.sceneryError);
   } else {
-    const f = data.featureCounts;
-    setStatus(`Compared against ${f.green} green spaces, ${f.water} waterways and ${f.historic} landmarks in this area.`);
+    setStatus(`Checked ${routes.length} routes against ${f.green} green areas, ${f.water} water features, and ${f.historic} landmarks in ${seconds.toFixed(1)} s.`);
   }
-  // Freeway/highway fallback note.
   if (data.highwayUnavoidable) {
-    const extra = document.createElement('p');
-    extra.className = 'status-note';
-    extra.textContent = '🛣️ No freeway-free route fits your time budget here, so the options below still use one. Increase the extra-time budget to search for a longer way around.';
-    statusEl.after(extra);
+    const note = document.createElement('p');
+    note.className = 'note';
+    note.textContent = 'No freeway-free route fits your time budget here, so these options still use one. Allow more extra time to search for a longer way around.';
+    statusEl.after(note);
   }
 
-  const group = [];
+  resultsEl.innerHTML = '';
   routes.forEach((r, idx) => {
-    const line = L.polyline(r.coords, { color: r.color, weight: 4, opacity: 0.9 }).addTo(map);
-    line.on('click', () => selectRoute(idx));
-    state.routeLayers.push(line);
-    group.push(line);
-
-    const card = document.createElement('div');
-    card.className = 'route-card';
-    card.id = `route-card-${idx}`;
-    const extras = r.extraSeconds > 30
-      ? `<span class="extra">+${fmtTime(r.extraSeconds)}</span>` : '';
     const m = r.metrics;
-
-    // Badges only for the categories the user actually selected.
-    const badges = [];
-    if (state.prefs.greenery && m.greenCoverage > 0.02) badges.push(`<span class="badge">🌳 ${Math.round(m.greenCoverage * 100)}% green</span>`);
-    if (state.prefs.water && m.waterCoverage > 0.02) badges.push(`<span class="badge water">💧 ${Math.round(m.waterCoverage * 100)}% water</span>`);
-    if (state.prefs.historic) m.highlights.historic.forEach(h => badges.push(`<span class="badge historic">🏛️ ${escapeHtml(h)}</span>`));
-    if (state.prefs.greenery) m.highlights.green.slice(0, 3).forEach(h => badges.push(`<span class="badge">${escapeHtml(h)}</span>`));
-    if (r.highwayFraction > 0.05) badges.push(`<span class="badge gray">🛣️ ${Math.round(r.highwayFraction * 100)}% freeway/highway</span>`);
-    if (state.prefs.quietStreets) badges.push(`<span class="badge gray">🏘️ ${Math.round((1 - r.mainRoadFraction) * 100)}% off main roads</span>`);
-    if (state.prefs.preferDifferent && !r.isFastest && r.uniqueness != null)
-      badges.push(`<span class="badge">🔀 ${Math.round(r.uniqueness * 100)}% different roads</span>`);
-    if (r.quiet) badges.push(`<span class="badge">back-streets route</span>`);
-    if (r.via) badges.push(`<span class="badge">via ${escapeHtml(r.via)}</span>`);
-
+    const card = document.createElement('article');
+    card.className = 'route-card';
+    card.style.setProperty('--route', r.color);
+    const extra = r.extraSeconds > 30 ? `<em>+${fmtTime(r.extraSeconds)}</em>` : r.isFastest ? '' : '<em>same time</em>';
+    const roads = r.roads.length ? ` · via ${r.roads.slice(0, 2).map(escapeHtml).join(', ')}` : '';
+    const tags = [];
+    m.highlights.green.slice(0, 3).forEach((h) => tags.push(`<span class="t-green">${escapeHtml(h)}</span>`));
+    m.highlights.water.slice(0, 2).forEach((h) => tags.push(`<span class="t-water">${escapeHtml(h)}</span>`));
+    m.highlights.historic.slice(0, 3).forEach((h) => tags.push(`<span class="t-landmark">${escapeHtml(h)}</span>`));
+    tags.splice(5);
+    if (r.quiet) tags.push('<span class="t-muted">Back streets</span>');
+    if (r.highwayFraction > 0.05) tags.push(`<span class="t-muted">${Math.round(r.highwayFraction * 100)}% freeway</span>`);
+    const bar = (label, value, color) => `<div class="rc-bar">${label}<b>${Math.round(value * 100)}%</b><i style="--v:${Math.round(Math.min(1, value) * 100)}%;--c:${color}"></i></div>`;
     card.innerHTML = `
-      <div class="title">
-        <span style="color:${r.color}">&#9632; ${r.label}</span>
-        <span class="time">${fmtTime(r.duration)} ${extras}</span>
+      <div class="rc-top">
+        <div class="rc-ring" style="--p:${r.score}" title="Scenic score ${r.score} out of 100"><span>${r.score}</span></div>
+        <div class="rc-head">
+          <div class="rc-label">${r.label}</div>
+          <div class="rc-time">${fmtTime(r.duration)}${extra}</div>
+          <div class="rc-sub">${fmtDist(r.distance)}${roads}</div>
+        </div>
       </div>
-      <div class="sub">${fmtDist(r.distance)} · scenic score ${r.score}/100${r.roads.length ? ' · ' + r.roads.slice(0, 3).map(escapeHtml).join(', ') : ''}</div>
-      <div class="scorebar"><div style="width:${r.score}%"></div></div>
-      <div class="badges">${badges.join('')}</div>
-      <div class="nav-row">
-        <span class="nav-label">Navigate:</span>
-        <a class="nav-link" href="${googleMapsUrl(r)}" target="_blank" rel="noopener" title="Follows this route via pinned waypoints">Google Maps ↗</a>
-        <a class="nav-link" href="${appleMapsUrl(r)}" target="_blank" rel="noopener" title="Apple Maps (start to destination)">Apple Maps ↗</a>
-        <a class="nav-link" href="${wazeUrl(r)}" target="_blank" rel="noopener" title="Waze (to destination)">Waze ↗</a>
+      <div class="rc-bars">
+        ${bar('Green', m.greenCoverage, 'var(--green)')}
+        ${bar('Water', m.waterCoverage, 'var(--water)')}
+        ${r.isFastest ? bar('Quiet', 1 - r.mainRoadFraction, 'var(--muted)') : bar('New roads', r.uniqueness, r.color)}
+      </div>
+      ${tags.length ? `<div class="rc-tags">${tags.join('')}</div>` : ''}
+      <div class="rc-nav">
+        <a href="${googleMapsUrl(r)}" target="_blank" rel="noopener" title="Follows this route through pinned waypoints">Google Maps</a>
+        <a href="${appleMapsUrl(r)}" target="_blank" rel="noopener">Apple Maps</a>
+        <a href="${wazeUrl(r)}" target="_blank" rel="noopener">Waze</a>
       </div>`;
-    card.addEventListener('click', () => selectRoute(idx));
-    card.querySelectorAll('.nav-link').forEach(a =>
-      a.addEventListener('click', e => e.stopPropagation()));
+    card.addEventListener('click', (e) => { if (!e.target.closest('a')) selectRoute(idx, { scroll: false }); });
     resultsEl.appendChild(card);
   });
 
-  if (group.length) {
-    map.fitBounds(L.featureGroup(group).getBounds(), { padding: [40, 40] });
-  }
-  selectRoute(routes.length > 1 ? 1 : 0);
-
-  // Bring the results into view with a visible scroll animation — on phones
-  // the cards land below the fold and are easy to miss otherwise. Animated
-  // by hand: native smooth scrolling is disabled in some browsers.
-  setCollapsed(false);
-  setTimeout(() => {
-    const body = document.getElementById('panel-body');
-    animateScroll(body, Math.max(0, statusEl.offsetTop - 10), 550);
-  }, 150);
-}
-
-function animateScroll(el, target, durationMs) {
-  const from = el.scrollTop;
-  const delta = target - from;
-  if (Math.abs(delta) < 2) return;
-  const t0 = performance.now();
-  const easeInOut = t => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
-  function step(now) {
-    const t = Math.min(1, (now - t0) / durationMs);
-    el.scrollTop = from + delta * easeInOut(t);
-    if (t < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-  // rAF doesn't tick in hidden/background tabs; land on the target anyway.
-  setTimeout(() => { el.scrollTop = target; }, durationMs + 120);
-}
-
-function selectRoute(idx) {
-  state.routes.forEach((r, i) => {
-    const layer = state.routeLayers[i];
-    if (layer) layer.setStyle({ weight: i === idx ? 7 : 4, opacity: i === idx ? 1 : 0.45 });
-    if (layer && i === idx) layer.bringToFront();
-    const card = document.getElementById(`route-card-${i}`);
-    if (card) card.classList.toggle('selected', i === idx);
+  selectRoute(0, { scroll: false });
+  fitRoutes(routes.map((r) => r.coords));
+  if (isPhone()) setSheet(SNAP.half);
+  requestAnimationFrame(() => {
+    const body = $('panel-body');
+    body.scrollTo({ top: Math.max(0, statusEl.offsetTop - 12), behavior: 'smooth' });
   });
 }
+
+function selectRoute(idx, { scroll = true } = {}) {
+  state.selected = idx;
+  refreshOverlay();
+  resultsEl.querySelectorAll('.route-card').forEach((card, i) => card.classList.toggle('selected', i === idx));
+  if (scroll) resultsEl.children[idx]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+if (isPhone()) setSheet(state.start && state.end ? SNAP.half : SNAP.full);

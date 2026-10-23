@@ -3,71 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scenic Routes</title>
-<meta name="description" content="Find the most beautiful driving route, not the fastest one. By Arash Ahmadi.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
-<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<title>Scenic Routes · Arash Ahmadi</title>
+<meta name="description" content="Find the most beautiful driving route instead of the fastest one, scored by parks, water, landmarks, and quiet streets. By Arash Ahmadi.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23DC143C'/%3E%3Cpath d='M9 23c4-1 3-6 7-7s3-6 7-7' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="map"></div>
+<div id="map" aria-label="Map"></div>
 
-<div id="panel">
-  <div id="panel-handle" title="Drag or tap to show / hide"></div>
-  <div class="panel-header">
-    <h1>🌳 Scenic Routes</h1>
-    <div class="header-btns">
-      <button id="theme-btn" title="Light / dark mode">🌙</button>
-      <button id="collapse-btn" title="Show / hide panel">▾</button>
+<aside id="panel" aria-label="Scenic route planner">
+  <div id="sheet-grip" aria-hidden="true"><span></span></div>
+  <header class="panel-head">
+    <a class="brand" href="/" title="Back to arash-ahmadi.com">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><path d="M9 23c4-1 3-6 7-7s3-6 7-7" /></svg>
+      </span>
+      <span class="brand-text"><b>Scenic Routes</b><small>The beautiful way, not the fastest</small></span>
+    </a>
+    <div class="head-actions">
+      <button id="theme-btn" class="icon-btn" type="button" aria-label="Switch light or dark map"></button>
     </div>
-  </div>
+  </header>
+
   <div id="panel-body">
-    <p class="tagline">Not the fastest way — the most beautiful one.</p>
+    <section class="trip" aria-label="Trip">
+      <div class="trip-rail" aria-hidden="true"><i class="pin-start"></i><span></span><i class="pin-end"></i></div>
+      <div class="trip-fields">
+        <div class="field" data-kind="start">
+          <input id="start-input" type="text" placeholder="Starting point" autocomplete="off" spellcheck="false" aria-label="Starting point" role="combobox" aria-expanded="false" aria-controls="start-suggestions">
+          <button id="locate-btn" class="field-btn" type="button" aria-label="Use my location" title="Use my location"></button>
+          <button id="start-save" class="field-btn save-btn" type="button" aria-label="Save this place" title="Save this place"></button>
+          <ul class="suggestions" id="start-suggestions" role="listbox"></ul>
+        </div>
+        <div class="field" data-kind="end">
+          <input id="end-input" type="text" placeholder="Destination" autocomplete="off" spellcheck="false" aria-label="Destination" role="combobox" aria-expanded="false" aria-controls="end-suggestions">
+          <button id="end-save" class="field-btn save-btn" type="button" aria-label="Save this place" title="Save this place"></button>
+          <ul class="suggestions" id="end-suggestions" role="listbox"></ul>
+        </div>
+      </div>
+      <button id="swap-btn" class="icon-btn swap" type="button" aria-label="Swap start and destination" title="Swap"></button>
+    </section>
+    <p class="hint" id="map-hint">You can also right-click the map, or press and hold on a phone, to drop a point.</p>
 
-    <div class="field">
-      <span class="dot start-dot"></span>
-      <input id="start-input" type="text" placeholder="Start (or use my location)" autocomplete="off">
-      <button id="locate-btn" title="Use my location">📍</button>
-      <button id="start-save" class="save-btn" title="Save this place with a custom name">☆</button>
-      <div class="suggestions" id="start-suggestions"></div>
-    </div>
-    <div class="swap-row"><button id="swap-btn" title="Swap start and destination">⇅ swap</button></div>
-    <div class="field">
-      <span class="dot end-dot"></span>
-      <input id="end-input" type="text" placeholder="Destination" autocomplete="off">
-      <button id="end-save" class="save-btn" title="Save this place with a custom name">☆</button>
-      <div class="suggestions" id="end-suggestions"></div>
-    </div>
-    <p class="hint">Tip: long-press / right-click the map to set start and destination.</p>
+    <section class="group">
+      <h2>Scenery I want</h2>
+      <div class="chips">
+        <button class="chip" type="button" data-pref="greenery" aria-pressed="true"><i data-icon="leaf"></i>Parks and trees</button>
+        <button class="chip" type="button" data-pref="water" aria-pressed="false"><i data-icon="drop"></i>Water</button>
+        <button class="chip" type="button" data-pref="historic" aria-pressed="false"><i data-icon="landmark"></i>Landmarks</button>
+      </div>
+      <h2>Road style</h2>
+      <div class="chips">
+        <button class="chip" type="button" data-pref="quietStreets" aria-pressed="true" title="Stay on calmer neighborhood streets"><i data-icon="house"></i>Quiet streets</button>
+        <button class="chip" type="button" data-pref="preferDifferent" aria-pressed="true" title="Prefer a path that leaves the usual fastest route"><i data-icon="shuffle"></i>A different way</button>
+      </div>
+    </section>
 
-    <p class="prefs-label">Prefer routes that are…</p>
-    <div class="prefs">
-      <button class="chip active" data-pref="greenery">🌳 Green</button>
-      <button class="chip" data-pref="water">💧 Water</button>
-      <button class="chip" data-pref="historic">🏛️ Historic</button>
-      <button class="chip active" data-pref="quietStreets" title="Avoid main roads — stay on calmer neighborhood streets">🏘️ Off main roads</button>
-      <button class="chip active" data-pref="preferDifferent" title="Take a path that diverges from the usual fastest route">🔀 A different way</button>
-    </div>
+    <section class="group sliders">
+      <label class="slider">
+        <span class="slider-top"><span>Freeways and highways</span><b id="highway-label">Avoid</b></span>
+        <input id="highway" type="range" min="0" max="100" step="10" value="0">
+        <span class="slider-note" id="highway-note"></span>
+      </label>
+      <label class="slider">
+        <span class="slider-top"><span>Extra time I will accept</span><b id="budget-label">+30%</b></span>
+        <input id="budget" type="range" min="10" max="100" step="5" value="30">
+      </label>
+    </section>
 
-    <label class="slider-row">
-      <span>🛣️ Freeways &amp; highways: <b id="highway-label">avoid</b></span>
-      <input id="highway" type="range" min="0" max="100" step="10" value="0">
-      <span class="slider-note" id="highway-note">Only used if it's the only way within your extra-time budget.</span>
-    </label>
+    <button id="go-btn" class="primary" type="button"><span>Find scenic routes</span></button>
 
-    <label class="slider-row">
-      <span>⏱️ Extra time I'll accept: <b id="budget-label">+30%</b></span>
-      <input id="budget" type="range" min="10" max="100" step="5" value="30">
-    </label>
-
-    <button id="go-btn">Find scenic routes</button>
-    <div id="status"></div>
+    <ol id="progress" class="progress" hidden>
+      <li data-stage="routing"><i></i><span>Finding roads</span></li>
+      <li data-stage="scenery"><i></i><span>Reading the scenery</span></li>
+      <li data-stage="scoring"><i></i><span>Scoring each route</span></li>
+    </ol>
+    <div id="status" role="status" aria-live="polite"></div>
     <div id="results"></div>
-    <p class="credit">Built by <a href="https://arash-ahmadi.com" target="_blank" rel="noopener">Arash Ahmadi</a> · data © OpenStreetMap contributors</p>
-  </div>
-</div>
 
-<script src="vendor/leaflet/leaflet.js"></script>
+    <footer class="credit">
+      Built by <a href="/">Arash Ahmadi</a>. Routing by <a href="https://valhalla.github.io/valhalla/" target="_blank" rel="noopener">Valhalla</a> (FOSSGIS),
+      map and scenery from <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>, data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
+    </footer>
+  </div>
+</aside>
+
+<script src="vendor/maplibre/maplibre-gl.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

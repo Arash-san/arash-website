@@ -1,19 +1,21 @@
-// Route search orchestration: fetch fastest + alternative routes, generate
-// extra candidates through scenic waypoints and quiet back streets, score
-// everything, and return a ranked list within the user's detour budget.
+// Route search: fetch the fastest and alternative routes, add candidates
+// through scenic waypoints and quiet back streets, read the scenery along
+// every candidate, score them, and return a ranked list within the user's
+// extra-time budget.
 
-import { valhallaRoute, getScenicFeatures } from './engines.js';
+import { valhallaRoute, osrmRoute, getScenicFeatures } from './engines.js';
+import { sceneryForBox, sceneryAlongRoutes } from './tiles.js';
 import { prepareFeatures, analyzeRoute, scenicScore } from './scoring.js';
 import { haversine, bbox, makeProjector, samplePolyline, pointSegDist2 } from './geo.js';
 
 const MAX_TRIP_KM = 80;
 
-// Fraction of a candidate route that does NOT run along the fastest route.
-// 1 = a completely different path, 0 = the same roads. Uses projected coords.
+// Share of a candidate route that does not run along the fastest route.
+// 1 = a completely different path, 0 = the same roads.
 function routeUniqueness(coords, fastestProjected, project) {
   const samples = samplePolyline(coords, 150).map(project);
   if (samples.length === 0 || fastestProjected.length < 2) return 0;
-  const thresh2 = 35 * 35; // within 35 m counts as "same road"
+  const thresh2 = 35 * 35; // within 35 m counts as the same road
   let near = 0;
   for (const p of samples) {
     for (let i = 1; i < fastestProjected.length; i++) {
@@ -28,16 +30,16 @@ function routeUniqueness(coords, fastestProjected, project) {
 
 function pickWaypoints(features, start, end, directDist, budgetFactor, prefs) {
   const pool = [];
-  if (prefs.greenery) pool.push(...features.green.filter(f => f.coords && f.closed));
-  if (prefs.water) pool.push(...features.water);
-  if (prefs.historic) pool.push(...features.historic.filter(f => f.name));
+  if (prefs.greenery) pool.push(...features.green.filter((f) => f.closed && (f.area ?? 1e9) > 40000));
+  if (prefs.water) pool.push(...features.water.filter((f) => !f.closed || (f.area ?? 1e9) > 40000));
+  if (prefs.historic) pool.push(...features.historic.filter((f) => f.name));
 
   const scored = [];
   for (const f of pool) {
     const detour = haversine(start, f.center) + haversine(f.center, end);
     const overhead = detour / directDist;
     if (overhead > 1 + budgetFactor * 1.2) continue;
-    const size = f.coords ? Math.min(f.coords.length, 60) : 5;
+    const size = f.area ? Math.min(60, Math.log10(f.area) * 10) : 25;
     const named = f.name ? 20 : 0;
     scored.push({ f, rank: size + named - overhead * 30 });
   }
@@ -46,16 +48,14 @@ function pickWaypoints(features, start, end, directDist, budgetFactor, prefs) {
   const picked = [];
   for (const { f } of scored) {
     if (picked.length >= 4) break;
-    if (picked.every(p => haversine(p.center, f.center) > 800)) picked.push(f);
+    if (picked.every((p) => haversine(p.center, f.center) > 800)) picked.push(f);
   }
   return picked;
 }
 
 function sameShape(a, b) {
   for (const t of [0.25, 0.5, 0.75]) {
-    const pa = a[Math.floor(a.length * t)];
-    const pb = b[Math.floor(b.length * t)];
-    if (haversine(pa, pb) > 300) return false;
+    if (haversine(a[Math.floor(a.length * t)], b[Math.floor(b.length * t)]) > 300) return false;
   }
   return true;
 }
@@ -63,7 +63,7 @@ function sameShape(a, b) {
 function dedupeRoutes(routes) {
   const kept = [];
   for (const r of routes) {
-    const dup = kept.find(k =>
+    const dup = kept.find((k) =>
       Math.abs(k.distance - r.distance) < 200 &&
       Math.abs(k.duration - r.duration) < 45 &&
       sameShape(k.coords, r.coords));
@@ -72,18 +72,14 @@ function dedupeRoutes(routes) {
   return kept;
 }
 
-// Quiet-streets candidate: Valhalla with highways off and capped top speed
-// pushes the route onto neighborhood streets, but the speed cap inflates its
-// reported duration. Re-route the same corridor at normal speed through a few
-// interior points for realistic timing — OSRM if it's up, else Valhalla, so
-// this never hard-depends on the flaky OSRM demo server.
+// Quiet-streets candidate: highways off and a capped top speed push the route
+// onto neighborhood streets, but the cap inflates the reported time, so the
+// same corridor is re-timed at normal speed through a few interior points.
 async function quietRoute(start, end) {
   const quiet = (await valhallaRoute([start, end], { use_highways: 0, top_speed: 50 }))[0];
   const pts = quiet.coords;
-  const vias = [0.2, 0.4, 0.6, 0.8].map(t => pts[Math.floor(pts.length * t)]);
+  const vias = [0.2, 0.4, 0.6, 0.8].map((t) => pts[Math.floor(pts.length * t)]);
   try {
-    // Re-route through the same interior points at normal speed so the
-    // reported duration isn't inflated by the top_speed cap.
     const retimed = (await valhallaRoute([start, ...vias, end]))[0];
     retimed.quiet = true;
     return retimed;
@@ -93,73 +89,87 @@ async function quietRoute(start, end) {
   }
 }
 
-export async function findRoutes({ start, end, prefs, detourBudget }) {
+async function corridorScenery(box) {
+  try {
+    return await sceneryForBox(box);
+  } catch {
+    // The tile CDN failed; the Overpass mirrors are slower but independent.
+    try { return await getScenicFeatures(box); }
+    catch (err) { return { green: [], water: [], historic: [], error: String(err.message || err) }; }
+  }
+}
+
+/**
+ * onStage(stage, detail) is called as the search moves through
+ * 'routing', 'scenery', and 'scoring'.
+ */
+export async function findRoutes({ start, end, prefs, detourBudget, onStage = () => {} }) {
   const directDist = haversine(start, end);
   if (directDist < 50) throw new Error('Start and destination are the same place.');
   if (directDist > MAX_TRIP_KM * 1000) {
-    throw new Error(`Trip is too long for scenic analysis (max ~${MAX_TRIP_KM} km as the crow flies).`);
+    throw new Error(`This trip is too long for scenic analysis. Try one under about ${MAX_TRIP_KM} km.`);
   }
   const budgetFactor = Math.max(0.05, Math.min(1.0, detourBudget ?? 0.3));
 
-  // 1. Baseline candidates, all in parallel. Valhalla (FOSSGIS) is the routing
-  // engine throughout — reliable and fast, unlike the public OSRM demo server
-  // which is frequently overloaded. Its `alternates` supply route diversity.
+  // 1. Baseline candidates and corridor scenery, all in parallel.
+  onStage('routing');
   const limitHighways = prefs.highwayUse < 0.95;
-  const basePromises = [
-    valhallaRoute([start, end], {}, { alternates: 2 }).catch(() => []),
-  ];
+  const basePromises = [valhallaRoute([start, end], {}, { alternates: 2 }).catch(() => [])];
   if (limitHighways) {
-    basePromises.push(
-      valhallaRoute([start, end], { use_highways: prefs.highwayUse }).catch(() => [])
-    );
+    basePromises.push(valhallaRoute([start, end], { use_highways: prefs.highwayUse }).catch(() => []));
   }
-  if (prefs.quietStreets) {
-    basePromises.push(quietRoute(start, end).then(r => [r]).catch(() => []));
-  }
+  if (prefs.quietStreets) basePromises.push(quietRoute(start, end).then((r) => [r]).catch(() => []));
 
-  // 2. Scenic features for the corridor (single cached Overpass call).
   const corridorPad = Math.min(4000, Math.max(1500, directDist * 0.25));
-  const box = bbox([start, end], corridorPad);
-  const featuresPromise = getScenicFeatures(box)
-    .catch(err => ({ green: [], water: [], historic: [], error: String(err.message || err) }));
+  const featuresPromise = corridorScenery(bbox([start, end], corridorPad));
 
-  const [baseResults, features] = await Promise.all([Promise.all(basePromises), featuresPromise]);
-  const baseRoutes = baseResults.flat();
+  let baseRoutes = (await Promise.all(basePromises)).flat();
   if (baseRoutes.length === 0) {
-    throw new Error('Routing services are unavailable right now. Please try again in a moment.');
+    // Valhalla is down; the OSRM demo server is a slower second choice.
+    baseRoutes = await osrmRoute([start, end], { alternatives: true }).catch(() => []);
+  }
+  if (baseRoutes.length === 0) {
+    throw new Error('The routing service is not answering right now. Please try again in a minute.');
   }
   const fastest = baseRoutes.reduce((m, r) => (r.duration < m.duration ? r : m), baseRoutes[0]);
+  const features = await featuresPromise;
 
-  // 3. Extra candidates via scenic waypoints (Valhalla — the reliable engine).
+  // 2. Extra candidates through scenic waypoints.
   const waypoints = pickWaypoints(features, start, end, directDist, budgetFactor, prefs);
   const viaOpts = limitHighways ? { use_highways: prefs.highwayUse } : {};
-  const viaCalls = waypoints.map(wp => ({
-    wp,
-    promise: valhallaRoute([start, wp.center, end], viaOpts),
-  }));
-  const viaResults = await Promise.allSettled(viaCalls.map(c => c.promise));
+  const viaResults = await Promise.allSettled(waypoints.map((wp) => valhallaRoute([start, wp.center, end], viaOpts)));
   const viaRoutes = [];
   viaResults.forEach((res, i) => {
-    if (res.status === 'fulfilled') {
-      const r = res.value[0];
-      r.via = viaCalls[i].wp.name || null;
-      viaRoutes.push(r);
-    }
+    if (res.status !== 'fulfilled') return;
+    const r = res.value[0];
+    r.via = waypoints[i].name || null;
+    viaRoutes.push(r);
   });
-
-  // 4. Score all unique candidates.
   const candidates = dedupeRoutes([...baseRoutes, ...viaRoutes]);
+  const maxDuration = fastest.duration * (1 + budgetFactor);
+  const inBudget = candidates.filter((r) => r === fastest || r.duration <= maxDuration);
+  onStage('scenery', { candidates: inBudget.map((r) => r.coords) });
+
+  // 3. Full-detail scenery in a strip along every candidate still in budget.
+  let detail = null;
+  try {
+    detail = await sceneryAlongRoutes(inBudget.map((r) => r.coords), {
+      onProgress: (done, total) => onStage('scenery', { done, total }),
+    });
+  } catch { /* fall back to the corridor scenery below */ }
+  const scenery = detail && detail.green.length + detail.water.length + detail.historic.length > 0 ? detail : features;
+
+  // 4. Score.
+  onStage('scoring');
   const project = makeProjector((start[0] + end[0]) / 2);
   const prepared = {
     project,
-    green: prepareFeatures(features.green, project),
-    water: prepareFeatures(features.water, project),
-    historic: prepareFeatures(features.historic, project),
+    green: prepareFeatures(scenery.green, project, 'green'),
+    water: prepareFeatures(scenery.water, project, 'water'),
+    historic: prepareFeatures(scenery.historic, project, 'historic'),
   };
-
   const fastestProjected = fastest.coords.map(project);
-  const maxDuration = fastest.duration * (1 + budgetFactor);
-  const results = candidates.map(r => {
+  const results = inBudget.map((r) => {
     const metrics = analyzeRoute(r.coords, prepared);
     const uniqueness = r === fastest ? 0 : routeUniqueness(r.coords, fastestProjected, project);
     return {
@@ -176,22 +186,18 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
       metrics,
       score: scenicScore(metrics, { ...r, uniqueness }, prefs),
       isFastest: r === fastest,
-      withinBudget: r.duration <= maxDuration,
     };
   });
 
   const scenic = results
-    .filter(r => !r.isFastest && r.withinBudget)
+    .filter((r) => !r.isFastest)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  // Freeway/highway fallback: when the user wants them avoided, note whether a
-  // (nearly) highway-free option actually fits the time budget. If none does,
-  // the shown routes still use a freeway because it's the only way in time.
-  const fastestResult = results.find(r => r.isFastest);
+  // When freeways should be avoided, say so if no option in budget manages it.
+  const fastestResult = results.find((r) => r.isFastest);
   const avoidingHighways = (prefs.highwayUse ?? 1) < 0.3;
-  const highwayFreeOption = [fastestResult, ...scenic].some(
-    r => r.withinBudget && r.highwayFraction < 0.05);
+  const highwayFreeOption = [fastestResult, ...scenic].some((r) => r.highwayFraction < 0.05);
 
   return {
     fastest: fastestResult,
@@ -199,10 +205,10 @@ export async function findRoutes({ start, end, prefs, detourBudget }) {
     avoidingHighways,
     highwayUnavoidable: avoidingHighways && !highwayFreeOption,
     featureCounts: {
-      green: features.green.length,
-      water: features.water.length,
-      historic: features.historic.length,
+      green: scenery.green.length,
+      water: scenery.water.length,
+      historic: scenery.historic.length,
     },
-    overpassError: features.error || null,
+    sceneryError: features.error || null,
   };
 }

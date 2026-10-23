@@ -16,12 +16,14 @@ type BoardOption = { board: string; rows: number; cols: number; mode: BoardMode;
 
 const format = new Intl.NumberFormat("en-US");
 const pageSize = 160;
+// The editor offers every rectangle from 3 by 3 up to this side length.
+const MAX_SIDE = 8;
 const orbitLabels = ["Original", "Rotate 180", "Flip left to right", "Flip top to bottom", "Rotate 90", "Rotate 270", "Main diagonal", "Other diagonal"];
 const completeBoards = new Set(yinYangEnumerations.map((record) => record.board));
 const exactCounts = new Map(rectangleCounts.records.map((record) => [record.board, record.solutions]));
 const graphRecords = new Map(decisionGraphs.records.map((record) => [record.board, record]));
-const boardOptions: BoardOption[] = Array.from({ length: 13 }, (_, rowIndex) => rowIndex + 3).flatMap((rows) =>
-  Array.from({ length: 16 - rows }, (_, colIndex) => {
+const boardOptions: BoardOption[] = Array.from({ length: MAX_SIDE - 2 }, (_, rowIndex) => rowIndex + 3).flatMap((rows) =>
+  Array.from({ length: MAX_SIDE + 1 - rows }, (_, colIndex) => {
     const cols = rows + colIndex;
     const board = `${rows}x${cols}`;
     const solutions = exactCounts.get(board);
@@ -231,7 +233,7 @@ export function YinYangExplorer() {
       <header className="yy-tool-hero yy-lab-hero">
         <p>Puzzle laboratory</p>
         <h1>Yin Yang puzzle viewer</h1>
-        <div><p>Edit square and rectangular boards through 15 by 15. Stored catalogs and compressed decision graphs provide complete virtual scrolling. Boards beyond the exact graph boundary use live constrained search.</p><span>91 board sizes through 15 × 15</span></div>
+        <div><p>Edit square and rectangular boards through 8 by 8. Stored catalogs and compressed decision graphs give complete virtual scrolling through every solution.</p><span>{boardOptions.length} board sizes through 8 × 8</span></div>
       </header>
 
       <section className="yy-catalog-workspace">
@@ -239,7 +241,7 @@ export function YinYangExplorer() {
           <div className="yy-card-head"><div><p className="yy-eyebrow">Puzzle editor</p><h2>{rows} by {cols}</h2></div><label>Board size<select value={board} onChange={(event) => chooseBoard(event.target.value)}>
             <optgroup label="Complete scrolling catalogs">{boardOptions.filter((option) => option.mode === "catalog").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
             <optgroup label="Complete compressed graph catalogs">{boardOptions.filter((option) => option.mode === "graph").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols} · {format.format(Number(option.solutions))}</option>)}</optgroup>
-            <optgroup label="Large live clue search">{boardOptions.filter((option) => option.mode === "live").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols}</option>)}</optgroup>
+            {boardOptions.some((option) => option.mode === "live") ? <optgroup label="Large live clue search">{boardOptions.filter((option) => option.mode === "live").map((option) => <option key={option.board} value={option.board}>{option.rows} × {option.cols}</option>)}</optgroup> : null}
           </select></label></div>
           <div className={`yy-mode-note is-${currentOption.mode}`}><b>{catalogMode ? "Complete catalog" : graphMode ? "Complete decision graph" : "Large live clue search"}</b><span>{catalogMode ? "Every solution is available in the virtual scroll." : graphMode ? `${format.format(exactTotal ?? 0)} solutions share ${format.format(graphRecords.get(board)?.nodes ?? 0)} graph states. Every solution remains directly accessible.` : "This board is available in the editor. Add enough pieces to make the live search practical."}</span></div>
           <div className="yy-tool-palette" aria-label="Piece tool">{(["1", "0", "."] as Tool[]).map((value) => <button key={value} className={`${tool === value ? "is-active" : ""} value-${value === "." ? "empty" : value}`} onClick={() => setTool(value)}><i />{value === "1" ? "Black" : value === "0" ? "White" : "Remove"}</button>)}</div>
@@ -263,7 +265,7 @@ export function YinYangExplorer() {
 
       <RectangleCountMap />
 
-      <footer className="yy-tool-footer"><p>The editor includes every distinct rectangle from 3 by 3 through 15 by 15. Stored catalogs cover the Flutter era sizes. Ranked decision graphs provide complete scrolling through every exact board with at most 100 cells. Larger boards continue with live clue search.</p><div><a href="https://arash-san.github.io/Yin-Yang-viewer/" target="_blank" rel="noreferrer">Open the original Flutter viewer ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
+      <footer className="yy-tool-footer"><p>The editor includes every distinct rectangle from 3 by 3 through 8 by 8. Stored catalogs cover the Flutter era sizes, and ranked decision graphs give complete scrolling through the rest.</p><div><a href="https://arash-san.github.io/Yin-Yang-viewer/" target="_blank" rel="noreferrer">Open the original Flutter viewer ↗</a><a href="https://x.com/user_arash" target="_blank" rel="noreferrer">Follow me on X ↗</a></div></footer>
     </div>
   );
 }

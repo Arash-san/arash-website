@@ -37,6 +37,15 @@ export type NewsItem = {
 /** Sourced from inquirelab.ai/news and LinkedIn updates. Newest first. */
 export const news: NewsItem[] = [
   {
+    date: "2026-10-01",
+    dateLabel: "October 1, 2026",
+    title: "Codenames workshop at the LLM Engineering Club",
+    body:
+      "We turned the board game Codenames into a playground for language models. Students played with AI teammates and saw how good clues become training data. A Gemma 4 model we fine-tuned on that data beat the base model 5 to 1 in head to head games.",
+    href: "https://inquirelab.ai/llm-club",
+    tag: "Workshop",
+  },
+  {
     date: "2026-05-28",
     dateLabel: "May 28, 2026",
     title: "New paper published in Expert Systems with Applications",

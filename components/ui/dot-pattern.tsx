@@ -1,10 +1,7 @@
-"use client";
-
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import React, { useEffect, useId, useRef, useState } from "react";
+import type { CSSProperties, HTMLAttributes } from "react";
 
-interface DotPatternProps extends React.SVGProps<SVGSVGElement> {
+interface DotPatternProps extends HTMLAttributes<HTMLDivElement> {
   width?: number;
   height?: number;
   x?: number;
@@ -13,10 +10,15 @@ interface DotPatternProps extends React.SVGProps<SVGSVGElement> {
   cy?: number;
   cr?: number;
   className?: string;
+  /** Kept for compatibility with older callers; the glow animation is gone. */
   glow?: boolean;
-  [key: string]: unknown;
 }
 
+/**
+ * A dotted background drawn by one CSS gradient tile. The previous version
+ * rendered one animated SVG circle per dot (thousands on a normal screen),
+ * which made pages slow to start and scroll.
+ */
 export function DotPattern({
   width = 16,
   height = 16,
@@ -26,90 +28,22 @@ export function DotPattern({
   cy = 1,
   cr = 1,
   className,
-  glow = false,
+  glow: _glow,
+  style,
   ...props
 }: DotPatternProps) {
-  const id = useId();
-  const containerRef = useRef<SVGSVGElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setDimensions({ width, height });
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
-
-  const dots = Array.from(
-    {
-      length:
-        Math.ceil(dimensions.width / width) *
-        Math.ceil(dimensions.height / height),
-    },
-    (_, i) => {
-      const col = i % Math.ceil(dimensions.width / width);
-      const row = Math.floor(i / Math.ceil(dimensions.width / width));
-      return {
-        x: col * width + cx,
-        y: row * height + cy,
-        delay: Math.random() * 5,
-        duration: Math.random() * 3 + 2,
-      };
-    },
-  );
-
+  void _glow;
+  const tile: CSSProperties = {
+    backgroundImage: `radial-gradient(circle at ${cx}px ${cy}px, currentColor ${cr}px, transparent ${cr + 0.6}px)`,
+    backgroundSize: `${width}px ${height}px`,
+    backgroundPosition: `${x}px ${y}px`,
+  };
   return (
-    <svg
-      ref={containerRef}
+    <div
       aria-hidden="true"
-      className={cn(
-        "pointer-events-none absolute inset-0 h-full w-full",
-        className,
-      )}
+      className={cn("pointer-events-none absolute inset-0 h-full w-full text-neutral-400/80", className)}
+      style={{ ...tile, ...style }}
       {...props}
-    >
-      <defs>
-        <radialGradient id={`${id}-gradient`}>
-          <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      {dots.map((dot, index) => (
-        <motion.circle
-          key={`${dot.x}-${dot.y}`}
-          cx={dot.x}
-          cy={dot.y}
-          r={cr}
-          fill={glow ? `url(#${id}-gradient)` : "currentColor"}
-          className={glow ? "text-blue-400" : "text-neutral-400/80"}
-          initial={glow ? { opacity: 0.6, scale: 1 } : {}}
-          animate={
-            glow
-              ? {
-                  opacity: [0.6, 1, 0.6],
-                  scale: [1, 1.2, 1],
-                }
-              : {}
-          }
-          transition={
-            glow
-              ? {
-                  duration: dot.duration,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  delay: dot.delay,
-                  ease: "easeInOut",
-                }
-              : {}
-          }
-        />
-      ))}
-    </svg>
+    />
   );
-} 
+}
