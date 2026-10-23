@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { startTransition, useEffect, useRef, useState } from "react";
+import { animate, motion, useMotionValue, useMotionValueEvent, useTransform, type AnimationPlaybackControls, type MotionValue } from "framer-motion";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
@@ -17,20 +17,86 @@ const SECTION_LABELS: Record<(typeof SECTIONS)[number], string> = {
   blog: "blog posts",
   interests: "interests",
 };
+const N = SECTIONS.length;
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+// Scrolling has two layers. A section whose text does not fit scrolls inside
+// its own box first. Moving to another section is a separate gesture: once
+// the box is at its edge, a fresh swipe or wheel gesture drags the current
+// section up (or down) and fades it while the next one rises in. A slow swipe
+// scrubs the transition; letting go past COMMIT finishes it, otherwise it
+// springs back.
+const WHEEL_DISTANCE = 340; // trackpad pixels for a full section change
+const TOUCH_DISTANCE = 0.32; // share of the screen height for a full change by swipe
+const COMMIT = 0.22; // share of the way that finishes a change on release
+const GESTURE_GAP = 220; // ms without wheel events that ends a gesture
+const MOUSE_STEP = 50; // a single wheel event this large is a mouse notch
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (v: number) => v * v * (3 - 2 * v);
+
+function HomeSection({
+  index,
+  p,
+  active,
+  reduced,
+  scrollerRef,
+  onScroll,
+  children,
+}: {
+  index: number;
+  p: MotionValue<number>;
+  active: boolean;
+  reduced: boolean;
+  scrollerRef: (el: HTMLDivElement | null) => void;
+  onScroll: (el: HTMLDivElement) => void;
+  children: ReactNode;
+}) {
+  const opacity = useTransform(p, (v) => {
+    const d = Math.abs(index - v);
+    return d >= 1 ? 0 : smooth(1 - d);
+  });
+  // Leaving sections move up, arriving ones rise from below.
+  const y = useTransform(p, (v) => (reduced ? 0 : Math.max(-1, Math.min(1, index - v)) * 72));
+  const scale = useTransform(p, (v) => (reduced ? 1 : 1 - Math.min(1, Math.abs(index - v)) * 0.03));
+  const visibility = useTransform(p, (v) => (Math.abs(index - v) >= 0.999 ? "hidden" : "visible"));
+  const pointerEvents = useTransform(p, (v) => (Math.abs(index - v) < 0.5 ? "auto" : "none"));
+  return (
+    <motion.div
+      className="absolute inset-0"
+      style={{ opacity, y, scale, visibility, pointerEvents }}
+      aria-hidden={!active}
+    >
+      <div
+        ref={scrollerRef}
+        className="home-scroller h-full overflow-y-auto overscroll-contain slim-scroll flex"
+        data-top="true"
+        data-bottom="true"
+        onScroll={(e) => onScroll(e.currentTarget)}
+      >
+        <div className="my-auto w-full space-y-3 py-2">{children}</div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const [active, setActive] = useState(0);
   const [reduced, setReduced] = useState(false);
   const activeRef = useRef(0);
-  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
-  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const glassRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const titleRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const scrollers = useRef<(HTMLDivElement | null)[]>([]);
+  // p is the continuous section position: 0 = home, 1 = news, and so on.
+  const p = useMotionValue(0);
+  const anim = useRef<AnimationPlaybackControls | null>(null);
+  const animating = useRef(false);
+  const reducedRef = useRef(false);
+  reducedRef.current = reduced;
+
+  // The portrait shrinks a little as the reader leaves the intro.
+  useMotionValueEvent(p, "change", (v) => {
+    rootRef.current?.style.setProperty("--shrink", clamp01(v).toFixed(3));
+  });
 
   useEffect(() => {
     const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -40,187 +106,331 @@ export default function Home() {
     return () => rm.removeEventListener("change", update);
   }, []);
 
-  // Gentle snapping: after the reader stops scrolling, the page settles on
-  // the nearest section, but slow scrolling still scrubs the fade freely.
+  // The page itself never scrolls; only section boxes do.
   useEffect(() => {
     const html = document.documentElement;
-    html.classList.add("home-snap");
-    return () => html.classList.remove("home-snap");
+    const prev = [html.style.overflow, html.style.overscrollBehavior];
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    window.scrollTo(0, 0);
+    return () => {
+      html.style.overflow = prev[0];
+      html.style.overscrollBehavior = prev[1];
+    };
   }, []);
 
-  // Scroll-linked reveal. Each section's content rises and fades in as it
-  // enters, then keeps rising and fades out as it leaves, in step with the
-  // scroll position rather than on a timer. Positions are read from the
-  // untransformed wrapper, and only opacity and transform are written, so
-  // the loop never forces a layout.
+  /** Mark whether a box has more text above or below, for the edge fades. */
+  function markEdges(el: HTMLDivElement) {
+    el.dataset.top = el.scrollTop <= 1 ? "true" : "false";
+    el.dataset.bottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight - 1 ? "true" : "false";
+  }
+
+  /** Can the active section's box still scroll in this direction? */
+  function boxCanScroll(dir: number) {
+    const el = scrollers.current[activeRef.current];
+    if (!el || el.scrollHeight <= el.clientHeight + 1) return false;
+    if (dir > 0) return Math.ceil(el.scrollTop + el.clientHeight) < el.scrollHeight - 1;
+    return el.scrollTop > 1;
+  }
+
+  /** Arriving from above starts a long section at its top, from below at its end. */
+  function prepare(target: number, dir: number) {
+    const el = scrollers.current[target];
+    if (!el) return;
+    el.scrollTop = dir > 0 ? 0 : el.scrollHeight;
+    markEdges(el);
+  }
+
+  function settle(target: number, from = activeRef.current) {
+    const clamped = Math.max(0, Math.min(N - 1, target));
+    anim.current?.stop();
+    if (clamped !== from) prepare(clamped, Math.sign(clamped - from));
+    if (clamped !== activeRef.current) {
+      activeRef.current = clamped;
+      setActive(clamped);
+      window.history.replaceState(null, "", clamped === 0 ? window.location.pathname : `#${SECTIONS[clamped]}`);
+    }
+    const distance = Math.abs(p.get() - clamped);
+    if (distance < 0.001) {
+      p.set(clamped);
+      return;
+    }
+    animating.current = true;
+    anim.current = animate(p, clamped, {
+      duration: reducedRef.current ? 0 : Math.min(0.85, 0.32 + distance * 0.14),
+      ease: EASE,
+      onComplete: () => {
+        animating.current = false;
+      },
+    });
+  }
+  const settleRef = useRef(settle);
+  settleRef.current = settle;
+
+  /** Drag position for an offset in sections, with resistance past the ends. */
+  function dragTo(offset: number) {
+    const base = activeRef.current;
+    let v = base + Math.max(-1, Math.min(1, offset));
+    if (v < 0) v = -Math.min(0.12, -v * 0.25);
+    if (v > N - 1) v = N - 1 + Math.min(0.12, (v - (N - 1)) * 0.25);
+    p.set(v);
+  }
+
+  // --- Wheel and trackpad -------------------------------------------------
   useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const vh = window.innerHeight;
-      const span = vh * 0.38;
-      // Read every position first, then write. Interleaving reads and writes
-      // would make the browser recompute styles once per section per frame.
-      const rects = blockRefs.current.map((block) => block?.getBoundingClientRect() ?? null);
-      let best = 0;
-      let bestV = -1;
-      rects.forEach((r, i) => {
-        const content = contentRefs.current[i];
-        const glass = glassRefs.current[i];
-        const title = titleRefs.current[i];
-        if (!r || !content) return;
-        let enter: number;
-        let exit: number;
-        if (r.height <= vh * 0.75) {
-          // Short sections fade with their center: fully clear only when
-          // centered, so every bit of scrolling moves the fade a little.
-          const c = r.top + r.height / 2;
-          enter = clamp01((vh - c) / (vh * 0.5));
-          exit = clamp01(c / (vh * 0.5));
-        } else {
-          // Tall sections stay readable while they fill the screen and only
-          // fade as their first or last lines reach the screen edge.
-          enter = clamp01((vh * 0.94 - r.top) / span);
-          exit = clamp01((r.bottom - vh * 0.06) / span);
+    const root = rootRef.current;
+    if (!root) return;
+    let lastWheel = 0;
+    let gesture = { dir: 0, inside: false, acc: 0, done: false };
+    let idle: ReturnType<typeof setTimeout> | null = null;
+
+    const release = () => {
+      idle = null;
+      if (gesture.done || animating.current) return;
+      const offset = gesture.acc / WHEEL_DISTANCE;
+      if (Math.abs(offset) < 0.001) return;
+      gesture.done = true;
+      const base = activeRef.current;
+      settleRef.current(Math.abs(offset) >= COMMIT ? base + Math.sign(offset) : base);
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return; // pinch zoom
+      const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+      if (Math.abs(dy) < 0.5) return;
+      const dir = Math.sign(dy);
+      const now = performance.now();
+      const fresh = now - lastWheel > GESTURE_GAP;
+      lastWheel = now;
+      // While a change animates, keep swallowing the same gesture's momentum
+      // so it cannot scroll the text of the section that just arrived.
+      if (animating.current) {
+        e.preventDefault();
+        gesture.done = true;
+        return;
+      }
+      if (fresh) gesture = { dir, inside: boxCanScroll(dir), acc: 0, done: false };
+      if (gesture.done && !gesture.inside) {
+        e.preventDefault();
+        return;
+      }
+      // A gesture that began by scrolling text stays a text scroll, even
+      // when it reaches the end of the box. A new gesture moves sections.
+      if (gesture.acc === 0 && !gesture.inside && boxCanScroll(dir)) gesture.inside = true;
+      if (gesture.inside) {
+        const box = scrollers.current[activeRef.current];
+        // Over the portrait or tabs the browser would scroll nothing, so move
+        // the text box directly; over the box itself, let it scroll natively.
+        if (box && !(e.target instanceof Node && box.contains(e.target))) {
+          e.preventDefault();
+          box.scrollTop += dy;
         }
-        const v = smooth(Math.min(enter, exit));
-        if (v > bestV + 0.001) {
-          bestV = v;
-          best = i;
-        }
-        if (reduced) {
-          content.style.opacity = "";
-          content.style.transform = "";
-          if (glass) glass.style.opacity = "";
-          if (title) title.style.transform = "";
+        return;
+      }
+      e.preventDefault();
+      if (Math.abs(dy) >= MOUSE_STEP && gesture.acc === 0) {
+        gesture.done = true;
+        settleRef.current(activeRef.current + dir);
+        return;
+      }
+      if (gesture.acc === 0) prepare(activeRef.current + dir, dir);
+      gesture.acc += dy;
+      const offset = gesture.acc / WHEEL_DISTANCE;
+      if (Math.abs(offset) >= 1) {
+        gesture.done = true;
+        settleRef.current(activeRef.current + Math.sign(offset));
+        return;
+      }
+      dragTo(offset);
+      if (idle) clearTimeout(idle);
+      idle = setTimeout(release, 140);
+    };
+    root.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      root.removeEventListener("wheel", onWheel);
+      if (idle) clearTimeout(idle);
+    };
+  }, []);
+
+  // --- Touch ----------------------------------------------------------------
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    let startY = 0;
+    let lastY = 0;
+    let lastT = 0;
+    let velocity = 0;
+    let mode: "idle" | "pending" | "text" | "section" = "idle";
+    let startedInBox = false;
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) {
+        mode = "idle";
+        return;
+      }
+      if (animating.current) anim.current?.stop();
+      animating.current = false;
+      startY = lastY = e.touches[0].clientY;
+      lastT = performance.now();
+      const box = scrollers.current[activeRef.current];
+      startedInBox = !!box && e.target instanceof Node && box.contains(e.target);
+      velocity = 0;
+      mode = "pending";
+    };
+    const onMove = (e: TouchEvent) => {
+      if (mode === "idle" || mode === "text") return;
+      const y = e.touches[0].clientY;
+      const dy = startY - y; // > 0 is a swipe up, toward the next section
+      if (mode === "pending") {
+        if (Math.abs(dy) < 6) return;
+        const dir = Math.sign(dy);
+        // Inside the text box, the text scrolls first. A swipe that starts on
+        // the portrait or the tabs always changes the section.
+        if (startedInBox && boxCanScroll(dir)) {
+          mode = "text";
           return;
         }
-        const y = exit < enter ? -(1 - smooth(exit)) * 64 : (1 - smooth(enter)) * 64;
-        const t = `translate3d(0, ${y.toFixed(1)}px, 0)`;
-        const o = v.toFixed(3);
-        // Sections far off screen settle at the same values every frame; skip
-        // rewriting identical styles.
-        if (content.style.transform === t && content.style.opacity === o) return;
-        content.style.opacity = o;
-        content.style.transform = t;
-        if (glass) {
-          glass.style.opacity = o;
-          glass.style.transform = t;
-        }
-        // The title moves a little ahead of the body for a sense of depth.
-        if (title) title.style.transform = `translate3d(0, ${(exit < enter ? y * 0.45 : -y * 0.25).toFixed(1)}px, 0)`;
-      });
-      if (best !== activeRef.current) {
-        activeRef.current = best;
-        startTransition(() => setActive(best));
-        window.history.replaceState(null, "", best === 0 ? window.location.pathname : `#${SECTIONS[best]}`);
+        mode = "section";
+        prepare(activeRef.current + dir, dir);
+        startY = y + dy; // keep the full movement so far
+      }
+      e.preventDefault();
+      const now = performance.now();
+      velocity = (lastY - y) / Math.max(1, now - lastT);
+      lastY = y;
+      lastT = now;
+      dragTo(dy / (window.innerHeight * TOUCH_DISTANCE));
+    };
+    const onEnd = () => {
+      if (mode === "section") {
+        const offset = p.get() - activeRef.current;
+        const base = activeRef.current;
+        const flick = Math.abs(velocity) > 0.45 ? Math.sign(velocity) : 0;
+        if (flick && Math.sign(offset) === flick) settleRef.current(base + flick);
+        else settleRef.current(Math.abs(offset) >= COMMIT ? base + Math.sign(offset) : base);
+      }
+      mode = "idle";
+    };
+    root.addEventListener("touchstart", onStart, { passive: true });
+    root.addEventListener("touchmove", onMove, { passive: false });
+    root.addEventListener("touchend", onEnd);
+    root.addEventListener("touchcancel", onEnd);
+    return () => {
+      root.removeEventListener("touchstart", onStart);
+      root.removeEventListener("touchmove", onMove);
+      root.removeEventListener("touchend", onEnd);
+      root.removeEventListener("touchcancel", onEnd);
+    };
+  }, [p]);
+
+  // --- Keyboard -------------------------------------------------------------
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select")) return;
+      const el = scrollers.current[activeRef.current];
+      const step = (dir: number, amount: number) => {
+        e.preventDefault();
+        if (el && boxCanScroll(dir)) el.scrollBy({ top: dir * amount, behavior: reducedRef.current ? "auto" : "smooth" });
+        else settleRef.current(activeRef.current + dir);
+      };
+      if (e.key === "ArrowDown") step(1, 80);
+      else if (e.key === "ArrowUp") step(-1, 80);
+      else if (e.key === "PageDown" || (e.key === " " && !e.shiftKey)) step(1, (el?.clientHeight ?? 400) * 0.85);
+      else if (e.key === "PageUp" || (e.key === " " && e.shiftKey)) step(-1, (el?.clientHeight ?? 400) * 0.85);
+      else if (e.key === "Home") {
+        e.preventDefault();
+        settleRef.current(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        settleRef.current(N - 1);
       }
     };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    const ro = new ResizeObserver(schedule);
-    blockRefs.current.forEach((b) => b && ro.observe(b));
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      ro.disconnect();
-    };
-  }, [reduced]);
-
-  function scrollToSection(index: number, instant = false) {
-    const el = sectionRefs.current[index];
-    if (!el) return;
-    window.scrollTo({ top: index === 0 ? 0 : el.getBoundingClientRect().top + window.scrollY, behavior: instant || reduced ? "auto" : "smooth" });
-  }
-  const scrollRef = useRef(scrollToSection);
-  scrollRef.current = scrollToSection;
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Deep links such as /#news, on load and when the hash changes.
   useEffect(() => {
-    const go = () => {
-      const i = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
-      if (i > 0) scrollRef.current(i, true);
-    };
-    go();
+    const idx = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
+    if (idx > 0) {
+      activeRef.current = idx;
+      setActive(idx);
+      p.set(idx);
+    }
     const onHash = () => {
       const i = (SECTIONS as readonly string[]).indexOf(window.location.hash.slice(1));
-      if (i >= 0) scrollRef.current(i);
+      if (i >= 0) settleRef.current(i);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
+  }, [p]);
+
+  // Keep the edge fades right when boxes resize (fonts, images, rotation).
+  useEffect(() => {
+    const ro = new ResizeObserver(() => scrollers.current.forEach((el) => el && markEdges(el)));
+    scrollers.current.forEach((el) => {
+      if (!el) return;
+      ro.observe(el);
+      if (el.firstElementChild) ro.observe(el.firstElementChild);
+    });
+    return () => ro.disconnect();
   }, []);
 
-  // --- Nav tabs with sliding pill ------------------------------------------
-  function NavTabs({ layout }: { layout: "d" | "m" }) {
-    return (
-      <div role="tablist" aria-label="Section navigation" className="flex items-center gap-0.5 sm:gap-1.5">
-        {SECTIONS.map((label, idx) => {
-          const isActive = active === idx;
-          return (
-            <button
-              key={label}
-              role="tab"
-              aria-selected={isActive}
-              aria-current={isActive ? "page" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection(idx);
-              }}
-              className="relative whitespace-nowrap px-1.5 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-sm active:opacity-90"
-              style={{ touchAction: "manipulation" }}
-            >
-              {isActive && (
-                <motion.span
-                  layoutId={`tab-pill-${layout}`}
-                  className="absolute inset-0 rounded-full bg-black"
-                  transition={reduced ? { duration: 0 } : { type: "spring", bounce: 0.18, duration: 0.5 }}
-                />
-              )}
-              <span
-                className={cn(
-                  "relative z-10 transition-colors duration-200",
-                  isActive ? "text-white" : "text-black/70 hover:text-black"
-                )}
-              >
-                {SECTION_LABELS[label]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
+  const goTo = (i: number) => settleRef.current(i);
 
-  // --- Progress dots --------------------------------------------------------
-  function ProgressDots() {
-    return (
-      <div className="fixed right-2 sm:right-5 top-1/2 -translate-y-1/2 z-20 hidden sm:flex flex-col items-center gap-2.5">
-        {SECTIONS.map((label, i) => (
+  // --- Nav tabs with sliding pill ------------------------------------------
+  const navTabs = (
+    <div role="tablist" aria-label="Section navigation" className="flex items-center gap-0.5 sm:gap-1.5">
+      {SECTIONS.map((label, idx) => {
+        const isActive = active === idx;
+        return (
           <button
             key={label}
-            aria-label={`Go to ${SECTION_LABELS[label]}`}
-            onClick={() => scrollToSection(i)}
-            className="group p-1"
+            role="tab"
+            aria-selected={isActive}
+            aria-current={isActive ? "page" : undefined}
+            onClick={(e) => {
+              e.preventDefault();
+              goTo(idx);
+            }}
+            className="relative whitespace-nowrap px-1.5 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-sm active:opacity-90"
             style={{ touchAction: "manipulation" }}
           >
-            <motion.span
-              className={cn(
-                "block w-1.5 rounded-full",
-                i === active ? "bg-black" : "bg-black/20 group-hover:bg-black/50"
-              )}
-              animate={{ height: i === active ? 22 : 6 }}
-              transition={reduced ? { duration: 0 } : { type: "spring", bounce: 0.2, duration: 0.5 }}
-            />
+            {isActive && (
+              <motion.span
+                layoutId="tab-pill"
+                className="absolute inset-0 rounded-full bg-black"
+                transition={reduced ? { duration: 0 } : { type: "spring", bounce: 0.18, duration: 0.5 }}
+              />
+            )}
+            <span className={cn("relative z-10 transition-colors duration-200", isActive ? "text-white" : "text-black/70 hover:text-black")}>
+              {SECTION_LABELS[label]}
+            </span>
           </button>
-        ))}
-      </div>
-    );
-  }
+        );
+      })}
+    </div>
+  );
+
+  const progressDots = (
+    <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2.5">
+      {SECTIONS.map((label, i) => (
+        <button
+          key={label}
+          aria-label={`Go to ${SECTION_LABELS[label]}`}
+          onClick={() => goTo(i)}
+          className="group p-1"
+          style={{ touchAction: "manipulation" }}
+        >
+          <motion.span
+            className={cn("block w-1.5 rounded-full", i === active ? "bg-black" : "bg-black/20 group-hover:bg-black/50")}
+            animate={{ height: i === active ? 22 : 6 }}
+            transition={reduced ? { duration: 0 } : { type: "spring", bounce: 0.2, duration: 0.5 }}
+          />
+        </button>
+      ))}
+    </div>
+  );
 
   // --- Content blocks (original voice) --------------------------------------
   const iconSize = "h-6 w-6 lg:h-7 lg:w-7";
@@ -256,7 +466,7 @@ export default function Home() {
   );
 
   const scrollHint = (
-    <button type="button" onClick={() => scrollToSection(1)} className="font-bold flex items-center gap-2 pt-1">
+    <button type="button" onClick={() => goTo(1)} className="font-bold flex items-center gap-2 pt-1">
       Scroll to see more!
       <svg
         width="16"
@@ -280,7 +490,7 @@ export default function Home() {
     <>
       <p>Welcome to my personal website!</p>
       <p>
-        My name is Arash Ahmadi. I&apos;m currently a PhD student at the{" "}
+        <span className="hidden lg:inline">My name is Arash Ahmadi. </span>I&apos;m currently a PhD student at the{" "}
         <a href="https://www.ou.edu/" className="text-[#DC143C] underline">University Of Oklahoma</a>{" "}
         working at <a href="https://inquirelab.ai/" className="text-[#DC143C] underline" target="_blank" rel="noopener noreferrer">InquireLab</a> in electrical and computer engineering. In my studies, I&apos;m focusing on the utilization of Large Language Models (LLMs) in different domains, and also working on the interpretability side of them.
       </p>
@@ -290,7 +500,7 @@ export default function Home() {
   );
 
   const newsBody = (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {news.map((item) => (
         <a
           key={item.title}
@@ -302,10 +512,10 @@ export default function Home() {
           <p className="text-xs text-gray-500">
             {item.dateLabel} · <span className="text-red-700">{item.tag}</span>
           </p>
-          <p className="font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors text-[15px] lg:text-base leading-snug">
+          <p className="font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors text-sm lg:text-base leading-snug">
             {item.title}
           </p>
-          <p className="text-xs lg:text-sm text-gray-600 mt-0.5 leading-relaxed">{item.body}</p>
+          <p className="text-xs text-gray-600 mt-0.5 leading-relaxed lg:hidden">{item.body}</p>
         </a>
       ))}
       <p className="text-xs text-gray-500">
@@ -383,8 +593,8 @@ export default function Home() {
   ];
 
   const toolsBody = (
-    <div className="space-y-4">
-      <p className="text-[15px] lg:text-base">Things I build outside of research, free for anyone to use.</p>
+    <div className="space-y-3">
+      <p className="text-xs lg:text-sm">Things I build outside of research, free for anyone to use.</p>
       {tools.map((item) => (
         <a
           key={item.name}
@@ -396,10 +606,10 @@ export default function Home() {
           <p className="text-xs text-gray-500">
             <span className="text-red-700">{item.tag}</span>
           </p>
-          <p className="font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors text-[15px] lg:text-base">
+          <p className="font-semibold text-gray-800 group-hover:text-[#DC143C] transition-colors text-sm lg:text-base">
             {item.name}
           </p>
-          <p className="text-xs lg:text-sm text-gray-600 mt-0.5 leading-relaxed">{item.desc}</p>
+          <p className="text-xs text-gray-600 mt-0.5">{item.desc}</p>
         </a>
       ))}
     </div>
@@ -430,7 +640,7 @@ export default function Home() {
     </>
   );
 
-  const titleClass = "text-[28px] leading-tight lg:text-5xl xl:text-6xl font-bold";
+  const titleClass = "text-2xl lg:text-5xl xl:text-6xl font-bold";
   const titles = [
     <h1 key="t0" className={titleClass}>
       <span className="text-gray-600">Hi! I&apos;m </span>
@@ -445,108 +655,57 @@ export default function Home() {
   ];
   const bodies = [homeBody, newsBody, academicBody, toolsBody, <HomeBlogPreview key="blog" />, interestsBody];
 
-  const portrait = (className: string, sizes: string) => (
-    <div className={cn("relative overflow-hidden rounded-xl", className)}>
-      <Image
-        src="/portrait.jpg"
-        alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma"
-        fill
-        sizes={sizes}
-        className="object-cover"
-        priority
-      />
-    </div>
-  );
-
   return (
-    <div className="relative min-h-screen bg-white [overflow-x:clip]">
+    <div ref={rootRef} className="home-root fixed inset-0 z-0 overflow-hidden bg-white">
       <DotPattern
         width={20}
         height={20}
         cx={1}
         cy={1}
         cr={1}
-        className="!fixed z-0 [mask-image:radial-gradient(900px_circle_at_center,white,transparent)]"
+        className="[mask-image:radial-gradient(800px_circle_at_center,white,transparent)]"
       />
+      {progressDots}
 
-      <ProgressDots />
+      <div className="home-stage">
+        {/* The portrait is always pinned on top and never scrolls away. */}
+        <motion.div
+          className="home-portrait-col"
+          initial={reduced ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE }}
+        >
+          {navTabs}
+          <div className="home-portrait">
+            <Image
+              src="/portrait.jpg"
+              alt="Arash Ahmadi - PhD Student in Electrical and Computer Engineering at University of Oklahoma"
+              fill
+              sizes="(min-width: 1024px) 320px, 360px"
+              className="object-cover"
+              priority
+            />
+          </div>
+        </motion.div>
 
-      {/* Phone navigation bar */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-30 flex justify-center px-2 pt-[max(10px,env(safe-area-inset-top))] pb-2.5 bg-white/80 backdrop-blur-md [mask-image:linear-gradient(to_bottom,#000_78%,transparent)]">
-        <NavTabs layout="m" />
-      </header>
-
-      <div className="relative z-10 mx-auto flex max-w-[900px] justify-center gap-10 px-6">
-        {/* Desktop: portrait and tabs stay put while the sections glide past. */}
-        <aside className="hidden lg:flex sticky top-0 h-[100svh] shrink-0 flex-col items-center justify-center">
-          <motion.div
-            className="flex flex-col items-center"
-            initial={reduced ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          >
-            <div className="mb-3">
-              <NavTabs layout="d" />
-            </div>
-            <motion.div
-              className="w-80 shadow-[0_18px_44px_-18px_rgba(0,0,0,0.3)] rounded-xl"
-              whileHover={reduced ? undefined : { scale: 1.015 }}
-              transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-            >
-              {portrait("w-80 h-[420px]", "320px")}
-            </motion.div>
-          </motion.div>
-        </aside>
-
-        <main className="w-full max-w-[520px] lg:w-[500px] lg:max-w-none">
+        <div className="home-viewport">
           {SECTIONS.map((label, i) => (
-            <section
+            <HomeSection
               key={label}
-              id={label}
-              ref={(el) => {
-                sectionRefs.current[i] = el;
+              index={i}
+              p={p}
+              active={i === active}
+              reduced={reduced}
+              scrollerRef={(el) => {
+                scrollers.current[i] = el;
               }}
-              aria-label={SECTION_LABELS[label]}
-              className="home-section flex min-h-[100svh] items-center pt-20 pb-14 lg:py-16"
+              onScroll={markEdges}
             >
-              <div
-                ref={(el) => {
-                  blockRefs.current[i] = el;
-                }}
-                className="relative w-full"
-              >
-                <div
-                  ref={(el) => {
-                    glassRefs.current[i] = el;
-                  }}
-                  aria-hidden="true"
-                  className="reading-glass"
-                />
-                <div
-                  ref={(el) => {
-                    contentRefs.current[i] = el;
-                  }}
-                  className="home-reveal relative space-y-3"
-                >
-                  {i === 0 &&
-                    portrait(
-                      "lg:hidden mx-auto mb-6 w-[min(62vw,250px)] aspect-[4/5] shadow-[0_14px_34px_-16px_rgba(0,0,0,0.3)]",
-                      "250px"
-                    )}
-                  <div
-                    ref={(el) => {
-                      titleRefs.current[i] = el;
-                    }}
-                    className="home-title"
-                  >
-                    {titles[i]}
-                  </div>
-                  <div className="space-y-2.5 text-[15px] lg:text-lg text-gray-700 leading-relaxed">{bodies[i]}</div>
-                </div>
-              </div>
-            </section>
+              {titles[i]}
+              <div className="space-y-2 text-sm lg:text-lg text-gray-700 leading-relaxed">{bodies[i]}</div>
+            </HomeSection>
           ))}
-        </main>
+        </div>
       </div>
     </div>
   );
