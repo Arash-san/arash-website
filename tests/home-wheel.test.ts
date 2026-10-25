@@ -513,6 +513,19 @@ describe("reported: at the end of the text, waiting and scrolling again did noth
     assert.equal(t.active, 4, "notch after reaching the end of the text");
   });
 
+  test("leftover glide after a hold-up never finishes a section change", () => {
+    // The glide of a swipe that already changed the section, cut by a 380 ms
+    // gap (the browser was busy), arrives as if it were a new gesture.
+    const s = new Sim([0, 0, 0, 0], 0).play(swipe(400, { decay: 0.95 })).wait(900);
+    assert.equal(s.active, 1);
+    let v = 6;
+    const tail: Ev[] = [];
+    for (let at = 0; v >= 1; at += 16, v *= 0.95) tail.push({ at, dy: v });
+    s.play(tail).wait(900);
+    assert.equal(s.active, 1);
+    assert.equal(s.p, 1);
+  });
+
   test("a full trackpad drag never moves two sections", () => {
     const s = new Sim([0, 0, 0, 0], 0).play(steady(30, 300)).wait(900);
     assert.equal(s.active, 1);

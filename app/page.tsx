@@ -226,9 +226,13 @@ export default function Home() {
       if (Math.abs(dy) < 0.5) return;
       const dir = Math.sign(dy);
       const box = scrollers.current[activeRef.current];
+      // When the input happened, not when the page got to it: a busy page
+      // can hold events back and then handle them in a burst.
+      const handled = performance.now();
+      const happened = e.timeStamp > 0 && e.timeStamp <= handled + 50 ? e.timeStamp : handled;
       const input = {
         dy,
-        now: performance.now(),
+        now: happened,
         canScroll: boxCanScroll(dir),
         overBox: !!box && e.target instanceof Node && box.contains(e.target),
         textMovedAt: textScrolledAt.current,

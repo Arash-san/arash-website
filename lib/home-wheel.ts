@@ -90,6 +90,8 @@ export class WheelController {
   private peak = 0;
   /** No section change before this time. */
   private calmUntil = Number.NEGATIVE_INFINITY;
+  /** This gesture showed an active push at some point (not only glide). */
+  private confirmed = false;
 
   /** Decide what one wheel event does. */
   handle(i: WheelInput): WheelAction {
@@ -111,11 +113,13 @@ export class WheelController {
       this.recent = [];
       this.peak = 0;
     }
+    if (fresh) this.confirmed = false;
     this.recent.push(abs);
     if (this.recent.length > 8) this.recent.shift();
     this.peak = Math.max(this.peak, abs);
     this.prevAbs = abs;
     const pushing = steadyOrGrowing(this.recent, this.peak);
+    if (pushing || abs >= WHEEL.mouseStep) this.confirmed = true;
 
     if (i.animating || i.now < this.calmUntil) {
       // Events during a section change belong to that change.
@@ -169,7 +173,9 @@ export class WheelController {
     const offset = this.acc / WHEEL.distance;
     this.mode = "done";
     this.acc = 0;
-    return Math.abs(offset) >= WHEEL.commit ? Math.sign(offset) : 0;
+    // Leftover glide alone (for example after the browser held events back)
+    // never finishes a change; it springs back.
+    return this.confirmed && Math.abs(offset) >= WHEEL.commit ? Math.sign(offset) : 0;
   }
 
   /** Forget the current gesture (for example after a tab click). */
