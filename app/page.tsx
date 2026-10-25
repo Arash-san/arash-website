@@ -7,6 +7,8 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import Image from "next/image";
 import { news } from "@/lib/profile-data";
 import { HomeBlogPreview } from "@/components/blog/home-blog-preview";
+import { WHEEL, WheelController } from "@/lib/home-wheel";
+import { TOUCH, chooseTouchMode, fingerSpeed, flingStep, releaseTarget, splitMove, type TextDrag } from "@/lib/home-touch";
 
 const SECTIONS = ["home", "news", "academic", "tools", "blog", "interests"] as const;
 const SECTION_LABELS: Record<(typeof SECTIONS)[number], string> = {
@@ -21,21 +23,8 @@ const N = SECTIONS.length;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 // Scrolling has two layers. A section whose text does not fit scrolls inside
-// its own box first. Moving to another section is a separate gesture: once
-// the box is at its edge, a fresh swipe or wheel gesture drags the current
-// section up (or down) and fades it while the next one rises in. A slow swipe
-// scrubs the transition; letting go past COMMIT finishes it, otherwise it
-// springs back.
-const WHEEL_DISTANCE = 340; // trackpad pixels for a full section change
-const TOUCH_DISTANCE = 0.32; // share of the screen height for a full change by swipe
-const COMMIT = 0.22; // share of the way that finishes a change on release
-const GESTURE_GAP = 220; // ms without wheel events that ends a gesture
-const MOUSE_STEP = 50; // a single wheel event this large is a mouse notch
-// Fast scrolling stops at the end of a long section's text. Only after a
-// pause this long does a new wheel gesture or swipe move to the next section.
-const END_HOLD = 450; // ms
-const TOUCH_SLOW = 0.4; // px/ms: a finger slower than this carries on past the text
-const FLING_DECAY = 0.9975; // speed kept per ms while text coasts after a swipe
+// its own box first; then a further scroll or swipe moves to the next section.
+// The rules live in lib/home-wheel.ts and lib/home-touch.ts, with unit tests.
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (v: number) => v * v * (3 - 2 * v);
@@ -95,8 +84,22 @@ export default function Home() {
   const p = useMotionValue(0);
   const anim = useRef<AnimationPlaybackControls | null>(null);
   const animating = useRef(false);
-  const textScrolledAt = useRef(0); // when the active box's text last moved
+  const textScrolledAt = useRef(Number.NEGATIVE_INFINITY); // when the active box's text last moved
   const flingRef = useRef(0);
+  // Add ?scrolldebug to the address to see what each scroll event did.
+  const debugRef = useRef<HTMLPreElement>(null);
+  const [debugOn, setDebugOn] = useState(false);
+  useEffect(() => setDebugOn(new URLSearchParams(window.location.search).has("scrolldebug")), []);
+  const debugLines = useRef<string[]>([]);
+  const debugLog = (line: string) => {
+    const el = debugRef.current;
+    if (!el) return;
+    debugLines.current.push(line);
+    if (debugLines.current.length > 16) debugLines.current.shift();
+    el.textContent = debugLines.current.join("\n");
+  };
+  const debugLogRef = useRef(debugLog);
+  debugLogRef.current = debugLog;
   const reducedRef = useRef(false);
   reducedRef.current = reduced;
 
@@ -169,7 +172,10 @@ export default function Home() {
     // a tab tap at the very end of a spring-back would block scrolling.
     animating.current = false;
     stopFling();
-    if (clamped !== from) prepare(clamped, Math.sign(clamped - from));
+    if (clamped !== from) {
+      prepare(clamped, Math.sign(clamped - from));
+      textScrolledAt.current = Number.NEGATIVE_INFINITY;
+    }
     if (clamped !== activeRef.current) {
       activeRef.current = clamped;
       setActive(clamped);
@@ -201,22 +207,17 @@ export default function Home() {
     p.set(v);
   }
 
-  // --- Wheel and trackpad -------------------------------------------------
+  // --- Wheel and trackpad (rules in lib/home-wheel.ts) --------------------
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    let lastWheel = 0;
-    let gesture = { dir: 0, inside: false, acc: 0, done: false };
+    const ctl = new WheelController();
     let idle: ReturnType<typeof setTimeout> | null = null;
 
     const release = () => {
       idle = null;
-      if (gesture.done || animating.current) return;
-      const offset = gesture.acc / WHEEL_DISTANCE;
-      if (Math.abs(offset) < 0.001) return;
-      gesture.done = true;
-      const base = activeRef.current;
-      settleRef.current(Math.abs(offset) >= COMMIT ? base + Math.sign(offset) : base);
+      const to = ctl.release();
+      if (to !== null && !animating.current) settleRef.current(activeRef.current + to);
     };
 
     const onWheel = (e: WheelEvent) => {
@@ -224,56 +225,37 @@ export default function Home() {
       const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
       if (Math.abs(dy) < 0.5) return;
       const dir = Math.sign(dy);
-      const now = performance.now();
-      const fresh = now - lastWheel > GESTURE_GAP;
-      lastWheel = now;
-      // While a change animates, keep swallowing the same gesture's momentum
-      // so it cannot scroll the text of the section that just arrived.
-      if (animating.current) {
-        e.preventDefault();
-        gesture.done = true;
-        return;
-      }
-      // Right after the text was scrolling, a new gesture also stays with the
-      // text, so fast scrolling stops at its end. A pause, then a new scroll,
-      // moves on to the next section.
-      if (fresh) gesture = { dir, inside: boxCanScroll(dir) || now - textScrolledAt.current < END_HOLD, acc: 0, done: false };
-      if (gesture.done && !gesture.inside) {
-        e.preventDefault();
-        return;
-      }
-      // A gesture that began by scrolling text stays a text scroll, even
-      // when it reaches the end of the box. A new gesture moves sections.
-      if (gesture.acc === 0 && !gesture.inside && boxCanScroll(dir)) gesture.inside = true;
-      if (gesture.inside) {
-        // Still pushing against the end of the text keeps the stop.
-        if (!boxCanScroll(dir)) textScrolledAt.current = now;
-        const box = scrollers.current[activeRef.current];
-        // Over the portrait or tabs the browser would scroll nothing, so move
-        // the text box directly; over the box itself, let it scroll natively.
-        if (box && !(e.target instanceof Node && box.contains(e.target))) {
-          e.preventDefault();
-          box.scrollTop += dy;
-        }
-        return;
-      }
+      const box = scrollers.current[activeRef.current];
+      const input = {
+        dy,
+        now: performance.now(),
+        canScroll: boxCanScroll(dir),
+        overBox: !!box && e.target instanceof Node && box.contains(e.target),
+        textMovedAt: textScrolledAt.current,
+        animating: animating.current,
+      };
+      const act = ctl.handle(input);
+      debugLogRef.current(
+        `wheel ${e.deltaY.toFixed(1)}${e.deltaMode ? ` m${e.deltaMode}` : ""} sec ${activeRef.current} ` +
+          `text ${input.canScroll ? "can" : "end"} ${Math.min(9999, Math.round(input.now - input.textMovedAt))}ms ` +
+          `${input.overBox ? "box" : "out"}${input.animating ? " anim" : ""}${e.cancelable ? "" : " NOT-cancelable"} -> ${act.kind}` +
+          (act.kind === "drag" ? ` ${act.offset.toFixed(2)}` : act.kind === "go" ? ` ${act.dir}` : ""),
+      );
+      if (act.kind === "native") return;
       e.preventDefault();
-      if (Math.abs(dy) >= MOUSE_STEP && gesture.acc === 0) {
-        gesture.done = true;
-        settleRef.current(activeRef.current + dir);
-        return;
+      if (act.kind === "scrollBox") {
+        // Over the portrait or the tabs, scroll the text box directly.
+        if (box) box.scrollTop += act.by;
+      } else if (act.kind === "go") {
+        if (idle) clearTimeout(idle);
+        idle = null;
+        settleRef.current(activeRef.current + act.dir);
+      } else if (act.kind === "drag") {
+        if (act.first) prepare(activeRef.current + dir, dir);
+        dragTo(act.offset);
+        if (idle) clearTimeout(idle);
+        idle = setTimeout(release, WHEEL.release);
       }
-      if (gesture.acc === 0) prepare(activeRef.current + dir, dir);
-      gesture.acc += dy;
-      const offset = gesture.acc / WHEEL_DISTANCE;
-      if (Math.abs(offset) >= 1) {
-        gesture.done = true;
-        settleRef.current(activeRef.current + Math.sign(offset));
-        return;
-      }
-      dragTo(offset);
-      if (idle) clearTimeout(idle);
-      idle = setTimeout(release, 140);
     };
     root.addEventListener("wheel", onWheel, { passive: false });
     return () => {
@@ -282,7 +264,7 @@ export default function Home() {
     };
   }, []);
 
-  // --- Touch ----------------------------------------------------------------
+  // --- Touch (rules in lib/home-touch.ts) -----------------------------------
   // The text boxes are scrolled here rather than by the browser, so one slow
   // finger can scroll the text to its end and carry on into the next section.
   useEffect(() => {
@@ -293,18 +275,11 @@ export default function Home() {
     let lastY = 0;
     let startedInBox = false;
     let caught = false; // this touch stopped a text fling
-    let textPos = 0; // the box scroll position, kept unrounded
-    let past = 0; // finger pixels past the end of the text, moving the section
+    let drag: TextDrag = { textPos: 0, max: 0, past: 0 }; // a text swipe
+    let past = 0; // finger pixels of a section swipe
     let samples: { y: number; t: number }[] = [];
-    const distance = () => window.innerHeight * TOUCH_DISTANCE;
-
-    /** Finger speed over the last 100 ms in px/ms. Above 0 is up, toward the next section. */
-    const speed = () => {
-      const now = performance.now();
-      const recent = samples.filter((s) => now - s.t <= 100);
-      if (recent.length < 2) return 0;
-      return (recent[0].y - recent[recent.length - 1].y) / Math.max(16, now - recent[0].t);
-    };
+    const distance = () => window.innerHeight * TOUCH.distance;
+    const speed = () => fingerSpeed(samples, performance.now());
 
     /** Coast after a swipe. A fling stops at the end of the text and never changes the section. */
     const fling = (v: number) => {
@@ -316,52 +291,29 @@ export default function Home() {
       const step = (t: number) => {
         const dt = Math.min(48, Math.max(0, t - last));
         last = t;
-        pos = Math.max(0, Math.min(max, pos + v * dt));
+        const f = flingStep(pos, v, dt, max);
+        pos = f.pos;
+        v = f.v;
         box.scrollTop = pos;
-        v *= Math.pow(FLING_DECAY, dt);
-        if (pos <= 0 || pos >= max || Math.abs(v) < 0.02) {
-          flingRef.current = 0;
-          return;
-        }
-        flingRef.current = requestAnimationFrame(step);
+        flingRef.current = f.done ? 0 : requestAnimationFrame(step);
       };
       flingRef.current = requestAnimationFrame(step);
     };
 
-    /** Move the text by d pixels; at its end, a slow finger moves the section instead. */
     const moveText = (d: number) => {
       const box = scrollers.current[activeRef.current];
       if (!box) return;
-      const hadPast = past !== 0;
-      let rest = d;
-      // Turning back first undoes any section movement, then scrolls text again.
-      if (past !== 0) {
-        const next = past + rest;
-        if (Math.sign(next) === Math.sign(past)) {
-          past = next;
-          rest = 0;
-        } else {
-          past = 0;
-          rest = next;
-        }
-      }
-      if (rest !== 0) {
-        const max = box.scrollHeight - box.clientHeight;
-        const want = textPos + rest;
-        textPos = Math.max(0, Math.min(max, want));
-        box.scrollTop = textPos;
-        const over = want - textPos;
-        if (Math.abs(over) > 0.01) {
-          if (Math.abs(speed()) < TOUCH_SLOW) {
-            past = over;
-            prepare(activeRef.current + Math.sign(over), Math.sign(over));
-          } else {
-            // A fast finger stops at the end of the text, and pushing on keeps the stop.
-            textScrolledAt.current = performance.now();
-          }
-        }
-      }
-      if (past !== 0 || hadPast) dragTo(past / distance());
+      const hadPast = drag.past !== 0;
+      drag.max = box.scrollHeight - box.clientHeight;
+      const r = splitMove(drag, d, Math.abs(speed()) < TOUCH.slow);
+      drag = { textPos: r.textPos, max: r.max, past: r.past };
+      box.scrollTop = drag.textPos;
+      // A fast finger pushing at the end keeps the stop going (touch only:
+      // each flick is a separate motion; a slow drag, a swipe on the portrait
+      // or a short pause still move on).
+      if (r.stopped) textScrolledAt.current = performance.now();
+      if (r.handoff) prepare(activeRef.current + Math.sign(r.past), Math.sign(r.past));
+      if (drag.past !== 0 || hadPast) dragTo(drag.past / distance());
     };
 
     const onStart = (e: TouchEvent) => {
@@ -376,6 +328,7 @@ export default function Home() {
       const box = scrollers.current[activeRef.current];
       startedInBox = !!box && e.target instanceof Node && box.contains(e.target);
       past = 0;
+      drag = { textPos: 0, max: 0, past: 0 };
       mode = "pending";
     };
     const onMove = (e: TouchEvent) => {
@@ -387,22 +340,17 @@ export default function Home() {
       if (samples.length > 12) samples.shift();
       if (mode === "pending") {
         const total = startY - y; // > 0 is a swipe up, toward the next section
-        if (Math.abs(total) < 6) return;
+        if (Math.abs(total) < TOUCH.start) return;
         const dir = Math.sign(total);
         const box = scrollers.current[activeRef.current];
-        const long = !!box && box.scrollHeight > box.clientHeight + 1;
-        // Inside a long section the text moves first. Right after the text was
-        // moving, a swipe at its end stays a text swipe: fast, it stops there;
-        // slow, it carries on to the next section. A swipe that starts on the
-        // portrait or the tabs always changes the section.
-        const justScrolled = caught || now - textScrolledAt.current < END_HOLD;
-        if (box && startedInBox && long && (boxCanScroll(dir) || justScrolled)) {
-          mode = "text";
-          textPos = box.scrollTop;
-        } else {
-          mode = "section";
-          prepare(activeRef.current + dir, dir);
-        }
+        mode = chooseTouchMode({
+          startedInBox,
+          long: !!box && box.scrollHeight > box.clientHeight + 1,
+          canScroll: boxCanScroll(dir),
+          justScrolled: caught || now - textScrolledAt.current < TOUCH.land,
+        });
+        if (mode === "text" && box) drag = { textPos: box.scrollTop, max: box.scrollHeight - box.clientHeight, past: 0 };
+        else prepare(activeRef.current + dir, dir);
         lastY = startY; // apply the full movement so far
       }
       e.preventDefault();
@@ -420,16 +368,15 @@ export default function Home() {
       const v = speed();
       const was = mode;
       mode = "idle";
-      if (was === "section" || (was === "text" && past !== 0)) {
+      debugLogRef.current(`touch ${was} v ${v.toFixed(2)} past ${Math.round(drag.past || past)} sec ${activeRef.current}`);
+      if (was === "section" || (was === "text" && drag.past !== 0)) {
         const base = activeRef.current;
-        const offset = p.get() - base;
-        const flick = Math.abs(v) > 0.45 ? Math.sign(v) : 0;
-        if (flick && Math.sign(offset) === flick) settleRef.current(base + flick);
-        else settleRef.current(Math.abs(offset) >= COMMIT ? base + Math.sign(offset) : base);
+        settleRef.current(base + releaseTarget(p.get() - base, v));
       } else if (was === "text") {
         fling(v);
       }
       past = 0;
+      drag.past = 0;
     };
     root.addEventListener("touchstart", onStart, { passive: true });
     root.addEventListener("touchmove", onMove, { passive: false });
@@ -778,6 +725,12 @@ export default function Home() {
 
   return (
     <div ref={rootRef} className="home-root fixed inset-0 z-0 overflow-hidden bg-white">
+      {debugOn && (
+        <pre
+          ref={debugRef}
+          className="pointer-events-none fixed bottom-2 left-2 z-50 max-w-[95vw] whitespace-pre rounded bg-black/80 p-2 font-mono text-[10px] leading-snug text-white"
+        />
+      )}
       <DotPattern
         width={20}
         height={20}

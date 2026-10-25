@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cms": "node scripts/blog-cms.mjs"
+    "cms": "node scripts/blog-cms.mjs",
+    "test": "node --test \"tests/*.test.ts\""
   },
   "dependencies": {
     "@atlaskit/app-provider": "^5.4.0",
