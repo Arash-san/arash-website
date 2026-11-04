@@ -614,49 +614,58 @@ async function renderResult(id, shared = false) {
   /* --- pauses: one connected chart over the time of the recording --- */
   const pauseCard = h('div', { class: 'card' });
   function paintPauses() {
-    const P = A.pauses.map(([s, e]) => ({ s, e, d: e - s })).filter(p => p.d >= 0.3);
-    const lv = d => d < 0.75 ? 'good' : d < 1.0 ? 'ok' : 'warn';
-    const word = d => ({ good: 'short and easy to follow', ok: 'a bit long', warn: 'long' }[lv(d)]);
+    // ranges: under 0.25 s too brief | 0.25-0.5 short | 0.5-1.5 good | 1.5-2 a bit long | over 2 long
+    const ZONES = [[0, 0.25, 'warn', 'too brief'], [0.25, 0.5, 'ok', 'short'], [0.5, 1.5, 'good', 'good'], [1.5, 2, 'ok', 'a bit long'], [2, 99, 'warn', 'long']];
+    const zoneOf = d => ZONES.find(z => d >= z[0] && d < z[1]) || ZONES[ZONES.length - 1];
+    const P = (A.pause_list || A.pauses.map(([s, e]) => ({ s, e, d: e - s })).filter(p => p.d >= 0.15)).map(p => ({ s: p.s, e: p.e, d: p.d }));
+    const lv = d => zoneOf(d)[2];
+    const word = d => zoneOf(d)[3];
     const col = d => css({ good: '--good', ok: '--ok', warn: '--warn' }[lv(d)]);
     const hear = p => { audio.currentTime = Math.max(0, p.s - 1.2); audio.play(); };
     const head = h('div', { class: 'row' }, icon('pauses', 20), h('h2', {}, 'Your pauses'), h('div', { class: 'spacer' }),
       P.length ? h('a', { class: 'btn sm ghost', href: dl('pauses'), download: '' }, icon('download', 16), 'Pause list (CSV)') : null);
-    if (!P.length) { pauseCard.replaceChildren(head, h('p', { class: 'muted', style: 'margin-top:8px' }, 'No pauses of 0.3 seconds or longer.')); return; }
+    if (!P.length) { pauseCard.replaceChildren(head, h('p', { class: 'muted', style: 'margin-top:8px' }, 'No pauses found.')); return; }
     const total = P.reduce((a, p) => a + p.d, 0), longest = P.reduce((a, p) => p.d > a.d ? p : a);
-    const n = { good: 0, ok: 0, warn: 0 }; P.forEach(p => n[lv(p.d)]++);
-    let story = n.good === P.length ? `All ${P.length} pauses were short and easy to follow.`
-      : `${n.good} of ${P.length} pauses were short and easy to follow` + (n.ok ? `, ${n.ok} ${n.ok === 1 ? 'was' : 'were'} a bit long` : '') + (n.warn ? `, ${n.warn} ${n.warn === 1 ? 'was' : 'were'} long` : '') + '.';
+    const n = {}; P.forEach(p => { const w = word(p.d); n[w] = (n[w] || 0) + 1; });
+    const nGood = n.good || 0, others = ['too brief', 'short', 'a bit long', 'long'].filter(k => n[k]).map(k => `${n[k]} ${k}`);
+    const story = nGood === P.length ? `All ${P.length} pauses were in the good range (0.5 to 1.5 s).`
+      : `${nGood} of ${P.length} pauses were in the good range (0.5 to 1.5 s)` + (others.length ? '; ' + others.join(', ') : '') + '.';
+    const nBad = (n['too brief'] || 0) + (n.long || 0);
     const stat = (v, l) => h('div', { class: 'pstat' }, h('b', {}, v), h('span', {}, l));
     const cv = h('canvas', { 'aria-label': 'Chart of pause lengths over the recording' });
     const top = [...P].sort((a, b) => b.d - a.d).slice(0, 3);
     pauseCard.replaceChildren(head,
-      h('p', { class: 'muted small', style: 'margin-top:4px' }, 'Each dot is one silence of 0.3 seconds or longer, placed at the moment it happened. Higher dot = longer pause. Tap a dot to hear it.'),
+      h('p', { class: 'muted small', style: 'margin-top:4px' }, 'Each dot is one silence between your words, placed at the moment it happened. Higher dot = longer pause. Tap a dot to hear it.'),
       h('div', { class: 'pstats' }, stat(P.length, P.length === 1 ? 'pause' : 'pauses'),
         stat(total.toFixed(1) + ' s', `in total (${Math.round(total / dur * 100)}% of the time)`),
         stat((total / P.length).toFixed(2) + ' s', 'on average'), stat(longest.d.toFixed(2) + ' s', 'longest, at ' + fmtClock(longest.s))),
-      h('div', { class: 'tipline', style: 'margin-top:12px' }, icon(n.warn ? 'bulb' : 'check', 18), h('span', {}, story)),
+      h('div', { class: 'tipline', style: 'margin-top:12px' }, icon(nBad ? 'bulb' : 'check', 18), h('span', {}, story)),
       h('div', { class: 'chart-box', style: 'height:280px' }, cv),
       h('div', { class: 'pause-legend' },
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--good-soft')}` }), 'under 0.75 s: easy to follow'),
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--ok-soft')}` }), '0.75–1 s: a bit long'),
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--warn-soft')}` }), 'over 1 s: long'),
+        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--warn-soft')}` }), 'under 0.25 s: too brief'),
+        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--ok-soft')}` }), '0.25–0.5 s: short'),
+        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--good-soft')}` }), '0.5–1.5 s: good'),
+        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--ok-soft')}` }), '1.5–2 s: a bit long'),
+        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--warn-soft')}` }), 'over 2 s: long'),
         h('span', {}, h('i', { class: 'lg-talk' }), 'when you were talking')),
       h('div', { class: 'row', style: 'gap:8px;margin-top:12px' }, h('span', { class: 'small muted' }, 'Longest pauses:'),
         top.map(p => h('button', { class: 'chip lv-' + lv(p.d), style: 'border:0;cursor:pointer', onclick: () => hear(p) }, icon('play', 12), `${fmtClock(p.s)} · ${p.d.toFixed(2)} s`))));
 
-    const yMax = Math.max(1.4, Math.ceil(longest.d * 1.2 * 10) / 10);
+    const yMax = Math.max(2.5, Math.ceil(longest.d * 1.15 * 10) / 10);
     const zones = { id: 'zones', beforeDatasetsDraw(c) {
       const { ctx, chartArea: a, scales: { x, y } } = c;
       const band = (lo, hi, color, label) => {
         const y0 = y.getPixelForValue(Math.min(hi, yMax)), y1 = y.getPixelForValue(lo);
         ctx.fillStyle = color; ctx.fillRect(a.left, y0, a.right - a.left, y1 - y0);
         ctx.fillStyle = css('--muted'); ctx.font = '600 11px ' + Chart.defaults.font.family; ctx.textAlign = 'left';
-        ctx.fillText(label, a.left + 8, y0 + 14);
+        if (y1 - y0 >= 15) ctx.fillText(label, a.left + 8, y0 + Math.min(14, (y1 - y0) / 2 + 4));
       };
       ctx.save();
-      band(0, 0.75, css('--good-soft'), 'easy to follow');
-      band(0.75, 1.0, css('--ok-soft'), 'a bit long');
-      band(1.0, yMax, css('--warn-soft'), 'long');
+      band(0, 0.25, css('--warn-soft'), 'too brief');
+      band(0.25, 0.5, css('--ok-soft'), 'short');
+      band(0.5, 1.5, css('--good-soft'), 'good');
+      band(1.5, 2.0, css('--ok-soft'), 'a bit long');
+      band(2.0, yMax, css('--warn-soft'), 'long');
       // talking time along the bottom, so silences and speech line up with the dots
       const ty = a.bottom - 7;
       ctx.fillStyle = css('--wave');
@@ -679,7 +688,7 @@ async function renderResult(id, shared = false) {
         plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: {
           title: c => 'Pause at ' + fmtClock(c[0].raw.p.s), label: c => `${c.raw.p.d.toFixed(2)} seconds: ${word(c.raw.p.d)}`, footer: () => 'Tap to hear it' } } },
         scales: { x: { type: 'linear', min: 0, max: dur, title: { display: true, text: 'time in your recording' }, ticks: { callback: v => fmtClock(v), maxTicksLimit: 8 }, grid: { display: false } },
-          y: { min: 0, max: yMax, title: { display: true, text: 'pause length (seconds)' }, ticks: { stepSize: 0.25, callback: v => v + ' s' } } },
+          y: { min: 0, max: yMax, title: { display: true, text: 'pause length (seconds)' }, ticks: { stepSize: 0.5, callback: v => v + ' s' } } },
         onClick: (_, el) => { if (el.length) hear(P[el[0].index]); } } });
     let lastT = -1;
     ticks.push(t => { if (Math.abs(t - lastT) > 0.04) { lastT = t; ch.draw(); } });
@@ -729,7 +738,7 @@ async function renderResult(id, shared = false) {
 
 /* ---------------- where the ranges come from ---------------- */
 const SOURCES = [
-  ['Speech rate, pace and pauses', 'Kang, Hirschi, Hansen, Looney & Miao (2022). 405 recordings of 108 second-language English speakers at US universities (presentations, microteaching, speaking exams), rated by 15 trained listeners. Easiest to understand: 2.75 to 4 syllables per second; 3.5 to 4.25 while talking; pauses under 0.75 s. Slow speech hurt more than fast speech.', 'https://par.nsf.gov/servlets/purl/10531499'],
+  ['Speech rate, pace and pauses', 'Kang, Hirschi, Hansen, Looney & Miao (2022). 405 recordings of 108 second-language English speakers at US universities (presentations, microteaching, speaking exams), rated by 15 trained listeners. Easiest to understand: 2.75 to 4 syllables per second; 3.5 to 4.25 while talking. Slow speech hurt more than fast speech. (The pause ranges in this app are set for presentations: 0.5 to 1.5 s good, under 0.25 s too brief, over 2 s long.)', 'https://par.nsf.gov/servlets/purl/10531499'],
   ['Fast speech and international listeners', 'Griffiths (1990), Language Learning. Listeners with lower-intermediate English understood significantly less at 200 words a minute than at 150.', 'https://consensus.app/papers/details/f84ab9fd3f67579fa58582b998076189/'],
   ['Speaking rate and pitch in lectures', 'Kang (2010), System. In lectures by international teaching assistants, how easy they were to understand was tied mostly to speaking rate; a narrow pitch range made speech sound more accented.', 'https://eric.ed.gov/?id=EJ885942'],
   ['Pitch variation in presentations', 'Hincks (2005), Interspeech: how lively student presentations sound tracks pitch variation. Lindemann et al. (2020): more pitch variation was rated as better teaching. The exact semitone cut-offs here are guide values.', 'https://www.isca-archive.org/interspeech_2005/hincks05_interspeech.html'],
@@ -853,7 +862,7 @@ async function renderProgress() {
   const c1 = h('canvas'), c2 = h('canvas'), c3 = h('canvas'), c4 = h('canvas');
   view.append(mk('Speaking pace', 'Words per minute in each recording. The green band (110 to 160) is easiest to follow in academic talks. Tap a point to open it.', c1),
     h('div', { class: 'split' }, mk('Speech rate', 'Syllables per second, pauses included. The green band (2.75 to 4) was easiest to understand.', c4), mk('Voice melody', 'Higher means a livelier, more expressive voice.', c2)),
-    mk('Pause length', 'Average length of your pauses, in seconds. Under 0.75 s was easiest to understand.', c3),
+    mk('Pause length', 'Average length of your pauses, in seconds. The green band (0.5 to 1.5 s) is the good range.', c3),
     h('div', { style: 'margin-top:18px;text-align:center' }, h('a', { class: 'btn', href: '#/compare' }, icon('compare', 18), 'Compare recordings side by side')));
   const labels = rows.map(r => new Date(r.t).toLocaleDateString([], { month: 'short', day: 'numeric' }));
   const line = (cv, k, color, band, unit) => mkChart(cv, {
@@ -864,7 +873,7 @@ async function renderProgress() {
   });
   line(c1, 'pace', css('--accent'), [110, 160, 'easy to follow'], 'words/min');
   line(c2, 'variety', css('--good'), [2.5, 6, 'lively'], 'semitones');
-  line(c3, 'pauses', css('--ok'), [0, 0.75, 'easy to follow'], 's');
+  line(c3, 'pauses', css('--ok'), [0.5, 1.5, 'good'], 's');
   line(c4, 'rate', '#0b84c6', [2.75, 4, 'easy to follow'], 'syllables/sec');
 }
 
