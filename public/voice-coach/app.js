@@ -611,17 +611,17 @@ async function renderResult(id, shared = false) {
     if (idx !== melLast) { if (melLast >= 0 && melTexts[melLast]) melTexts[melLast].classList.remove('now'); if (idx >= 0 && melTexts[idx]) melTexts[idx].classList.add('now'); melLast = idx; }
   });
 
-  /* --- pauses: one connected chart over the time of the recording --- */
+  /* --- pauses: one connected chart over time; long recordings get a moving window + an overview strip --- */
   const pauseCard = h('div', { class: 'card' });
   function paintPauses() {
     // ranges: under 0.25 s too brief | 0.25-0.5 short | 0.5-1.5 good | 1.5-2 a bit long | over 2 long
-    const ZONES = [[0, 0.25, 'warn', 'too brief'], [0.25, 0.5, 'ok', 'short'], [0.5, 1.5, 'good', 'good'], [1.5, 2, 'ok', 'a bit long'], [2, 99, 'warn', 'long']];
+    const ZONES = [[0, 0.25, 'warn', 'too brief', 'under 0.25 s'], [0.25, 0.5, 'ok', 'short', '0.25–0.5 s'], [0.5, 1.5, 'good', 'good', '0.5–1.5 s'],
+      [1.5, 2, 'ok', 'a bit long', '1.5–2 s'], [2, 99, 'warn', 'long', 'over 2 s']];
     const zoneOf = d => ZONES.find(z => d >= z[0] && d < z[1]) || ZONES[ZONES.length - 1];
     const P = (A.pause_list || A.pauses.map(([s, e]) => ({ s, e, d: e - s })).filter(p => p.d >= 0.15)).map(p => ({ s: p.s, e: p.e, d: p.d }));
     const lv = d => zoneOf(d)[2];
     const word = d => zoneOf(d)[3];
     const col = d => css({ good: '--good', ok: '--ok', warn: '--warn' }[lv(d)]);
-    const hear = p => { audio.currentTime = Math.max(0, p.s - 1.2); audio.play(); };
     const head = h('div', { class: 'row' }, icon('pauses', 20), h('h2', {}, 'Your pauses'), h('div', { class: 'spacer' }),
       P.length ? h('a', { class: 'btn sm ghost', href: dl('pauses'), download: '' }, icon('download', 16), 'Pause list (CSV)') : null);
     if (!P.length) { pauseCard.replaceChildren(head, h('p', { class: 'muted', style: 'margin-top:8px' }, 'No pauses found.')); return; }
@@ -632,7 +632,33 @@ async function renderResult(id, shared = false) {
       : `${nGood} of ${P.length} pauses were in the good range (0.5 to 1.5 s)` + (others.length ? '; ' + others.join(', ') : '') + '.';
     const nBad = (n['too brief'] || 0) + (n.long || 0);
     const stat = (v, l) => h('div', { class: 'pstat' }, h('b', {}, v), h('span', {}, l));
+
+    // how the pauses split over the five ranges: one bar, readable at any length
+    const split = h('div', { class: 'psplit' },
+      h('div', { class: 'stack', role: 'img', 'aria-label': ZONES.map(z => `${z[3]}: ${n[z[3]] || 0}`).join(', ') },
+        ZONES.filter(z => n[z[3]]).map(z => { const k = z[3], share = n[k] / P.length;
+          const words = innerWidth >= 640 ? share >= .16 : share >= .45;   // phones: numbers only unless there is room
+          return h('i', { style: `flex:${n[k]};background:${css('--' + z[2])}`, title: `${k} (${z[4]}): ${n[k]}` }, words ? `${n[k]} ${k}` : share >= .05 ? String(n[k]) : ''); })),
+      h('div', { class: 'stack-legend' }, ZONES.map(z => h('span', {}, h('span', { class: 'dot', style: `background:${css('--' + z[2])}` }), `${z[3][0].toUpperCase() + z[3].slice(1)}, ${z[4]} `, h('b', {}, n[z[3]] || 0)))));
+
+    // long recordings: show a window of 30-60 s at a time (about 40 pauses), with an overview strip to move it
+    const LONG = dur > 75;
+    const per = P.length / dur;
+    let span = LONG ? Math.min(60, Math.max(30, Math.round(40 / Math.max(per, 0.01) / 5) * 5)) : dur;
+    if (LONG && innerWidth < 640) span = Math.min(span, 30);
+    let w0 = 0;
     const cv = h('canvas', { 'aria-label': 'Chart of pause lengths over the recording' });
+    const winLabel = h('span', { class: 'small muted pwin-label' });
+    const prevBtn = h('button', { class: 'btn sm', 'aria-label': 'Earlier part', onclick: () => setWin(w0 - span * 0.8) }, icon('back', 15), h('span', { class: 'hide-sm' }, 'Earlier'));
+    const nextBtn = h('button', { class: 'btn sm', 'aria-label': 'Later part', onclick: () => setWin(w0 + span * 0.8) }, h('span', { class: 'hide-sm' }, 'Later'), h('span', { style: 'display:inline-flex;transform:scaleX(-1)' }, icon('back', 15)));
+    const mini = h('canvas', { class: 'pmini', role: 'slider', tabindex: 0, 'aria-label': 'Part of the recording shown in the chart',
+      'aria-valuemin': 0, 'aria-valuemax': Math.round(dur) });
+    const nav = LONG ? h('div', { class: 'pnav' },
+      h('div', { class: 'row', style: 'gap:8px' }, prevBtn, winLabel, h('div', { class: 'spacer' }), h('span', { class: 'small muted hide-sm' }, 'Drag the box below to move through the recording'), nextBtn),
+      mini, h('div', { class: 'pmini-axis' }, h('span', {}, '0:00'), h('span', {}, 'whole recording'), h('span', {}, fmtClock(dur)))) : null;
+
+    const show = p => { if (LONG && (p.s < w0 || p.e > w0 + span)) setWin(p.s + p.d / 2 - span / 2); };
+    const hear = p => { show(p); audio.currentTime = Math.max(0, p.s - 1.2); audio.play(); };
     const top = [...P].sort((a, b) => b.d - a.d).slice(0, 3);
     pauseCard.replaceChildren(head,
       h('p', { class: 'muted small', style: 'margin-top:4px' }, 'Each dot is one silence between your words, placed at the moment it happened. Higher dot = longer pause. Tap a dot to hear it.'),
@@ -640,44 +666,40 @@ async function renderResult(id, shared = false) {
         stat(total.toFixed(1) + ' s', `in total (${Math.round(total / dur * 100)}% of the time)`),
         stat((total / P.length).toFixed(2) + ' s', 'on average'), stat(longest.d.toFixed(2) + ' s', 'longest, at ' + fmtClock(longest.s))),
       h('div', { class: 'tipline', style: 'margin-top:12px' }, icon(nBad ? 'bulb' : 'check', 18), h('span', {}, story)),
+      split,
       h('div', { class: 'chart-box', style: 'height:280px' }, cv),
-      h('div', { class: 'pause-legend' },
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--warn-soft')}` }), 'under 0.25 s: too brief'),
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--ok-soft')}` }), '0.25–0.5 s: short'),
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--good-soft')}` }), '0.5–1.5 s: good'),
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--ok-soft')}` }), '1.5–2 s: a bit long'),
-        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--warn-soft')}` }), 'over 2 s: long'),
-        h('span', {}, h('i', { class: 'lg-talk' }), 'when you were talking')),
+      nav || '',
+      h('div', { class: 'pause-legend' }, h('span', {}, h('i', { class: 'lg-talk' }), 'when you were talking'),
+        h('span', {}, h('i', { class: 'lg-band', style: `background:${css('--good-soft')}` }), 'green band: good pause length')),
       h('div', { class: 'row', style: 'gap:8px;margin-top:12px' }, h('span', { class: 'small muted' }, 'Longest pauses:'),
         top.map(p => h('button', { class: 'chip lv-' + lv(p.d), style: 'border:0;cursor:pointer', onclick: () => hear(p) }, icon('play', 12), `${fmtClock(p.s)} · ${p.d.toFixed(2)} s`))));
 
     const yMax = Math.max(2.5, Math.ceil(longest.d * 1.15 * 10) / 10);
     const zones = { id: 'zones', beforeDatasetsDraw(c) {
       const { ctx, chartArea: a, scales: { x, y } } = c;
-      const band = (lo, hi, color, label) => {
+      const band = (lo, hi, color) => {   // the band names are on the right-hand axis, clear of the dots
         const y0 = y.getPixelForValue(Math.min(hi, yMax)), y1 = y.getPixelForValue(lo);
         ctx.fillStyle = color; ctx.fillRect(a.left, y0, a.right - a.left, y1 - y0);
-        ctx.fillStyle = css('--muted'); ctx.font = '600 11px ' + Chart.defaults.font.family; ctx.textAlign = 'left';
-        if (y1 - y0 >= 15) ctx.fillText(label, a.left + 8, y0 + Math.min(14, (y1 - y0) / 2 + 4));
       };
       ctx.save();
+      ctx.beginPath(); ctx.rect(a.left, a.top, a.right - a.left, a.bottom - a.top); ctx.clip();
       band(0, 0.25, css('--warn-soft'), 'too brief');
       band(0.25, 0.5, css('--ok-soft'), 'short');
       band(0.5, 1.5, css('--good-soft'), 'good');
       band(1.5, 2.0, css('--ok-soft'), 'a bit long');
       band(2.0, yMax, css('--warn-soft'), 'long');
       // talking time along the bottom, so silences and speech line up with the dots
-      const ty = a.bottom - 7;
+      const ty = a.bottom - 7, lo = x.min - 1, hi = x.max + 1;
       ctx.fillStyle = css('--wave');
-      A.segments.forEach(([s0, s1]) => { const x0 = x.getPixelForValue(s0), x1 = x.getPixelForValue(s1); ctx.fillRect(x0, ty, Math.max(1, x1 - x0), 5); });
+      A.segments.forEach(([s0, s1]) => { if (s1 < lo || s0 > hi) return; const x0 = x.getPixelForValue(s0), x1 = x.getPixelForValue(s1); ctx.fillRect(x0, ty, Math.max(1, x1 - x0), 5); });
       // a faint stem from each dot down to its silence, connecting the two
-      P.forEach(p => { const xp = x.getPixelForValue(p.s + p.d / 2); ctx.strokeStyle = col(p.d); ctx.globalAlpha = .45; ctx.setLineDash([3, 3]);
+      P.forEach(p => { if (p.e < lo || p.s > hi) return; const xp = x.getPixelForValue(p.s + p.d / 2); ctx.strokeStyle = col(p.d); ctx.globalAlpha = .45; ctx.setLineDash([3, 3]);
         ctx.beginPath(); ctx.moveTo(xp, y.getPixelForValue(p.d)); ctx.lineTo(xp, ty); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
         ctx.fillStyle = col(p.d); const x0 = x.getPixelForValue(p.s), x1 = x.getPixelForValue(p.e); ctx.fillRect(x0, ty - 1, Math.max(3, x1 - x0), 7); });
       ctx.restore();
     }, afterDatasetsDraw(c) {
       const { ctx, chartArea: a, scales: { x } } = c, t = audio.currentTime;
-      if (!(t > 0)) return;
+      if (!(t > 0) || t < x.min || t > x.max) return;
       const xp = x.getPixelForValue(t); ctx.save(); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(xp, a.top); ctx.lineTo(xp, a.bottom); ctx.stroke(); ctx.restore();
     } };
     const ch = mkChart(cv, { type: 'line', plugins: [zones],
@@ -687,11 +709,56 @@ async function renderResult(id, shared = false) {
         interaction: { mode: 'nearest', intersect: false, axis: 'x' },
         plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: {
           title: c => 'Pause at ' + fmtClock(c[0].raw.p.s), label: c => `${c.raw.p.d.toFixed(2)} seconds: ${word(c.raw.p.d)}`, footer: () => 'Tap to hear it' } } },
-        scales: { x: { type: 'linear', min: 0, max: dur, title: { display: true, text: 'time in your recording' }, ticks: { callback: v => fmtClock(v), maxTicksLimit: 8 }, grid: { display: false } },
-          y: { min: 0, max: yMax, title: { display: true, text: 'pause length (seconds)' }, ticks: { stepSize: 0.5, callback: v => v + ' s' } } },
+        scales: { x: { type: 'linear', min: 0, max: span, title: { display: true, text: 'time in your recording' }, ticks: { callback: v => fmtClock(v), maxTicksLimit: 8 }, grid: { display: false } },
+          y: { min: 0, max: yMax, title: { display: true, text: 'pause length (seconds)' }, ticks: { stepSize: 0.5, callback: v => v + ' s' } },
+          zone: { position: 'right', min: 0, max: yMax, grid: { display: false }, border: { display: false },
+            afterBuildTicks: ax => { ax.ticks = ZONES.map(z => ({ value: (z[0] + Math.min(z[1], yMax)) / 2, label: z[3] })); },
+            afterFit: ax => { ax.width = Math.min(ax.width, 74); },
+            ticks: { autoSkip: false, padding: 6, color: css('--muted'), font: { size: 11, weight: 600 },
+              callback: v => (ZONES.find(z => Math.abs((z[0] + Math.min(z[1], yMax)) / 2 - v) < 1e-6) || [])[3] || '' } } },
         onClick: (_, el) => { if (el.length) hear(P[el[0].index]); } } });
+
+    function drawMini() {
+      if (!LONG) return;
+      const dpr = devicePixelRatio || 1, w = mini.clientWidth, hh = 46; if (!w) return;
+      if (mini.width !== Math.round(w * dpr)) { mini.width = Math.round(w * dpr); mini.height = hh * dpr; }
+      const g = mini.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, hh);
+      const X = t => t / dur * w, base = hh - 6;
+      g.fillStyle = css('--wave'); A.segments.forEach(([s0, s1]) => g.fillRect(X(s0), base + 1, Math.max(1, X(s1) - X(s0)), 3));
+      P.forEach(p => { const bh = 3 + Math.min(p.d, yMax) / yMax * (hh - 14); g.fillStyle = col(p.d);
+        g.fillRect(X(p.s + p.d / 2) - 1, base - bh, Math.max(2, X(p.e) - X(p.s)), bh); });
+      const a0 = X(w0), a1 = X(w0 + span);
+      g.fillStyle = css('--accent') + '22'; g.strokeStyle = css('--accent'); g.lineWidth = 2;
+      g.beginPath(); g.roundRect(a0 + 1, 1, Math.max(8, a1 - a0 - 2), hh - 2, 7); g.fill(); g.stroke();
+      const t = audio.currentTime; if (t > 0) { g.fillStyle = css('--ink'); g.fillRect(X(t) - 0.75, 0, 1.5, hh); }
+    }
+    function setWin(t0) {
+      if (!LONG) return;
+      w0 = Math.max(0, Math.min(dur - span, t0));
+      ch.options.scales.x.min = w0; ch.options.scales.x.max = w0 + span;
+      const vis = P.filter(p => p.s >= w0 && p.s <= w0 + span).length;
+      ch.data.datasets[0].pointRadius = vis > 45 ? 5 : 7;
+      ch.update('none');
+      winLabel.textContent = `${fmtClock(w0)} – ${fmtClock(w0 + span)} of ${fmtClock(dur)}`;
+      mini.setAttribute('aria-valuenow', Math.round(w0)); mini.setAttribute('aria-valuetext', winLabel.textContent);
+      prevBtn.disabled = w0 <= 0.01; nextBtn.disabled = w0 >= dur - span - 0.01;
+      drawMini();
+    }
+    if (LONG) {
+      const fromEvent = e => { const r = mini.getBoundingClientRect(); setWin((e.clientX - r.left) / r.width * dur - span / 2); };
+      mini.addEventListener('pointerdown', e => { mini.setPointerCapture(e.pointerId); fromEvent(e); });
+      mini.addEventListener('pointermove', e => { if (mini.hasPointerCapture(e.pointerId)) fromEvent(e); });
+      mini.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { e.preventDefault(); setWin(w0 + span * 0.8); } if (e.key === 'ArrowLeft') { e.preventDefault(); setWin(w0 - span * 0.8); } });
+      const onR = () => drawMini(); addEventListener('resize', onR); cleanup.push(() => removeEventListener('resize', onR));
+      requestAnimationFrame(() => setWin(0));
+    }
     let lastT = -1;
-    ticks.push(t => { if (Math.abs(t - lastT) > 0.04) { lastT = t; ch.draw(); } });
+    ticks.push(t => {
+      if (Math.abs(t - lastT) <= 0.04) return;
+      lastT = t;
+      if (LONG && !audio.paused && (t < w0 || t > w0 + span)) setWin(t - span * 0.1);   // follow playback
+      else { ch.draw(); drawMini(); }
+    });
   }
 
   /* --- notes --- */
@@ -750,6 +817,10 @@ function sourcesDialog() {
     h('div', { style: 'display:flex;flex-direction:column;gap:14px;margin-top:16px;max-height:55vh;overflow:auto' },
       SOURCES.map(([t, d, u]) => h('div', {}, h('b', {}, t), h('p', { class: 'small muted', style: 'margin-top:2px' }, d), h('a', { class: 'small', href: u, target: '_blank', rel: 'noopener' }, 'Read the source')))),
     h('p', { class: 'small muted', style: 'margin-top:14px' }, 'Filler-word and recording-quality ratings are practical guides, not research norms.'),
+    h('p', { class: 'small muted', style: 'margin-top:8px' }, h('b', {}, 'How it is measured. '),
+      'Pauses are found by a speech detector (Silero VAD) and timed with Praat’s loudness curve. Syllables are counted from the words in your transcript; ',
+      'without one, from the sound (de Jong & Wempe 2009). Pitch is tracked with Praat in two passes. ',
+      'Tested against speech that people labelled by hand, the average pause per recording matched theirs closely (correlation 0.85) and the syllable count was within about 2% for international speakers.'),
     h('div', { class: 'row', style: 'margin-top:18px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn primary', onclick: () => dlg.close() }, 'Got it')));
   dlg.showModal();
 }
@@ -819,8 +890,8 @@ function buildAdvanced(container, X) {
   // raw numbers with explanations
   const f = (v, d = 1) => v == null ? '–' : (+v).toFixed(d);
   const M = [
-    ['Syllable rate', f(m.speech_rate_sps, 2), 'syl/s', 'Syllables per second, including pauses.'], ['Articulation rate', f(m.articulation_rate_sps, 2), 'syl/s', 'Syllables per second while actually speaking.'],
-    ['Syllables', m.syllables, '', 'Estimated from loudness peaks.'], ['Speaking time', f(m.speaking_time_s), 's', 'Time with voice, excluding silences.'],
+    ['Syllable rate', f(m.speech_rate_sps, 2), 'syl/s', 'Syllables per second from the first word to the last, including pauses.'], ['Articulation rate', f(m.articulation_rate_sps, 2), 'syl/s', 'Syllables per second while actually speaking.'],
+    ['Syllables', m.syllables, '', m.syllable_source === 'transcript' ? `Counted from the transcript's words (${m.syllables_acoustic} found in the sound alone).` : 'Found in the sound: loudness peaks with a voice.'], ['Speaking time', f(m.speaking_time_s), 's', 'Time with voice, excluding silences.'],
     ['Mean pause', f(m.mean_pause_s, 2), 's', 'Average silence of 0.25 s or longer.'], ['Pause share', f(m.pause_ratio * 100), '%', 'Part of the recording spent in pauses.'],
     ['Mean pitch (F0)', f(m.f0_mean_hz, 0), 'Hz', 'How high or low your voice is on average.'], ['Pitch range', m.f0_min_hz == null ? '–' : f(m.f0_min_hz, 0) + '–' + f(m.f0_max_hz, 0), 'Hz', '5th to 95th percentile.'],
     ['Voiced', f(m.voiced_fraction * 100, 0), '%', 'Frames with a clear pitch.'], ['Loudness', f(m.rms_dbfs), 'dBFS', 'Average level; 0 is the maximum.'],
