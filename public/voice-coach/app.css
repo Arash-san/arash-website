@@ -281,3 +281,15 @@ dialog h2{margin-bottom:6px}
 .pnav .btn[disabled]{opacity:.45;cursor:default}
 @media(max-width:640px){.hide-sm{display:none}}
 .pnav > .row{flex-wrap:nowrap}
+
+/* emphasis: bold = heavily emphasized, underlined = slightly */
+:root{--em-slight:color-mix(in srgb,var(--accent) 38%,var(--panel));--em-none:var(--line)}
+.transcript .w.e2{font-weight:800}
+.transcript .w.e1,.lg-e1,.mw.e1{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;text-decoration-color:var(--accent)}
+.lg-e2{color:var(--ink);font-weight:800}
+.lg-e1{color:var(--ink)}
+.tr-legend{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.mw.e0{font-weight:500;color:color-mix(in srgb,var(--ink) 72%,var(--panel))}
+.mw.e1{font-weight:600}
+.mw.e2{font-weight:800;background:var(--accent-soft)}
+.mw.now.e0,.mw.now.e1,.mw.now.e2{background:var(--accent);color:var(--accent-ink);text-decoration-color:var(--accent-ink)}

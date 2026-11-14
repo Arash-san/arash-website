@@ -471,6 +471,7 @@ async function renderResult(id, shared = false) {
   function paintSummary() {
     const I = A.insights;
     if (I && A.intonation && A.intonation.level === 'warn' && I.tips.length < 3 && !I.tips.some(t => t.includes('statement'))) I.tips.push('Let your voice go down on the last word of each statement. It sounds more sure.');
+    if (I && A.intonation && A.intonation.emphasis && A.intonation.emphasis.level === 'warn' && I.tips.length < 3 && !I.tips.some(t => t.includes('key word'))) I.tips.push('Few words stood out. Choose the key word in each phrase and make it longer, with more movement in your voice.');
     if (!I || !I.items.length) { summaryBox.replaceChildren(h('div', { class: 'card headline' }, h('div', { class: 'big' }, (I && I.headline) || 'This recording is too short to analyse.'))); return; }
     summaryBox.replaceChildren(
       h('div', { class: 'headline' }, scoreRing(I.score),
@@ -483,6 +484,7 @@ async function renderResult(id, shared = false) {
   /* --- transcript --- */
   const trBox = h('div', { class: 'card' }); let words = [], lastW = -1;
   const FILL = new Set(['um', 'umm', 'uh', 'uhh', 'er', 'erm', 'ah', 'hmm', 'mm']);
+  const emTitle = w => (w.em === 2 ? 'Heavily emphasized' : 'Slightly emphasized') + (w.why && w.why.length ? ': ' + w.why.join(', ') : '');
   function paintTranscript() {
     words = []; lastW = -1;
     const head = h('div', { class: 'row', style: 'margin-bottom:12px' }, icon('text', 20), h('h2', {}, 'Transcript'));
@@ -497,13 +499,22 @@ async function renderResult(id, shared = false) {
     }
     head.append(h('div', { class: 'spacer' }), h('span', { class: 'muted small' }, `${t.word_count} words · tap a word to jump there`));
     const box = h('div', { class: 'transcript' });
+    const EW = (A.intonation && A.intonation.words) || []; let wi = 0, anyEm = false;
     if (!t.word_count) box.append(h('span', { class: 'muted' }, 'No words were recognised.'));
     t.segments.forEach(sg => {
       const p = h('p', { style: 'margin:0 0 6px' });
-      sg.words.forEach(w => { const clean = w.w.toLowerCase().replace(/[^a-z']/g, ''); const s = h('span', { class: 'w' + (FILL.has(clean) ? ' filler' : ''), onclick: () => { audio.currentTime = w.s; audio.play(); } }, w.w); words.push({ s: w.s, e: w.e, el: s }); p.append(s, ' '); });
+      sg.words.forEach(w => {
+        const clean = w.w.toLowerCase().replace(/[^a-z']/g, ''), ew = EW[wi++], em = ew && !FILL.has(clean) ? (ew.em || 0) : 0;
+        if (em) anyEm = true;
+        const s = h('span', { class: 'w' + (FILL.has(clean) ? ' filler' : '') + (em ? ' e' + em : ''), title: em ? emTitle(ew) : null, onclick: () => { audio.currentTime = w.s; audio.play(); } }, w.w);
+        words.push({ s: w.s, e: w.e, el: s }); p.append(s, ' ');
+      });
       box.append(p);
     });
-    trBox.replaceChildren(head, box, Object.keys(t.fillers || {}).length ? h('p', { class: 'muted small', style: 'margin-top:10px' }, h('span', { class: 'chip lv-ok', style: 'margin-right:6px' }, 'um'), 'Filler words are highlighted.') : null);
+    trBox.replaceChildren(head, box, h('p', { class: 'muted small tr-legend' },
+      anyEm ? h('span', {}, h('b', { class: 'lg-e2' }, 'Bold'), ' heavily emphasized') : null,
+      anyEm ? h('span', {}, h('span', { class: 'lg-e1' }, 'Underlined'), ' slightly emphasized') : null,
+      Object.keys(t.fillers || {}).length ? h('span', {}, h('span', { class: 'chip lv-ok' }, 'um'), ' filler word') : null));
   }
   ticks.push(t => {
     if (!words.length) return; let lo = 0, hi = words.length - 1, idx = -1;
@@ -552,47 +563,51 @@ async function renderResult(id, shared = false) {
     });
   }
 
-  /* --- rising and falling pitch, word by word --- */
+  /* --- pitch and emphasis, word by word --- */
   const melCard = h('div', { class: 'card' });
   let melTexts = [];
   function paintMelody() {
     const M = A.intonation;
     melTexts = [];
-    const head = h('div', { class: 'row' }, icon('variety', 20), h('h2', {}, 'Rising and falling, word by word'));
+    const head = h('div', { class: 'row' }, icon('variety', 20), h('h2', {}, 'Pitch and emphasis'));
     if (!M) {
       melCard.replaceChildren(head, h('p', { class: 'muted', style: 'margin-top:8px' },
         A.transcript ? 'There was not enough voiced speech to follow your melody.' : meta.tstatus === 'running' ? 'Waiting for the transcript…' : 'This needs the transcript. Create it in the Transcript section above.'));
       return;
     }
     const C = { rise: css('--rise'), fall: css('--fall'), level: css('--muted') };
-    const ARROW = { rise: '↗', fall: '↘', level: '' };
     const stack = (parts, unit) => {
       const total = parts.reduce((a, x) => a + x.n, 0) || 1;
       return h('div', {},
         h('div', { class: 'stack', role: 'img', 'aria-label': parts.map(x => `${x.label}: ${x.n}`).join(', ') },
-          parts.filter(x => x.n).map(x => h('i', { style: `flex:${x.n};background:${x.c}`, title: `${x.label}: ${x.n} ${unit}` }, x.n / total >= 0.1 ? `${x.arrow} ${Math.round(x.n / total * 100)}%` : ''))),
+          parts.filter(x => x.n).map(x => h('i', { style: `flex:${x.n};background:${x.c}${x.ink ? ';color:' + x.ink : ''}`, title: `${x.label}: ${x.n} ${unit}` }, x.n / total >= 0.1 ? `${x.arrow ? x.arrow + ' ' : ''}${Math.round(x.n / total * 100)}%` : ''))),
         h('div', { class: 'stack-legend' }, parts.map(x => h('span', {}, h('span', { class: 'dot', style: `background:${x.c}` }), `${x.label} `, h('b', {}, x.n)))));
     };
-    const wc = M.counts, ec = M.endings;
+    const ec = M.endings, E = M.emphasis || { counts: { heavy: 0, slight: 0, none: M.words.length }, verdict: '', level: 'none' };
+    const emOf = w => FILL.has(w.w.toLowerCase().replace(/[^a-z']/g, '')) ? 0 : (w.em || 0);
     const graphs = h('div', { class: 'split', style: 'margin-top:14px' },
-      h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Inside each word'),
-        stack([{ label: 'Going up', n: wc.rise, c: C.rise, arrow: '↗' }, { label: 'Steady', n: wc.level, c: C.level, arrow: '→' }, { label: 'Going down', n: wc.fall, c: C.fall, arrow: '↘' }], 'words')),
-      h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'How your sentences end'),
+      h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Emphasis on words'),
+        stack([{ label: 'Heavily emphasized', n: E.counts.heavy, c: css('--accent'), ink: css('--accent-ink') }, { label: 'Slightly emphasized', n: E.counts.slight, c: css('--em-slight'), ink: css('--ink') },
+          { label: 'Not emphasized', n: E.counts.none, c: css('--em-none'), ink: css('--muted') }], 'words')),
+      h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Final pitch movements'),
         stack([{ label: 'Down', n: ec.fall, c: C.fall, arrow: '↘' }, { label: 'Level', n: ec.level, c: C.level, arrow: '→' }, { label: 'Up', n: ec.rise, c: C.rise, arrow: '↗' }], 'sentences')));
-    const verdict = h('div', { class: 'tipline', style: 'margin-top:12px' }, icon(M.level === 'good' ? 'check' : 'bulb', 18), h('span', {}, M.verdict));
+    const verdict = h('div', { style: 'margin-top:12px;display:flex;flex-direction:column;gap:6px' },
+      E.verdict ? h('div', { class: 'tipline' }, icon(E.level === 'good' ? 'check' : 'bulb', 18), h('span', {}, E.verdict)) : null,
+      h('div', { class: 'tipline' }, icon(M.level === 'good' ? 'check' : 'bulb', 18), h('span', {}, M.verdict)));
     const lines = h('div', { class: 'mel-lines' });
     melCard.replaceChildren(head,
       h('p', { class: 'muted small', style: 'margin-top:4px' },
-        h('b', { style: `color:${C.rise}` }, '↗ blue'), ' means your voice went up during the word, ', h('b', { style: `color:${C.fall}` }, '↘ orange'), ' means it went down, and no arrow means it stayed steady. ',
-        'In English, a statement usually ends going down; a yes/no question often ends going up. Tap a word to hear it.'),
+        'Words in ', h('b', { class: 'lg-e2' }, 'bold'), ' were heavily emphasized and ', h('span', { class: 'lg-e1' }, 'underlined'), ' words slightly. ',
+        'A word stands out when you hold it longer, move your pitch on it, or say it higher or louder than the words around it. ',
+        'The label after each sentence shows its final pitch movement: in English a statement usually ends going down, and a yes/no question often ends going up. Tap a word to hear it.'),
       graphs, verdict, lines);
     M.sentences.forEach(sn => {
       const box = h('div', { class: 'mel-sentence' }), row = h('div', { class: 'mel-words' });
       for (let i = sn.i0; i < sn.i1; i++) {
         const w = M.words[i];
-        const el = h('button', { class: 'mw', title: w.dir === 'rise' ? 'voice went up' : w.dir === 'fall' ? 'voice went down' : 'steady',
-          onclick: () => { audio.currentTime = Math.max(0, w.s - 0.05); audio.play(); } },
-          w.w, ARROW[w.dir] ? h('span', { class: 'arr', style: `color:${C[w.dir]}` }, ARROW[w.dir]) : null);
+        const em = emOf(w);
+        const el = h('button', { class: 'mw e' + em, title: em ? emTitle(w) : 'Not emphasized',
+          onclick: () => { audio.currentTime = Math.max(0, w.s - 0.05); audio.play(); } }, w.w);
         melTexts[i] = el; row.append(el);
       }
       box.append(row);
@@ -808,6 +823,7 @@ const SOURCES = [
   ['Speech rate, pace and pauses', 'Kang, Hirschi, Hansen, Looney & Miao (2022). 405 recordings of 108 second-language English speakers at US universities (presentations, microteaching, speaking exams), rated by 15 trained listeners. Easiest to understand: 2.75 to 4 syllables per second; 3.5 to 4.25 while talking. Slow speech hurt more than fast speech. (The pause ranges in this app are set for presentations: 0.5 to 1.5 s good, under 0.25 s too brief, over 2 s long.)', 'https://par.nsf.gov/servlets/purl/10531499'],
   ['Fast speech and international listeners', 'Griffiths (1990), Language Learning. Listeners with lower-intermediate English understood significantly less at 200 words a minute than at 150.', 'https://consensus.app/papers/details/f84ab9fd3f67579fa58582b998076189/'],
   ['Speaking rate and pitch in lectures', 'Kang (2010), System. In lectures by international teaching assistants, how easy they were to understand was tied mostly to speaking rate; a narrow pitch range made speech sound more accented.', 'https://eric.ed.gov/?id=EJ885942'],
+  ['Emphasized words', 'The emphasis rating combines how long a word is held, how much the pitch moves and rises on it, and how loud it is next to its neighbours. The weights were fitted to people, not chosen by hand: recordings in which 3 to 9 listeners marked the words they heard as emphasized (Morrison et al. 2024), and recordings in which the speaker was told which word to stress (Expresso, Nguyen et al. 2023). Tested on speakers it was not fitted on. Treat it as a good guide, not a final judgement.', 'https://arxiv.org/abs/2310.08464'],
   ['Pitch variation in presentations', 'Hincks (2005), Interspeech: how lively student presentations sound tracks pitch variation. Lindemann et al. (2020): more pitch variation was rated as better teaching. The exact semitone cut-offs here are guide values.', 'https://www.isca-archive.org/interspeech_2005/hincks05_interspeech.html'],
 ];
 function sourcesDialog() {
@@ -819,7 +835,7 @@ function sourcesDialog() {
     h('p', { class: 'small muted', style: 'margin-top:14px' }, 'Filler-word and recording-quality ratings are practical guides, not research norms.'),
     h('p', { class: 'small muted', style: 'margin-top:8px' }, h('b', {}, 'How it is measured. '),
       'Pauses are found by a speech detector (Silero VAD) and timed with Praat’s loudness curve. Syllables are counted from the words in your transcript; ',
-      'without one, from the sound (de Jong & Wempe 2009). Pitch is tracked with Praat in two passes. ',
+      'without one, from the sound (de Jong & Wempe 2009). Pitch is tracked with Praat in two passes. Each word is timed by aligning the transcript to the sound. ',
       'Tested against speech that people labelled by hand, the average pause per recording matched theirs closely (correlation 0.85) and the syllable count was within about 2% for international speakers.'),
     h('div', { class: 'row', style: 'margin-top:18px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn primary', onclick: () => dlg.close() }, 'Got it')));
   dlg.showModal();
