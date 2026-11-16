@@ -113,6 +113,14 @@ function paintThemeBtn() { const dark = css('--bg') === '#14131b'; $('#themeBtn'
   };
 })();
 
+// Any page that cannot reach the server says so once, instead of staying empty without a word.
+let lastDown = 0;
+addEventListener('unhandledrejection', e => {
+  if (!(e.reason instanceof TypeError) || Date.now() - lastDown < 10000) return;
+  lastDown = Date.now();
+  toast(navigator.onLine === false ? 'You seem to be offline.' : 'Voice Coach is not answering right now. Please try again in a few minutes.', null, 7000);
+});
+
 /* ---------------- router ---------------- */
 function route() {
   leave();
@@ -143,8 +151,17 @@ function uploadFiles(files, extra = {}) {
     const x = new XMLHttpRequest(); x.open('POST', U('/api/recordings')); x.withCredentials = true;
     x.setRequestHeader('X-CSRFToken', cookie('csrftoken')); x.setRequestHeader('X-Voice', '1');
     x.upload.onprogress = e => { if (e.lengthComputable) bar.style.width = (e.loaded / e.total * 100) + '%'; };
-    x.onload = () => { t.remove(); try { const d = JSON.parse(x.responseText); if (x.status < 300) return res(d.ids); toast('Upload failed: ' + (d.error || x.status)); } catch (e) { toast('Upload failed.'); } res([]); };
-    x.onerror = () => { t.remove(); toast('Upload failed. Check your connection.'); res([]); };
+    // uploadFiles.why tells the caller why nothing was saved: 'offline' (this device), 'server' (no answer), or the server's own words
+    const fail = (why, msg) => { t.remove(); uploadFiles.why = why; toast(msg, null, 7000); res([]); };
+    uploadFiles.why = '';
+    x.onload = () => {
+      let d = null; try { d = JSON.parse(x.responseText); } catch (e) { }
+      if (d && x.status < 300) { t.remove(); return res(d.ids); }
+      if (d && d.error) return fail(d.error, 'Upload failed: ' + d.error);
+      fail('server', 'Upload failed. The Voice Coach server did not answer properly. Please try again in a few minutes.');
+    };
+    x.onerror = () => navigator.onLine === false ? fail('offline', 'Upload failed. You seem to be offline. Check your connection.')
+      : fail('server', 'Upload failed. The Voice Coach server did not answer. Please try again in a few minutes.');
     x.send(fd);
   });
 }
@@ -217,6 +234,9 @@ const PROMPTS = [
   'Open a class presentation: say what the topic is and why it matters.',
   'Read aloud: “The morning train was late again, so Maya bought a coffee and watched the platform fill up. A man with a bright yellow umbrella was arguing with a pigeon about a sandwich. By the time the train arrived, half the crowd was laughing, and nobody seemed to mind the delay any more.”',
 ];
+let keptTake = null;    // a recorded take whose upload failed; kept in memory (not in browser storage) until saved or discarded
+let leaveGuard = null;  // true while leaving the page would lose a recording
+addEventListener('beforeunload', e => { if (keptTake || (leaveGuard && leaveGuard())) { e.preventDefault(); e.returnValue = ''; } });
 async function renderHome(autostart) {
   view.innerHTML = '';
   let stream, rec, chunks = [], t0 = 0, acc = 0, state = 'idle', raf, ctx, an, pi = Math.floor(Math.random() * PROMPTS.length);
@@ -227,7 +247,12 @@ async function renderHome(autostart) {
   const pauseBtn = h('button', { class: 'btn' }, icon('pause', 18), 'Pause');
   const cancelBtn = h('button', { class: 'btn ghost' }, 'Cancel');
   const actions = h('div', { class: 'rec-actions hidden' }, pauseBtn, cancelBtn);
+  const retryBtn = h('button', { class: 'btn primary' }, icon('upload', 18), 'Try again');
+  const fileBtn = h('button', { class: 'btn' }, 'Save the file');
+  const dropBtn = h('button', { class: 'btn ghost' }, 'Discard');
+  const keep = h('div', { class: 'rec-actions hidden' }, retryBtn, fileBtn, dropBtn);
   const err = h('div', { class: 'err hidden', role: 'alert' });
+  const off = h('div', { class: 'err hidden', role: 'status' });
   const promptBox = h('div', { class: 'prompt hidden' });
   const showPrompt = () => { promptBox.classList.remove('hidden'); promptBox.replaceChildren(h('div', { class: 'muted' }, 'Something to talk about'), h('div', {}, PROMPTS[pi]), h('button', { class: 'link-btn small', style: 'margin-top:8px', onclick: () => { pi = (pi + 1) % PROMPTS.length; showPrompt(); } }, 'Another idea')); };
   const alt = h('div', { class: 'alt' },
@@ -237,7 +262,7 @@ async function renderHome(autostart) {
     h('h1', {}, 'How do you sound?'),
     h('p', { class: 'lead' }, 'Talk for about 30 seconds, like the start of a class presentation. You get friendly feedback on your pace, pauses and voice, plus a written transcript.'),
     PUBLIC ? h('p', { class: 'muted small', style: 'margin-top:10px' }, 'Free, no sign-up. Your recordings are private to this browser; nobody else can see them unless you share a link. You can delete them any time.') : null,
-    h('div', { class: 'rec-wrap' }, recBtn, label, timer, live, actions), err, promptBox, alt);
+    off, h('div', { class: 'rec-wrap' }, recBtn, label, timer, live, actions, keep), err, promptBox, alt);
   const features = h('div', { class: 'features' },
     [['pace', 'Speaking pace', 'Are you rushing, or easy to follow?'], ['variety', 'Voice melody', 'Lively and expressive, or a bit flat?'], ['text', 'Transcript', 'See every word, with “um”s highlighted.']]
       .map(([i, t, d]) => h('div', { class: 'card feature' }, icon(i, 20), h('div', {}, h('h3', {}, t), h('p', {}, d)))));
@@ -249,7 +274,17 @@ async function renderHome(autostart) {
     if (!recordings.length) return;
     recent.append(h('div', { class: 'section-head' }, h('h2', {}, 'Recent recordings'), h('div', { class: 'spacer' }), h('a', { class: 'btn sm ghost', href: '#/recordings' }, 'See all', icon('chev', 16))),
       h('div', { class: 'list' }, recordings.slice(0, 3).map(r => recItem(r))));
-  }).catch(() => { });
+  }).catch(e => { if (e instanceof TypeError) serverDown(); });
+  // The server is a computer that can be switched off: say so before someone records, and notice when it is back.
+  let downTimer = 0;
+  function serverDown() {
+    off.textContent = navigator.onLine === false ? 'You seem to be offline. You can record once your connection is back.'
+      : 'Voice Coach is offline at the moment, so a recording cannot be analysed right now. This page will notice when it is back.';
+    off.classList.remove('hidden');
+    clearTimeout(downTimer);
+    downTimer = setTimeout(() => api('/api/recordings?sort=new').then(() => { off.classList.add('hidden'); }).catch(serverDown), 15000);
+  }
+  cleanup.push(() => clearTimeout(downTimer));
 
   const elapsed = () => acc + (state === 'rec' ? (performance.now() - t0) / 1000 : 0);
   function draw() {
@@ -294,10 +329,33 @@ async function renderHome(autostart) {
     label.textContent = 'Saving…'; recBtn.disabled = true; actions.classList.add('hidden');
     const ext = blob.type.includes('ogg') ? 'ogg' : blob.type.includes('mp4') ? 'm4a' : 'webm';
     const title = 'Recording, ' + new Date().toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-    const ids = await uploadFiles([new File([blob], 'recording.' + ext, { type: blob.type })], { source: 'record', title });
-    if (ids.length) location.hash = '#/r/' + ids[0]; else reset();
+    keptTake = { file: new File([blob], 'recording.' + ext, { type: blob.type }), title };
+    send();
   }
+  // A take is never thrown away because the upload failed: it stays on the page until it is saved, downloaded or discarded.
+  async function send() {
+    state = 'saving'; label.textContent = 'Saving…'; recBtn.disabled = true; actions.classList.add('hidden'); keep.classList.add('hidden'); err.classList.add('hidden');
+    timer.classList.add('hidden'); live.classList.add('hidden'); alt.classList.add('hidden');
+    const ids = await uploadFiles([keptTake.file], { source: 'record', title: keptTake.title });
+    if (ids.length) { keptTake = null; location.hash = '#/r/' + ids[0]; return; }
+    showKept(uploadFiles.why);
+  }
+  function showKept(why) {
+    state = 'kept'; recBtn.disabled = true; label.textContent = 'Not saved yet';
+    recBtn.classList.remove('live'); recBtn.replaceChildren(icon('mic', 46, 2));
+    timer.classList.add('hidden'); live.classList.add('hidden'); actions.classList.add('hidden'); alt.classList.add('hidden');
+    err.textContent = (why === 'offline' ? 'You seem to be offline. ' : why === 'server' || !why ? 'The Voice Coach server did not answer. ' : 'The recording could not be saved (' + why + '). ')
+      + 'Your recording is still here. Try again in a minute, or save the file and upload it later.';
+    err.classList.remove('hidden'); keep.classList.remove('hidden');
+  }
+  retryBtn.onclick = send;
+  fileBtn.onclick = () => {
+    const a = h('a', { href: URL.createObjectURL(keptTake.file), download: keptTake.file.name }); document.body.append(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  };
+  dropBtn.onclick = () => { if (!confirm('Discard this recording? It has not been saved.')) return; keptTake = null; reset(); toast('Recording discarded.'); };
   function reset() {
+    keep.classList.add('hidden'); err.classList.add('hidden');
     state = 'idle'; recBtn.disabled = false; recBtn.classList.remove('live'); recBtn.replaceChildren(icon('mic', 46, 2)); recBtn.setAttribute('aria-label', 'Start recording');
     label.textContent = 'Tap to start recording'; timer.classList.add('hidden'); live.classList.add('hidden'); actions.classList.add('hidden'); alt.classList.remove('hidden');
     pauseBtn.replaceChildren(icon('pause', 18), 'Pause');
@@ -314,7 +372,9 @@ async function renderHome(autostart) {
   };
   cancelBtn.onclick = () => { state = 'cancel'; rec.stop(); toast('Recording discarded.'); };
   draw();
-  cleanup.push(() => { cancelAnimationFrame(raf); if (state === 'rec' || state === 'pause') { state = 'cancel'; try { rec.stop(); } catch (e) { } } stopAll(); });
+  leaveGuard = () => state === 'rec' || state === 'pause' || state === 'stopping' || state === 'saving' || state === 'kept';
+  if (keptTake) showKept('');   // came back to this page with a take that is still waiting to be saved
+  cleanup.push(() => { leaveGuard = null; cancelAnimationFrame(raf); if (state === 'rec' || state === 'pause') { state = 'cancel'; try { rec.stop(); } catch (e) { } } stopAll(); });
 }
 
 /* ---------------- recordings ---------------- */
