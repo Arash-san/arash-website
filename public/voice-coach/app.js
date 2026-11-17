@@ -190,14 +190,17 @@ function drawMiniWave(cv, thumb, w = 120, hh = 40) {
   }
 }
 function levelChip(l) { return l ? h('span', { class: 'chip lv-' + l.level }, l.label) : null; }
+// A recording is "busy" until the analysis AND the transcript are finished: results are only shown once they are final.
+const isBusy = r => r.status === 'processing' || (r.status === 'ready' && r.tstatus === 'running');
 function recItem(r, opts = {}) {
   const cv = h('canvas', { 'aria-hidden': 'true' }), s = r.summary;
-  const sub = r.status === 'ready' ? `${fmtWhen(r.created)} · ${fmtLen(r.duration)}` : r.status === 'error' ? 'Could not read this file' : 'Analysing…';
+  const busy = isBusy(r);
+  const sub = busy ? 'Analysing…' : r.status === 'ready' ? `${fmtWhen(r.created)} · ${fmtLen(r.duration)}` : 'Could not read this file';
   const el = h('a', { class: 'item', href: '#/r/' + r.id },
     opts.select ? h('input', { type: 'checkbox', 'aria-label': 'Select ' + r.title, checked: opts.selected, onclick: e => { e.stopPropagation(); }, onchange: e => opts.select(r.id, e.target.checked) }) : null,
     cv,
-    h('div', { class: 'main' }, h('div', { class: 't' }, r.title), h('div', { class: 'sub' }, r.status === 'processing' ? [h('span', { class: 'spin', style: 'width:12px;height:12px;vertical-align:-1px;margin-right:6px' }), sub] : sub)),
-    h('div', { class: 'chips' }, s && s.labels.pace ? levelChip({ label: s.labels.pace.label + ' pace', level: s.labels.pace.level }) : null, r.shared ? h('span', { class: 'chip lv-none' }, icon('link', 13), 'Shared') : null));
+    h('div', { class: 'main' }, h('div', { class: 't' }, r.title), h('div', { class: 'sub' }, busy ? [h('span', { class: 'spin', style: 'width:12px;height:12px;vertical-align:-1px;margin-right:6px' }), sub] : sub)),
+    h('div', { class: 'chips' }, s && s.labels.pace && !busy ? levelChip({ label: s.labels.pace.label + ' pace', level: s.labels.pace.level }) : null, r.shared ? h('span', { class: 'chip lv-none' }, icon('link', 13), 'Shared') : null));
   requestAnimationFrame(() => drawMiniWave(cv, r.thumb));
   return el;
 }
@@ -403,7 +406,7 @@ async function renderRecordings() {
       [h('h2', { style: 'color:var(--ink);margin-bottom:6px' }, 'No recordings yet'), 'Make your first recording, or drop an audio file anywhere on this page.', h('div', { style: 'margin-top:16px' }, h('a', { class: 'btn primary', href: '#/record' }, icon('mic', 18), 'Record now'))]));
     recordings.forEach(r => listEl.append(recItem(r, { selected: st.sel.has(r.id), select: (id, on) => { on ? st.sel.add(id) : st.sel.delete(id); bar(); } })));
     bar();
-    if (recordings.some(r => r.status === 'processing')) timer = setTimeout(load, 1500);
+    if (recordings.some(isBusy)) timer = setTimeout(load, 1500);
   }
   function bar() {
     const ids = [...st.sel].join(','), n = st.sel.size; bulk.classList.toggle('hidden', !n);
@@ -443,20 +446,53 @@ function scoreRing(score) {
 async function renderResult(id, shared = false) {
   leave();
   const base = U(shared ? `/api/shared/${SHARE}` : `/api/recordings/${id}`);
-  let meta, A, timer, tTimer;
-  cleanup.push(() => { clearTimeout(timer); clearTimeout(tTimer); });
+  let meta, A, timer, gone = false;
+  cleanup.push(() => { gone = true; clearTimeout(timer); });
   view.innerHTML = '<div class="processing"><span class="spin"></span></div>';
-  try { if (shared) { A = await api(base); meta = A.meta; } else { meta = await api(base); if (meta.status === 'ready') A = await api(base + '/analysis'); } }
-  catch (e) { view.replaceChildren(h('div', { class: 'card empty' }, h('h2', { style: 'color:var(--ink)' }, 'This recording is not available'), h('p', { style: 'margin-top:6px' }, shared ? 'The link may have been switched off.' : 'It may have been removed.'), !shared && h('a', { class: 'btn', href: '#/recordings', style: 'margin-top:16px' }, 'My recordings'))); return; }
+  const missing = () => view.replaceChildren(h('div', { class: 'card empty' }, h('h2', { style: 'color:var(--ink)' }, 'This recording is not available'), h('p', { style: 'margin-top:6px' }, shared ? 'The link may have been switched off.' : 'It may have been removed.'), !shared && h('a', { class: 'btn', href: '#/recordings', style: 'margin-top:16px' }, 'My recordings')));
+  // The results are shown only when the analysis AND the transcript are finished. Showing the first half early
+  // meant that the numbers changed in front of the reader a few seconds later.
+  const load = async () => {
+    if (shared) { A = await api(base); meta = A.meta; }
+    else { meta = await api(base); if (meta.status === 'ready' && meta.tstatus !== 'running') A = await api(base + '/analysis'); }
+  };
+  try { await load(); } catch (e) { if (!gone) missing(); return; }
+  if (gone) return;
 
+  if (isBusy(meta)) {
+    const s2 = h('div', { class: 'step' }), s3 = h('div', { class: 'step' }), note = h('p', { class: 'muted small', style: 'margin-top:22px' });
+    const t0 = Date.now(); let phase = 0, lost = false;
+    const paintWait = () => {
+      const p = meta.status === 'processing' ? 1 : 2;
+      if (p !== phase) {   // only touched when the step changes, so the spinner keeps turning smoothly
+        phase = p;
+        s2.className = 'step ' + (p === 1 ? 'now' : 'done'); s2.replaceChildren(p === 1 ? h('span', { class: 'spin' }) : icon('check', 20), 'Checking pace, pauses and voice');
+        s3.className = 'step' + (p === 2 ? ' now' : ''); s3.replaceChildren(p === 2 ? h('span', { class: 'spin' }) : icon('text', 20), 'Writing the transcript and finding the emphasized words');
+      }
+      const secs = (Date.now() - t0) / 1000, ahead = meta.ahead || 0;
+      note.textContent = lost ? 'The connection dropped for a moment. Trying again…'
+        : ahead ? `${ahead} recording${ahead > 1 ? 's are' : ' is'} ahead of yours. Your results appear when everything is ready.`
+          : secs > 25 ? 'Still working. A long recording takes longer, and several people may be using Voice Coach at the same time.'
+            : 'Your results appear when everything is ready, usually in less than half a minute.';
+    };
+    view.replaceChildren(h('div', { class: 'card processing' }, h('h2', {}, 'Listening to your recording…'),
+      h('div', { class: 'steps' }, h('div', { class: 'step done' }, icon('check', 20), 'Uploaded'), s2, s3), note));
+    paintWait();
+    const ok = await new Promise(done => {
+      const again = () => { timer = setTimeout(async () => {
+        try { await load(); lost = false; }
+        catch (e) { if (gone) return; if (!(e instanceof TypeError)) return done(false); lost = true; }   // a dropped connection is tried again
+        if (gone) return;
+        paintWait(); isBusy(meta) ? again() : done(true);
+      }, shared ? 2500 : 1200); };
+      again();
+    });
+    if (gone) return;
+    if (!ok) { missing(); return; }
+  }
   if (meta.status !== 'ready') {
-    const failed = meta.status === 'error';
-    view.replaceChildren(h('div', { class: 'card processing' },
-      failed ? [h('h2', {}, 'We could not read this file'), h('p', { class: 'muted', style: 'margin-top:8px' }, 'It may not contain audio, or the format is not supported. Try another file.'), h('a', { class: 'btn', href: '#/', style: 'margin-top:18px' }, 'Back')]
-        : [h('h2', {}, 'Listening to your recording…'), h('div', { class: 'steps' },
-          h('div', { class: 'step done' }, icon('check', 20), 'Uploaded'), h('div', { class: 'step now' }, h('span', { class: 'spin' }), 'Checking pace, pauses and voice'),
-          h('div', { class: 'step' }, icon('text', 20), 'Writing the transcript'))]));
-    if (!failed) timer = setTimeout(() => renderResult(id, shared), 1200);
+    view.replaceChildren(h('div', { class: 'card processing' }, h('h2', {}, 'We could not read this file'),
+      h('p', { class: 'muted', style: 'margin-top:8px' }, 'It may not contain audio, or the format is not supported. Try another file.'), h('a', { class: 'btn', href: '#/', style: 'margin-top:18px' }, 'Back')));
     return;
   }
 
@@ -502,7 +538,8 @@ async function renderResult(id, shared = false) {
   const playBtn = h('button', { class: 'play-btn', 'aria-label': 'Play' }, icon('play', 26));
   const waveCv = h('canvas'), waveBox = h('div', { class: 'wave-main', role: 'slider', tabindex: 0, 'aria-label': 'Playback position', 'aria-valuemin': 0, 'aria-valuemax': Math.round(dur) }, waveCv);
   const tNow = h('span', {}, '0:00'), speeds = [1, 1.25, 1.5, 0.75];
-  const speedBtn = h('button', { class: 'btn sm ghost speed', title: 'Playback speed', onclick: () => { const i = (speeds.indexOf(audio.playbackRate) + 1) % speeds.length; audio.playbackRate = speeds[i]; speedBtn.textContent = speeds[i] + '×'; } }, '1×');
+  const nextSpeed = () => { audio.playbackRate = speeds[(speeds.indexOf(audio.playbackRate) + 1) % speeds.length]; };
+  const speedBtn = h('button', { class: 'btn sm ghost speed', title: 'Playback speed', onclick: nextSpeed }, '1×');
   const player = h('div', { class: 'card', style: 'padding:18px 20px' }, h('div', { class: 'player', style: 'margin:0' }, playBtn, h('div', { style: 'flex:1;min-width:0' }, waveBox, h('div', { class: 'ptime' }, tNow, h('span', {}, fmtClock(dur)))), speedBtn));
   const bins = 140;
   const amp = (() => { const n = A.peaks_min.length, out = []; for (let i = 0; i < bins; i++) { let a = 0; for (let j = Math.floor(i * n / bins); j < Math.floor((i + 1) * n / bins); j++) a = Math.max(a, A.peaks_max[j] - A.peaks_min[j]); out.push(a); } const mx = Math.max(...out, .01); return out.map(v => v / mx); })();
@@ -517,16 +554,36 @@ async function renderResult(id, shared = false) {
   ticks.push(drawWave);
   waveBox.addEventListener('pointerdown', e => { const r = waveBox.getBoundingClientRect(); audio.currentTime = Math.max(0, Math.min(dur, (e.clientX - r.left) / r.width * dur)); tick(); });
   waveBox.addEventListener('keydown', e => { if (e.key === 'ArrowRight') audio.currentTime = Math.min(dur, audio.currentTime + 5); if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5); tick(); });
-  playBtn.onclick = () => audio.paused ? audio.play() : audio.pause();
-  audio.onplay = () => { playBtn.replaceChildren(icon('pause', 26, 2.6)); playBtn.setAttribute('aria-label', 'Pause'); tick(); };
-  audio.onpause = () => { playBtn.replaceChildren(icon('play', 26)); playBtn.setAttribute('aria-label', 'Play'); };
+  /* A small player that stays at the bottom of the screen once the big one has scrolled out of view, so the sound
+     can be paused, moved and replayed from anywhere on the page (a tablet has no space bar). */
+  const mPlay = h('button', { class: 'mp-play', 'aria-label': 'Play' }, icon('play', 22));
+  const jump = d => { audio.currentTime = Math.max(0, Math.min(dur, audio.currentTime + d)); tick(); };
+  const mBack = h('button', { class: 'mp-btn', 'aria-label': 'Back 5 seconds', title: 'Back 5 seconds', onclick: () => jump(-5) }, '−5 s');
+  const mFwd = h('button', { class: 'mp-btn mp-fwd', 'aria-label': 'Forward 5 seconds', title: 'Forward 5 seconds', onclick: () => jump(5) }, '+5 s');
+  const mSeek = h('input', { type: 'range', class: 'mp-seek', min: 0, max: dur.toFixed(2), step: 0.05, value: 0, 'aria-label': 'Playback position' });
+  const mTime = h('span', { class: 'mp-time' }, '0:00 / ' + fmtClock(dur));
+  const mSpeed = h('button', { class: 'mp-btn', 'aria-label': 'Playback speed', title: 'Playback speed', onclick: nextSpeed }, '1×');
+  const mini = h('div', { class: 'miniplayer', role: 'region', 'aria-label': 'Player' }, h('div', { class: 'mp-in' }, mPlay, mBack, mFwd, mSeek, mTime, mSpeed));
+  let dragging = false;
+  mSeek.addEventListener('input', () => { dragging = true; audio.currentTime = +mSeek.value; tick(); });
+  mSeek.addEventListener('change', () => { dragging = false; });
+  ticks.push(t => { if (!dragging) mSeek.value = t; mTime.textContent = fmtClock(t) + ' / ' + fmtClock(dur); });
+  audio.addEventListener('ratechange', () => { speedBtn.textContent = mSpeed.textContent = audio.playbackRate + '×'; });
+  const miniOn = on => { mini.classList.toggle('on', on); document.body.classList.toggle('mini-on', on); };
+  const seen = new IntersectionObserver(es => miniOn(!es[es.length - 1].isIntersecting), { rootMargin: '-70px 0px 0px 0px' });   // 70px: the page header
+  document.body.append(mini); document.body.classList.add('has-mini');
+  cleanup.push(() => { seen.disconnect(); mini.remove(); document.body.classList.remove('has-mini', 'mini-on'); });
+
+  playBtn.onclick = mPlay.onclick = () => audio.paused ? audio.play() : audio.pause();
+  audio.onplay = () => { playBtn.replaceChildren(icon('pause', 26, 2.6)); mPlay.replaceChildren(icon('pause', 22, 2.6)); [playBtn, mPlay].forEach(b => b.setAttribute('aria-label', 'Pause')); tick(); };
+  audio.onpause = () => { playBtn.replaceChildren(icon('play', 26)); mPlay.replaceChildren(icon('play', 22)); [playBtn, mPlay].forEach(b => b.setAttribute('aria-label', 'Play')); };
   audio.onended = () => { audio.currentTime = 0; tick(); };
   audio.onseeked = tick;
   const key = e => { if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable) return; if (e.code === 'Space') { e.preventDefault(); playBtn.click(); } };
   addEventListener('keydown', key); cleanup.push(() => removeEventListener('keydown', key));
   const onResize = () => tick(); addEventListener('resize', onResize); cleanup.push(() => removeEventListener('resize', onResize));
 
-  /* --- summary + insights (re-rendered when the transcript arrives) --- */
+  /* --- summary + insights --- */
   const summaryBox = h('div');
   function paintSummary() {
     const I = A.insights;
@@ -550,11 +607,9 @@ async function renderResult(id, shared = false) {
     const head = h('div', { class: 'row', style: 'margin-bottom:12px' }, icon('text', 20), h('h2', {}, 'Transcript'));
     const t = A.transcript;
     if (!t) {
-      const running = meta.tstatus === 'running';
-      trBox.replaceChildren(head, running ? h('div', { class: 'row muted' }, h('span', { class: 'spin' }), 'Writing the transcript… this usually takes a few seconds.')
-        : shared ? h('p', { class: 'muted' }, 'No transcript for this recording.')
-          : h('div', { class: 'row' }, h('p', { class: 'muted' }, meta.tstatus === 'error' ? 'The transcript could not be created.' : 'No transcript yet.'),
-            h('button', { class: 'btn sm', onclick: async () => { await api(base + '/transcribe', { method: 'POST' }); meta.tstatus = 'running'; paintTranscript(); pollTranscript(); } }, meta.tstatus === 'error' ? 'Try again' : 'Create transcript')));
+      trBox.replaceChildren(head, shared ? h('p', { class: 'muted' }, 'No transcript for this recording.')
+        : h('div', { class: 'row' }, h('p', { class: 'muted' }, meta.tstatus === 'error' ? 'The transcript could not be created.' : 'No transcript yet.'),
+          h('button', { class: 'btn sm', onclick: async () => { await api(base + '/transcribe', { method: 'POST' }); renderResult(id); } }, meta.tstatus === 'error' ? 'Try again' : 'Create transcript')));
       return;
     }
     head.append(h('div', { class: 'spacer' }), h('span', { class: 'muted small' }, `${t.word_count} words · tap a word to jump there`));
@@ -582,20 +637,6 @@ async function renderResult(id, shared = false) {
     if (idx >= 0 && t > words[idx].e + .35) idx = -1;
     if (idx !== lastW) { if (lastW >= 0) words[lastW].el.classList.remove('now'); if (idx >= 0) words[idx].el.classList.add('now'); lastW = idx; }
   });
-  function pollTranscript() {
-    clearTimeout(tTimer);
-    tTimer = setTimeout(async () => {
-      if (shared) { const d = await api(base); if (d.meta.tstatus === 'running') return pollTranscript(); meta = d.meta; A = d; }
-      else {
-        meta = Object.assign(meta, await api(base));
-        if (meta.tstatus === 'running') return pollTranscript();
-        A = Object.assign(A, await api(base + '/analysis'));
-      }
-      paintTranscript(); paintSummary(); paintPace(); paintMelody();
-      if (meta.tstatus === 'ready') toast('Transcript ready.');
-    }, 2000);
-  }
-
   /* --- pace through the recording --- */
   const paceCard = h('div', { class: 'card' }), paceCv = h('canvas');
   let paceChart;
@@ -632,7 +673,7 @@ async function renderResult(id, shared = false) {
     const head = h('div', { class: 'row' }, icon('variety', 20), h('h2', {}, 'Pitch and emphasis'));
     if (!M) {
       melCard.replaceChildren(head, h('p', { class: 'muted', style: 'margin-top:8px' },
-        A.transcript ? 'There was not enough voiced speech to follow your melody.' : meta.tstatus === 'running' ? 'Waiting for the transcript…' : 'This needs the transcript. Create it in the Transcript section above.'));
+        A.transcript ? 'There was not enough voiced speech to follow your melody.' : 'This needs the transcript. Create it in the Transcript section above.'));
       return;
     }
     const C = { rise: css('--rise'), fall: css('--fall'), level: css('--muted') };
@@ -875,7 +916,7 @@ async function renderResult(id, shared = false) {
     h('div', { style: 'height:16px' }), player, audio, summaryBox,
     h('div', { style: 'height:14px' }), trBox, h('div', { style: 'height:14px' }), melCard, h('div', { style: 'height:14px' }), paceCard, h('div', { style: 'height:14px' }), pauseCard, notes ? h('div', { style: 'height:14px' }) : null, notes, adv);
   paintSummary(); paintTranscript(); paintPace(); paintPauses(); paintMelody(); requestAnimationFrame(tick);
-  if (meta.tstatus === 'running') pollTranscript();
+  seen.observe(player);
 }
 
 /* ---------------- where the ranges come from ---------------- */

@@ -293,3 +293,23 @@ dialog h2{margin-bottom:6px}
 .mw.e1{font-weight:600}
 .mw.e2{font-weight:800;background:var(--accent-soft)}
 .mw.now.e0,.mw.now.e1,.mw.now.e2{background:var(--accent);color:var(--accent-ink);text-decoration-color:var(--accent-ink)}
+
+/* mini player: stays at the bottom of the screen on a result page once the big player has scrolled away */
+.miniplayer{position:fixed;left:0;right:0;bottom:0;z-index:35;padding:10px max(14px,calc((100vw - 1040px)/2 + 20px)) calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--panel) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(20,15,30,.10);transform:translateY(110%);visibility:hidden;transition:transform .22s ease,visibility 0s .22s}
+.miniplayer.on{transform:none;visibility:visible;transition:transform .22s ease}
+.mp-in{display:flex;align-items:center;gap:10px}
+.mp-play{width:50px;height:50px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;cursor:pointer;flex:none;box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 28%,transparent)}
+.mp-btn{min-width:48px;height:44px;padding:0 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:700;font-size:14px;cursor:pointer;flex:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+.mp-btn:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.mp-seek{flex:1;min-width:0;height:44px;margin:0;padding:0;border:0;background:transparent;accent-color:var(--accent);cursor:pointer;touch-action:none}
+.mp-time{color:var(--muted);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+body.has-mini{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+body.mini-on #toasts{bottom:calc(92px + env(safe-area-inset-bottom))}
+@media(max-width:560px){
+  .mp-in{gap:8px}
+  .mp-fwd{display:none}
+  .mp-play{width:46px;height:46px}
+  .mp-btn{min-width:44px;padding:0 8px}
+}
+@media(max-width:380px){ .mp-time{display:none} }
+@media(prefers-reduced-motion:reduce){ .miniplayer,.miniplayer.on{transition:none} }
