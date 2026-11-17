@@ -313,3 +313,8 @@ body.mini-on #toasts{bottom:calc(92px + env(safe-area-inset-bottom))}
 }
 @media(max-width:380px){ .mp-time{display:none} }
 @media(prefers-reduced-motion:reduce){ .miniplayer,.miniplayer.on{transition:none} }
+
+/* thought groups (Pitch and emphasis card) */
+.tg-box .pstat{background:var(--panel)}
+.tg-break{display:inline-flex;align-items:center;padding:0 5px;color:var(--accent);font-weight:800;font-size:19px;line-height:1;cursor:default;user-select:none}
+p .tg-break{display:inline;padding:0 2px;font-size:inherit}

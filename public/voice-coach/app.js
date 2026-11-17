@@ -692,6 +692,19 @@ async function renderResult(id, shared = false) {
           { label: 'Not emphasized', n: E.counts.none, c: css('--em-none'), ink: css('--muted') }], 'words')),
       h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Final pitch movements'),
         stack([{ label: 'Down', n: ec.fall, c: C.fall, arrow: '↘' }, { label: 'Level', n: ec.level, c: C.level, arrow: '→' }, { label: 'Up', n: ec.rise, c: C.rise, arrow: '↗' }], 'sentences')));
+    // thought groups: the words said between two pauses (asked for by Jessica Reynolds's class)
+    const G = M.groups, plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+    const tgStat = (v, l) => h('div', { class: 'pstat' }, h('b', {}, v), h('span', {}, l));
+    const groupsBox = G ? h('div', { class: 'mel-box tg-box', style: 'margin-top:14px' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Thought groups'),
+      h('div', { class: 'pstats', style: 'margin-top:8px' },
+        tgStat(G.count, G.count === 1 ? 'thought group' : 'thought groups'),
+        tgStat(G.words_mean.toFixed(1), 'words in a thought group, on average'),
+        tgStat(G.heavy_mean.toFixed(1), 'heavily emphasized words in a thought group, on average'),
+        tgStat(G.words_max, G.words_max === 1 ? 'word in the longest one' : 'words in the longest one')),
+      h('p', { class: 'muted small', style: 'margin-top:10px' },
+        `A thought group is the words you say between two pauses. Pauses of ${G.pause_min} seconds or longer count, and “um” is not counted as a word. `,
+        `${plural(G.heavy_none, 'thought group', 'thought groups')} had no heavily emphasized word, ${G.heavy_one} had one and ${G.heavy_more} had two or more. `,
+        'In the lines below, ', h('span', { class: 'tg-break', 'aria-hidden': 'true' }, '/'), ' marks the end of each thought group.')) : null;
     const verdict = h('div', { style: 'margin-top:12px;display:flex;flex-direction:column;gap:6px' },
       E.verdict ? h('div', { class: 'tipline' }, icon(E.level === 'good' ? 'check' : 'bulb', 18), h('span', {}, E.verdict)) : null,
       h('div', { class: 'tipline' }, icon(M.level === 'good' ? 'check' : 'bulb', 18), h('span', {}, M.verdict)));
@@ -701,7 +714,7 @@ async function renderResult(id, shared = false) {
         'Words in ', h('b', { class: 'lg-e2' }, 'bold'), ' were heavily emphasized and ', h('span', { class: 'lg-e1' }, 'underlined'), ' words slightly. ',
         'A word stands out when you hold it longer, move your pitch on it, or say it higher or louder than the words around it. ',
         'The label after each sentence shows its final pitch movement: in English a statement usually ends going down, and a yes/no question often ends going up. Tap a word to hear it.'),
-      graphs, verdict, lines);
+      graphs, groupsBox, verdict, lines);
     M.sentences.forEach(sn => {
       const box = h('div', { class: 'mel-sentence' }), row = h('div', { class: 'mel-words' });
       for (let i = sn.i0; i < sn.i1; i++) {
@@ -710,6 +723,8 @@ async function renderResult(id, shared = false) {
         const el = h('button', { class: 'mw e' + em, title: em ? emTitle(w) : 'Not emphasized',
           onclick: () => { audio.currentTime = Math.max(0, w.s - 0.05); audio.play(); } }, w.w);
         melTexts[i] = el; row.append(el);
+        const br = G && G.breaks[i];
+        if (br) row.append(h('span', { class: 'tg-break', role: 'img', 'aria-label': 'end of a thought group', title: `A thought group ends here (${(+br).toFixed(2)} s pause)` }, '/'));
       }
       box.append(row);
       const endTxt = { fall: ['↘ Ends going down', sn.question ? 'lv-none' : 'lv-good'], rise: ['↗ Ends going up', sn.question ? 'lv-good' : 'lv-ok'], level: ['→ Ends level', 'lv-ok'] }[sn.end];
