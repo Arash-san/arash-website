@@ -701,8 +701,10 @@ async function renderResult(id, shared = false) {
         tgStat(G.words_mean.toFixed(1), 'words in a thought group, on average'),
         tgStat(G.heavy_mean.toFixed(1), 'heavily emphasized words in a thought group, on average'),
         tgStat(G.words_max, G.words_max === 1 ? 'word in the longest one' : 'words in the longest one')),
+      G.feedback && G.feedback.text ? h('div', { class: 'tipline tg-note' }, icon('bulb', 18), h('span', {}, G.feedback.text)) : null,
       h('p', { class: 'muted small', style: 'margin-top:10px' },
-        `A thought group is the words you say between two pauses. Pauses of ${G.pause_min} seconds or longer count, and “um” is not counted as a word. `,
+        `A thought group is the words you say between two pauses. Pauses of ${G.pause_min} seconds or longer count, and filler words such as “um” are part of the pause, not of the thought group. `,
+        G.len_min ? `An average of ${G.len_min} to ${G.len_max} words is easy for listeners to process. ` : '',
         `${plural(G.heavy_none, 'thought group', 'thought groups')} had no heavily emphasized word, ${G.heavy_one} had one and ${G.heavy_more} had two or more. `,
         'In the lines below, ', h('span', { class: 'tg-break', 'aria-hidden': 'true' }, '/'), ' marks the end of each thought group.')) : null;
     const verdict = h('div', { style: 'margin-top:12px;display:flex;flex-direction:column;gap:6px' },
