@@ -601,7 +601,10 @@ async function renderResult(id, shared = false) {
   /* --- transcript --- */
   const trBox = h('div', { class: 'card' }); let words = [], lastW = -1;
   const FILL = new Set(['um', 'umm', 'uh', 'uhh', 'er', 'erm', 'ah', 'hmm', 'mm']);
-  const emTitle = w => (w.em === 2 ? 'Heavily emphasized' : 'Slightly emphasized') + (w.why && w.why.length ? ': ' + w.why.join(', ') : '');
+  // Only heavily emphasized words are marked, in bold. The analysis still rates words as slightly emphasized (em 1),
+  // but they are not shown: Jessica Reynolds, 2026-11-20, "only use bold for the heavily emphasized words".
+  const HEAVY = 2, shownEm = em => em === HEAVY ? HEAVY : 0;
+  const emTitle = w => 'Heavily emphasized' + (w.why && w.why.length ? ': ' + w.why.join(', ') : '');
   function paintTranscript() {
     words = []; lastW = -1;
     const head = h('div', { class: 'row', style: 'margin-bottom:12px' }, icon('text', 20), h('h2', {}, 'Transcript'));
@@ -619,7 +622,7 @@ async function renderResult(id, shared = false) {
     t.segments.forEach(sg => {
       const p = h('p', { style: 'margin:0 0 6px' });
       sg.words.forEach(w => {
-        const clean = w.w.toLowerCase().replace(/[^a-z']/g, ''), ew = EW[wi++], em = ew && !FILL.has(clean) ? (ew.em || 0) : 0;
+        const clean = w.w.toLowerCase().replace(/[^a-z']/g, ''), ew = EW[wi++], em = ew && !FILL.has(clean) ? shownEm(ew.em) : 0;
         if (em) anyEm = true;
         const s = h('span', { class: 'w' + (FILL.has(clean) ? ' filler' : '') + (em ? ' e' + em : ''), title: em ? emTitle(ew) : null, onclick: () => { audio.currentTime = w.s; audio.play(); } }, w.w);
         words.push({ s: w.s, e: w.e, el: s }); p.append(s, ' ');
@@ -628,7 +631,6 @@ async function renderResult(id, shared = false) {
     });
     trBox.replaceChildren(head, box, h('p', { class: 'muted small tr-legend' },
       anyEm ? h('span', {}, h('b', { class: 'lg-e2' }, 'Bold'), ' heavily emphasized') : null,
-      anyEm ? h('span', {}, h('span', { class: 'lg-e1' }, 'Underlined'), ' slightly emphasized') : null,
       Object.keys(t.fillers || {}).length ? h('span', {}, h('span', { class: 'chip lv-ok' }, 'um'), ' filler word') : null));
   }
   ticks.push(t => {
@@ -685,11 +687,11 @@ async function renderResult(id, shared = false) {
         h('div', { class: 'stack-legend' }, parts.map(x => h('span', {}, h('span', { class: 'dot', style: `background:${x.c}` }), `${x.label} `, h('b', {}, x.n)))));
     };
     const ec = M.endings, E = M.emphasis || { counts: { heavy: 0, slight: 0, none: M.words.length }, verdict: '', level: 'none' };
-    const emOf = w => FILL.has(w.w.toLowerCase().replace(/[^a-z']/g, '')) ? 0 : (w.em || 0);
+    const emOf = w => FILL.has(w.w.toLowerCase().replace(/[^a-z']/g, '')) ? 0 : shownEm(w.em);
     const graphs = h('div', { class: 'split', style: 'margin-top:14px' },
       h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Emphasis on words'),
-        stack([{ label: 'Heavily emphasized', n: E.counts.heavy, c: css('--accent'), ink: css('--accent-ink') }, { label: 'Slightly emphasized', n: E.counts.slight, c: css('--em-slight'), ink: css('--ink') },
-          { label: 'Not emphasized', n: E.counts.none, c: css('--em-none'), ink: css('--muted') }], 'words')),
+        stack([{ label: 'Heavily emphasized', n: E.counts.heavy, c: css('--accent'), ink: css('--accent-ink') },
+          { label: 'Other words', n: (E.counts.slight || 0) + E.counts.none, c: css('--em-none'), ink: css('--muted') }], 'words')),
       h('div', { class: 'mel-box' }, h('div', { class: 'sub-head', style: 'margin-top:0' }, 'Final pitch movements'),
         stack([{ label: 'Down', n: ec.fall, c: C.fall, arrow: '↘' }, { label: 'Level', n: ec.level, c: C.level, arrow: '→' }, { label: 'Up', n: ec.rise, c: C.rise, arrow: '↗' }], 'sentences')));
     // thought groups: the words said between two pauses (asked for by Jessica Reynolds's class)
@@ -704,7 +706,7 @@ async function renderResult(id, shared = false) {
       G.feedback && G.feedback.text ? h('div', { class: 'tipline tg-note' }, icon('bulb', 18), h('span', {}, G.feedback.text)) : null,
       h('p', { class: 'muted small', style: 'margin-top:10px' },
         `A thought group is the words you say between two pauses. Pauses of ${G.pause_min} seconds or longer count, and filler words such as “um” are part of the pause, not of the thought group. `,
-        G.len_min ? `An average of ${G.len_min} to ${G.len_max} words is easy for listeners to process. ` : '',
+        G.len_min ? `An average between ${G.len_min} and ${G.len_max} words is easy for listeners to process. ` : '',
         `${plural(G.heavy_none, 'thought group', 'thought groups')} had no heavily emphasized word, ${G.heavy_one} had one and ${G.heavy_more} had two or more. `,
         'In the lines below, ', h('span', { class: 'tg-break', 'aria-hidden': 'true' }, '/'), ' marks the end of each thought group.')) : null;
     const verdict = h('div', { style: 'margin-top:12px;display:flex;flex-direction:column;gap:6px' },
@@ -713,7 +715,7 @@ async function renderResult(id, shared = false) {
     const lines = h('div', { class: 'mel-lines' });
     melCard.replaceChildren(head,
       h('p', { class: 'muted small', style: 'margin-top:4px' },
-        'Words in ', h('b', { class: 'lg-e2' }, 'bold'), ' were heavily emphasized and ', h('span', { class: 'lg-e1' }, 'underlined'), ' words slightly. ',
+        'Words in ', h('b', { class: 'lg-e2' }, 'bold'), ' were heavily emphasized. ',
         'A word stands out when you hold it longer, move your pitch on it, or say it higher or louder than the words around it. ',
         'The label after each sentence shows its final pitch movement: in English a statement usually ends going down, and a yes/no question often ends going up. Tap a word to hear it.'),
       graphs, groupsBox, verdict, lines);
@@ -722,7 +724,7 @@ async function renderResult(id, shared = false) {
       for (let i = sn.i0; i < sn.i1; i++) {
         const w = M.words[i];
         const em = emOf(w);
-        const el = h('button', { class: 'mw e' + em, title: em ? emTitle(w) : 'Not emphasized',
+        const el = h('button', { class: 'mw e' + em, title: em ? emTitle(w) : null,
           onclick: () => { audio.currentTime = Math.max(0, w.s - 0.05); audio.play(); } }, w.w);
         melTexts[i] = el; row.append(el);
         const br = G && G.breaks[i];
@@ -747,11 +749,13 @@ async function renderResult(id, shared = false) {
   /* --- pauses: one connected chart over time; long recordings get a moving window + an overview strip --- */
   const pauseCard = h('div', { class: 'card' });
   function paintPauses() {
-    // ranges: under 0.25 s too brief | 0.25-0.5 short | 0.5-1.5 good | 1.5-2 a bit long | over 2 long
-    const ZONES = [[0, 0.25, 'warn', 'too brief', 'under 0.25 s'], [0.25, 0.5, 'ok', 'short', '0.25–0.5 s'], [0.5, 1.5, 'good', 'good', '0.5–1.5 s'],
+    // A pause is a silence of 0.35 s or longer (Jessica Reynolds, 2026-11-20: shorter ones are barely heard).
+    // ranges: 0.35-0.5 short | 0.5-1.5 good | 1.5-2 a bit long | over 2 long
+    const PAUSE_MIN = 0.35;
+    const ZONES = [[PAUSE_MIN, 0.5, 'ok', 'short', '0.35–0.5 s'], [0.5, 1.5, 'good', 'good', '0.5–1.5 s'],
       [1.5, 2, 'ok', 'a bit long', '1.5–2 s'], [2, 99, 'warn', 'long', 'over 2 s']];
-    const zoneOf = d => ZONES.find(z => d >= z[0] && d < z[1]) || ZONES[ZONES.length - 1];
-    const P = (A.pause_list || A.pauses.map(([s, e]) => ({ s, e, d: e - s })).filter(p => p.d >= 0.15)).map(p => ({ s: p.s, e: p.e, d: p.d }));
+    const zoneOf = d => ZONES.find(z => d < z[1]) || ZONES[ZONES.length - 1];
+    const P = (A.pause_list || A.pauses.map(([s, e]) => ({ s, e, d: e - s }))).filter(p => p.d >= PAUSE_MIN - 1e-6).map(p => ({ s: p.s, e: p.e, d: p.d }));
     const lv = d => zoneOf(d)[2];
     const word = d => zoneOf(d)[3];
     const col = d => css({ good: '--good', ok: '--ok', warn: '--warn' }[lv(d)]);
@@ -760,13 +764,13 @@ async function renderResult(id, shared = false) {
     if (!P.length) { pauseCard.replaceChildren(head, h('p', { class: 'muted', style: 'margin-top:8px' }, 'No pauses found.')); return; }
     const total = P.reduce((a, p) => a + p.d, 0), longest = P.reduce((a, p) => p.d > a.d ? p : a);
     const n = {}; P.forEach(p => { const w = word(p.d); n[w] = (n[w] || 0) + 1; });
-    const nGood = n.good || 0, others = ['too brief', 'short', 'a bit long', 'long'].filter(k => n[k]).map(k => `${n[k]} ${k}`);
+    const nGood = n.good || 0, others = ['short', 'a bit long', 'long'].filter(k => n[k]).map(k => `${n[k]} ${k}`);
     const story = nGood === P.length ? `All ${P.length} pauses were in the good range (0.5 to 1.5 s).`
       : `${nGood} of ${P.length} pauses were in the good range (0.5 to 1.5 s)` + (others.length ? '; ' + others.join(', ') : '') + '.';
-    const nBad = (n['too brief'] || 0) + (n.long || 0);
+    const nBad = n.long || 0;
     const stat = (v, l) => h('div', { class: 'pstat' }, h('b', {}, v), h('span', {}, l));
 
-    // how the pauses split over the five ranges: one bar, readable at any length
+    // how the pauses split over the four ranges: one bar, readable at any length
     const split = h('div', { class: 'psplit' },
       h('div', { class: 'stack', role: 'img', 'aria-label': ZONES.map(z => `${z[3]}: ${n[z[3]] || 0}`).join(', ') },
         ZONES.filter(z => n[z[3]]).map(z => { const k = z[3], share = n[k] / P.length;
@@ -794,7 +798,7 @@ async function renderResult(id, shared = false) {
     const hear = p => { show(p); audio.currentTime = Math.max(0, p.s - 1.2); audio.play(); };
     const top = [...P].sort((a, b) => b.d - a.d).slice(0, 3);
     pauseCard.replaceChildren(head,
-      h('p', { class: 'muted small', style: 'margin-top:4px' }, 'Each dot is one silence between your words, placed at the moment it happened. Higher dot = longer pause. Tap a dot to hear it.'),
+      h('p', { class: 'muted small', style: 'margin-top:4px' }, 'Each dot is one pause: a silence of 0.35 seconds or longer between your words, placed at the moment it happened. Higher dot = longer pause. Tap a dot to hear it.'),
       h('div', { class: 'pstats' }, stat(P.length, P.length === 1 ? 'pause' : 'pauses'),
         stat(total.toFixed(1) + ' s', `in total (${Math.round(total / dur * 100)}% of the time)`),
         stat((total / P.length).toFixed(2) + ' s', 'on average'), stat(longest.d.toFixed(2) + ' s', 'longest, at ' + fmtClock(longest.s))),
@@ -816,8 +820,7 @@ async function renderResult(id, shared = false) {
       };
       ctx.save();
       ctx.beginPath(); ctx.rect(a.left, a.top, a.right - a.left, a.bottom - a.top); ctx.clip();
-      band(0, 0.25, css('--warn-soft'), 'too brief');
-      band(0.25, 0.5, css('--ok-soft'), 'short');
+      band(PAUSE_MIN, 0.5, css('--ok-soft'), 'short');
       band(0.5, 1.5, css('--good-soft'), 'good');
       band(1.5, 2.0, css('--ok-soft'), 'a bit long');
       band(2.0, yMax, css('--warn-soft'), 'long');
@@ -938,7 +941,7 @@ async function renderResult(id, shared = false) {
 
 /* ---------------- where the ranges come from ---------------- */
 const SOURCES = [
-  ['Speech rate, pace and pauses', 'Kang, Hirschi, Hansen, Looney & Miao (2022). 405 recordings of 108 second-language English speakers at US universities (presentations, microteaching, speaking exams), rated by 15 trained listeners. Easiest to understand: 2.75 to 4 syllables per second; 3.5 to 4.25 while talking. Slow speech hurt more than fast speech. (The pause ranges in this app are set for presentations: 0.5 to 1.5 s good, under 0.25 s too brief, over 2 s long.)', 'https://par.nsf.gov/servlets/purl/10531499'],
+  ['Speech rate, pace and pauses', 'Kang, Hirschi, Hansen, Looney & Miao (2022). 405 recordings of 108 second-language English speakers at US universities (presentations, microteaching, speaking exams), rated by 15 trained listeners. Easiest to understand: 2.75 to 4 syllables per second; 3.5 to 4.25 while talking. Slow speech hurt more than fast speech. (In this app a silence counts as a pause from 0.35 s, and the pause ranges are set for presentations: 0.5 to 1.5 s good, over 2 s long.)', 'https://par.nsf.gov/servlets/purl/10531499'],
   ['Fast speech and international listeners', 'Griffiths (1990), Language Learning. Listeners with lower-intermediate English understood significantly less at 200 words a minute than at 150.', 'https://consensus.app/papers/details/f84ab9fd3f67579fa58582b998076189/'],
   ['Speaking rate and pitch in lectures', 'Kang (2010), System. In lectures by international teaching assistants, how easy they were to understand was tied mostly to speaking rate; a narrow pitch range made speech sound more accented.', 'https://eric.ed.gov/?id=EJ885942'],
   ['Emphasized words', 'The emphasis rating combines how long a word is held, how much the pitch moves and rises on it, and how loud it is next to its neighbours. The weights were fitted to people, not chosen by hand: recordings in which 3 to 9 listeners marked the words they heard as emphasized (Morrison et al. 2024), and recordings in which the speaker was told which word to stress (Expresso, Nguyen et al. 2023). Tested on speakers it was not fitted on. Treat it as a good guide, not a final judgement.', 'https://arxiv.org/abs/2310.08464'],
@@ -954,7 +957,7 @@ function sourcesDialog() {
     h('p', { class: 'small muted', style: 'margin-top:8px' }, h('b', {}, 'How it is measured. '),
       'Pauses are found by a speech detector (Silero VAD) and timed with Praat’s loudness curve. Syllables are counted from the words in your transcript; ',
       'without one, from the sound (de Jong & Wempe 2009). Pitch is tracked with Praat in two passes. Each word is timed by aligning the transcript to the sound. ',
-      'Tested against speech that people labelled by hand, the average pause per recording matched theirs closely (correlation 0.85) and the syllable count was within about 2% for international speakers.'),
+      'Tested against speech that people labelled by hand, the average pause per recording matched theirs closely (correlation 0.87) and the syllable count was within about 2% for international speakers.'),
     h('div', { class: 'row', style: 'margin-top:18px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn primary', onclick: () => dlg.close() }, 'Got it')));
   dlg.showModal();
 }
@@ -1026,7 +1029,7 @@ function buildAdvanced(container, X) {
   const M = [
     ['Syllable rate', f(m.speech_rate_sps, 2), 'syl/s', 'Syllables per second from the first word to the last, including pauses.'], ['Articulation rate', f(m.articulation_rate_sps, 2), 'syl/s', 'Syllables per second while actually speaking.'],
     ['Syllables', m.syllables, '', m.syllable_source === 'transcript' ? `Counted from the transcript's words (${m.syllables_acoustic} found in the sound alone).` : 'Found in the sound: loudness peaks with a voice.'], ['Speaking time', f(m.speaking_time_s), 's', 'Time with voice, excluding silences.'],
-    ['Mean pause', f(m.mean_pause_s, 2), 's', 'Average silence of 0.25 s or longer.'], ['Pause share', f(m.pause_ratio * 100), '%', 'Part of the recording spent in pauses.'],
+    ['Mean pause', f(m.mean_pause_s, 2), 's', 'Average length of your pauses (silences of 0.35 s or longer).'], ['Pause share', f(m.pause_ratio * 100), '%', 'Part of the recording spent in pauses.'],
     ['Mean pitch (F0)', f(m.f0_mean_hz, 0), 'Hz', 'How high or low your voice is on average.'], ['Pitch range', m.f0_min_hz == null ? '–' : f(m.f0_min_hz, 0) + '–' + f(m.f0_max_hz, 0), 'Hz', '5th to 95th percentile.'],
     ['Voiced', f(m.voiced_fraction * 100, 0), '%', 'Frames with a clear pitch.'], ['Loudness', f(m.rms_dbfs), 'dBFS', 'Average level; 0 is the maximum.'],
     ['Peak', f(m.peak_dbfs), 'dBFS', 'Loudest moment.'], ['Signal to noise', f(m.snr_db_est), 'dB', 'Higher is cleaner (capped at 60).'], ['Clipping', f(m.clipping_pct, 2), '%', 'Samples at the maximum level (distortion).']];
