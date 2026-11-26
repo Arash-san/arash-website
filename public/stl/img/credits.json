@@ -8,20 +8,20 @@
   "h": 973
  },
  "cathedral": {
-  "file": "Cathedral_Basilica_of_Saint_Louis_(St._Louis,_MO)_-_exterior,_quarter_view_2.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Cathedral_Basilica_of_Saint_Louis_(St._Louis,_MO)_-_exterior,_quarter_view_2.jpg",
-  "artist": "Nheyob (changes by Rabanus Flavus)",
-  "license": "CC BY-SA 4.0",
+  "file": "Angels holding Beautitudes at Cathedral Basilica of Saint Louis.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Angels_holding_Beautitudes_at_Cathedral_Basilica_of_Saint_Louis.jpg",
+  "artist": "The Real Dr. Worm",
+  "license": "CC0",
   "w": 1000,
-  "h": 877
+  "h": 750
  },
  "forestpark": {
-  "file": "Forest_Park,_St_Louis.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Forest_Park,_St_Louis.jpg",
-  "artist": "Kris from Seattle, USA",
-  "license": "CC BY 2.0",
-  "w": 750,
-  "h": 1000
+  "file": "Grand Basin in Forest Park - panoramio.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Grand_Basin_in_Forest_Park_-_panoramio.jpg",
+  "artist": "Bohao Zhao",
+  "license": "CC BY 3.0",
+  "w": 1000,
+  "h": 666
  },
  "unionstation": {
   "file": "St._Louis_Union_Station,_Market_Street,_St._Louis,_MO_-_53050963215.jpg",
@@ -40,20 +40,12 @@
   "h": 509
  },
  "brewery": {
-  "file": "StLouisABPackaging_Plant.JPG",
-  "page": "https://commons.wikimedia.org/wiki/File:StLouisABPackaging_Plant.JPG",
-  "artist": "",
+  "file": "Anheuser-Busch Brewery at St. Louis.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Anheuser-Busch_Brewery_at_St._Louis.jpg",
+  "artist": "Pp391",
   "license": "CC BY-SA 3.0",
-  "w": 480,
-  "h": 360
- },
- "hill": {
-  "file": "The_Italian_Immigrants.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:The_Italian_Immigrants.jpg",
-  "artist": "Louiemantia",
-  "license": "CC BY 4.0",
-  "w": 749,
-  "h": 1000
+  "w": 1000,
+  "h": 666
  },
  "loop": {
   "file": "Blueberry_Hill_patio.jpg",
@@ -64,36 +56,20 @@
   "h": 794
  },
  "teddrewes": {
-  "file": "Ted_Drewes_Frozen_Custard_Oreo_Concrete.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Ted_Drewes_Frozen_Custard_Oreo_Concrete.jpg",
-  "artist": "Louiemantia",
-  "license": "CC BY 4.0",
-  "w": 750,
-  "h": 1000
+  "file": "Blue Drewes (8156292433).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Blue_Drewes_(8156292433).jpg",
+  "artist": "Philip Leara",
+  "license": "CC0",
+  "w": 1000,
+  "h": 663
  },
  "meramec": {
-  "file": "Brown_formation_in_cavern.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Brown_formation_in_cavern.jpg",
-  "artist": "T.sujatha",
-  "license": "CC BY-SA 3.0",
-  "w": 1000,
-  "h": 750
- },
- "citygarden": {
-  "file": "Citygarden_limestone_wall_sign.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Citygarden_limestone_wall_sign.jpg",
-  "artist": "hickory hardscrabble",
-  "license": "CC BY 2.0",
-  "w": 1000,
-  "h": 750
- },
- "enterprise": {
-  "file": "Scottrade_2015.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Scottrade_2015.jpg",
-  "artist": "Lightmetro",
+  "file": "Meramec Caverns 0088.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Meramec_Caverns_0088.jpg",
+  "artist": "Ronincmc",
   "license": "CC BY-SA 4.0",
   "w": 1000,
-  "h": 470
+  "h": 670
  },
  "toasted": {
   "file": "Toasted_Ravioli.jpg",
@@ -143,22 +119,6 @@
   "w": 781,
   "h": 599
  },
- "bbq": {
-  "file": "Pappy's Smokehouse.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Pappy%27s_Smokehouse.jpg",
-  "artist": "Paul Sableman",
-  "license": "CC BY 2.0",
-  "w": 1000,
-  "h": 928
- },
- "fox": {
-  "file": "Fox_Theatre_(St._Louis).jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Fox_Theatre_(St._Louis).jpg",
-  "artist": "Paul Sableman",
-  "license": "CC BY 2.0",
-  "w": 1000,
-  "h": 1000
- },
  "pageant": {
   "file": "The_Pageant,_November_2011_(cropped).jpg",
   "page": "https://commons.wikimedia.org/wiki/File:The_Pageant,_November_2011_(cropped).jpg",
@@ -192,60 +152,44 @@
   "h": 648
  },
  "nutcracker": {
-  "file": "Tschaikowsky_EBieber_1888.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Tschaikowsky_EBieber_1888.jpg",
-  "artist": "Atelier E. Bieber, Hamburg (probably by Leonard Berlin (1841-1931))",
+  "file": "Madison Ballet - The Nutcracker - December 10, 2021 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Madison_Ballet_-_The_Nutcracker_-_December_10,_2021_2.jpg",
+  "artist": "Caitlin Wilkins",
   "license": "Public domain",
-  "w": 718,
-  "h": 1000
+  "w": 1000,
+  "h": 666
  },
  "turkey": {
-  "file": "Thanksgiving_1918.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Thanksgiving_1918.jpg",
-  "artist": "Underwood &amp; Underwood. (War Dept.)",
-  "license": "Public domain",
+  "file": "Our (Almost Traditional) Thanksgiving Dinner.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Our_(Almost_Traditional)_Thanksgiving_Dinner.jpg",
+  "artist": "Ms Jones from California, USA",
+  "license": "CC BY 2.0",
   "w": 1000,
-  "h": 767
- },
- "skate": {
-  "file": "Skating,_man,_woman,_ice-skating_rink,_winter,_smile,_free_time_Fortepan_14348.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Skating,_man,_woman,_ice-skating_rink,_winter,_smile,_free_time_Fortepan_14348.jpg",
-  "artist": "FOTO:Fortepan \u2014 ID 14348: Adom\u00e1nyoz\u00f3/Donor: Unknown.",
-  "license": "Public domain",
-  "w": 1000,
-  "h": 744
+  "h": 663
  },
  "citymuseum": {
-  "file": "City Museum, St Louis MO 988773 1280.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:City_Museum,_St_Louis_MO_988773_1280.jpg",
-  "artist": "stefib230",
-  "license": "CC0",
+  "file": "City Museum outdoor structures.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:City_Museum_outdoor_structures.jpg",
+  "artist": "Chris857",
+  "license": "CC BY-SA 3.0",
   "w": 1000,
-  "h": 563
+  "h": 750
  },
  "zoo": {
-  "file": "Entrance to the Saint Louis Zoo.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Entrance_to_the_Saint_Louis_Zoo.jpg",
+  "file": "Penguins at the Saint Louis Zoo.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Penguins_at_the_Saint_Louis_Zoo.jpg",
   "artist": "HeatherMarieKosur",
   "license": "CC BY-SA 4.0",
   "w": 1000,
   "h": 750
  },
- "garden": {
-  "file": "Climatron, Missouri Botanical Gardens.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Climatron,_Missouri_Botanical_Gardens.jpg",
-  "artist": "",
-  "license": "CC BY-SA 3.0",
-  "w": 1000,
-  "h": 753
- },
  "slam": {
-  "file": "Fishing on the Merced River by Thomas Hill, 1891, oil on canvas, Saint Louis Art Museum.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Fishing_on_the_Merced_River_by_Thomas_Hill,_1891,_oil_on_canvas,_Saint_Louis_Art_Museum.jpg",
-  "artist": "Hiart",
-  "license": "CC0",
+  "file": "St louis Art Museum.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St_louis_Art_Museum.jpg",
+  "artist": "",
+  "license": "Public domain",
   "w": 1000,
-  "h": 638
+  "h": 749
  },
  "courthouse": {
   "file": "St Louis night expblend.jpg",
@@ -272,12 +216,12 @@
   "h": 750
  },
  "history": {
-  "file": "Dedication ceremony for Thomas Jefferson Statue in Jefferson Memorial Building, 1913.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Dedication_ceremony_for_Thomas_Jefferson_Statue_in_Jefferson_Memorial_Building,_1913.jpg",
-  "artist": "Unknown authorUnknown author",
-  "license": "Public domain",
+  "file": "Missouri History Museum - panoramio.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Missouri_History_Museum_-_panoramio.jpg",
+  "artist": "Peter K.",
+  "license": "CC BY-SA 3.0",
   "w": 1000,
-  "h": 811
+  "h": 666
  },
  "cahokia": {
   "file": "Monks Mound in July.JPG",
@@ -287,12 +231,100 @@
   "w": 1000,
   "h": 750
  },
- "route66": {
-  "file": "Carved Route 66 Sign - Devils Elbow - Missouri - USA (41916764281).jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:Carved_Route_66_Sign_-_Devils_Elbow_-_Missouri_-_USA_(41916764281).jpg",
-  "artist": "Adam Jones from Kelowna, BC, Canada",
-  "license": "CC BY-SA 2.0",
+ "grocery": {
+  "file": "Vegetable oils etc. aisle in Meny Supermarket in Bergen Storsenter Shopping Mall, Bergen, Norway 2017-10-23 b.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Vegetable_oils_etc._aisle_in_Meny_Supermarket_in_Bergen_Storsenter_Shopping_Mall,_Bergen,_Norway_2017-10-23_b.jpg",
+  "artist": "Wolfmann",
+  "license": "CC BY-SA 4.0",
   "w": 1000,
   "h": 750
+ },
+ "sleep": {
+  "file": "Cozy wooden bedroom with floral bedding.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Cozy_wooden_bedroom_with_floral_bedding.jpg",
+  "artist": "Shixart1985",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 667
+ },
+ "bogarts": {
+  "file": "Plate of brisket, BBQ ribs, pulled pork, South Texas beans and pickled jalape\u00f1os from the Pinkerton's BBQ San Antonio location.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Plate_of_brisket,_BBQ_ribs,_pulled_pork,_South_Texas_beans_and_pickled_jalape%C3%B1os_from_the_Pinkerton%27s_BBQ_San_Antonio_location.jpg",
+  "artist": "Gatorfan252525",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 750
+ },
+ "glow": {
+  "file": "Climatron Garden Glow-2013-12-27 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Climatron_Garden_Glow-2013-12-27_1.jpg",
+  "artist": "Kbh3rd",
+  "license": "CC BY 3.0",
+  "w": 1000,
+  "h": 657
+ },
+ "home": {
+  "file": "Interstate 44 West at Exit 186, Business Loop 44, US 63, Highway 72 exit (1992).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Interstate_44_West_at_Exit_186,_Business_Loop_44,_US_63,_Highway_72_exit_(1992).jpg",
+  "artist": "Dwaynep2020",
+  "license": "CC0",
+  "w": 1000,
+  "h": 628
+ },
+ "games": {
+  "file": "Table game of cards birds eye view.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Table_game_of_cards_birds_eye_view.JPG",
+  "artist": "No machine-readable author provided. Esteffect assumed (based on copyright claim",
+  "license": "Public domain",
+  "w": 1000,
+  "h": 750
+ },
+ "bbs": {
+  "file": "Geoff Garbow Band at Ealing Blues Festival (48412088417).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Geoff_Garbow_Band_at_Ealing_Blues_Festival_(48412088417).jpg",
+  "artist": "Roger Green",
+  "license": "CC BY-SA 2.0",
+  "w": 1000,
+  "h": 611
+ },
+ "rooster": {
+  "file": "Hippie Kitchen Jefferson LA Oct 2018 Crepe.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Hippie_Kitchen_Jefferson_LA_Oct_2018_Crepe.jpg",
+  "artist": "Infrogmation of New Orleans",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 750
+ },
+ "blues": {
+  "file": "St. Louis blues home enterprise center.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St._Louis_blues_home_enterprise_center.jpg",
+  "artist": "Johnhochi",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 561
+ },
+ "wildlights": {
+  "file": "Lincoln Park Zoo Lights (8285736027).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Lincoln_Park_Zoo_Lights_(8285736027).jpg",
+  "artist": "Christine Zenino from Chicago, US",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 709
+ },
+ "pappys": {
+  "file": "Pappy's Smokehouse2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Pappy%27s_Smokehouse2.jpg",
+  "artist": "regan76",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 750
+ },
+ "airbnb": {
+  "file": "Close-up of the key with house keychain.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Close-up_of_the_key_with_house_keychain.jpg",
+  "artist": "Shixart1985",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 667
  }
 }
