@@ -6,6 +6,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#060a13">
 <title>Meet Us in St. Louis</title>
+<meta property="og:title" content="Meet Us in St. Louis">
+<meta property="og:description" content="Nov 25 to 29. The crew plan: swap, vote, add your own.">
+<meta property="og:image" content="https://arash-ahmadi.com/stl/og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Yellowtail&display=swap" rel="stylesheet">
@@ -914,7 +919,7 @@ async function weather() {
 
 // ---------- start
 async function start() {
-  if (!key) { $('#gate').hidden = false; return; }
+  if (!key) { $('#gate').hidden = false; $('#etalabel').textContent = 'For the crew'; $('#count').textContent = 'Nov 25 to 29'; return; }
   const cached = store.get('doc');
   try {
     await loadState();
