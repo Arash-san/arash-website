@@ -1,0 +1,298 @@
+{
+ "arch": {
+  "file": "St_Louis_night_expblend_cropped.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St_Louis_night_expblend_cropped.jpg",
+  "artist": "St_Louis_night_expblend.jpg: Daniel Schwen derivative work: \u2190fetchcomms",
+  "license": "CC BY-SA 3.0",
+  "w": 1000,
+  "h": 973
+ },
+ "cathedral": {
+  "file": "Cathedral_Basilica_of_Saint_Louis_(St._Louis,_MO)_-_exterior,_quarter_view_2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Cathedral_Basilica_of_Saint_Louis_(St._Louis,_MO)_-_exterior,_quarter_view_2.jpg",
+  "artist": "Nheyob (changes by Rabanus Flavus)",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 877
+ },
+ "forestpark": {
+  "file": "Forest_Park,_St_Louis.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Forest_Park,_St_Louis.jpg",
+  "artist": "Kris from Seattle, USA",
+  "license": "CC BY 2.0",
+  "w": 750,
+  "h": 1000
+ },
+ "unionstation": {
+  "file": "St._Louis_Union_Station,_Market_Street,_St._Louis,_MO_-_53050963215.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St._Louis_Union_Station,_Market_Street,_St._Louis,_MO_-_53050963215.jpg",
+  "artist": "w_lemay",
+  "license": "CC BY-SA 2.0",
+  "w": 1000,
+  "h": 750
+ },
+ "soulard": {
+  "file": "SoulardMarketSTL.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:SoulardMarketSTL.jpg",
+  "artist": "Whitebox",
+  "license": "CC BY 3.0",
+  "w": 1000,
+  "h": 509
+ },
+ "brewery": {
+  "file": "StLouisABPackaging_Plant.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:StLouisABPackaging_Plant.JPG",
+  "artist": "",
+  "license": "CC BY-SA 3.0",
+  "w": 480,
+  "h": 360
+ },
+ "hill": {
+  "file": "The_Italian_Immigrants.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_Italian_Immigrants.jpg",
+  "artist": "Louiemantia",
+  "license": "CC BY 4.0",
+  "w": 749,
+  "h": 1000
+ },
+ "loop": {
+  "file": "Blueberry_Hill_patio.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Blueberry_Hill_patio.jpg",
+  "artist": "Mattthenhaus (talk) (Uploads)",
+  "license": "CC0",
+  "w": 1000,
+  "h": 794
+ },
+ "teddrewes": {
+  "file": "Ted_Drewes_Frozen_Custard_Oreo_Concrete.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ted_Drewes_Frozen_Custard_Oreo_Concrete.jpg",
+  "artist": "Louiemantia",
+  "license": "CC BY 4.0",
+  "w": 750,
+  "h": 1000
+ },
+ "meramec": {
+  "file": "Brown_formation_in_cavern.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Brown_formation_in_cavern.jpg",
+  "artist": "T.sujatha",
+  "license": "CC BY-SA 3.0",
+  "w": 1000,
+  "h": 750
+ },
+ "citygarden": {
+  "file": "Citygarden_limestone_wall_sign.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Citygarden_limestone_wall_sign.jpg",
+  "artist": "hickory hardscrabble",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 750
+ },
+ "enterprise": {
+  "file": "Scottrade_2015.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Scottrade_2015.jpg",
+  "artist": "Lightmetro",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 470
+ },
+ "toasted": {
+  "file": "Toasted_Ravioli.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Toasted_Ravioli.jpg",
+  "artist": "Timothy Boyd",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 750
+ },
+ "gooey": {
+  "file": "Gooey_Butter_Cake_Photo.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Gooey_Butter_Cake_Photo.jpg",
+  "artist": "Topher0128",
+  "license": "Public domain",
+  "w": 1000,
+  "h": 564
+ },
+ "lafayette": {
+  "file": "LafayetteSquareHouses.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:LafayetteSquareHouses.jpg",
+  "artist": "Whitebox at English Wikipedia",
+  "license": "CC BY 3.0",
+  "w": 1000,
+  "h": 501
+ },
+ "crown": {
+  "file": "Inside_Crown_Candy_Kitchen.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Inside_Crown_Candy_Kitchen.jpg",
+  "artist": "Marcus Qwertyus",
+  "license": "CC BY-SA 3.0",
+  "w": 1000,
+  "h": 750
+ },
+ "pizza": {
+  "file": "St_Louis_Missouri_pizza_in_cardboard_box.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St_Louis_Missouri_pizza_in_cardboard_box.jpg",
+  "artist": "Dale Cruse from San Francisco, CA, USA",
+  "license": "CC BY 2.0",
+  "w": 750,
+  "h": 1000
+ },
+ "powell": {
+  "file": "782px-Powell_Symphony_Hall.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:782px-Powell_Symphony_Hall.jpg",
+  "artist": "en:User:Big Brother 1984",
+  "license": "CC BY-SA 3.0",
+  "w": 781,
+  "h": 599
+ },
+ "bbq": {
+  "file": "Pappy's Smokehouse.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Pappy%27s_Smokehouse.jpg",
+  "artist": "Paul Sableman",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 928
+ },
+ "fox": {
+  "file": "Fox_Theatre_(St._Louis).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Fox_Theatre_(St._Louis).jpg",
+  "artist": "Paul Sableman",
+  "license": "CC BY 2.0",
+  "w": 1000,
+  "h": 1000
+ },
+ "pageant": {
+  "file": "The_Pageant,_November_2011_(cropped).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_Pageant,_November_2011_(cropped).jpg",
+  "artist": "Paul Sableman",
+  "license": "CC BY 2.0",
+  "w": 908,
+  "h": 1000
+ },
+ "stcharles": {
+  "file": "Historic_Saint_Charles_Main_Street_3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Historic_Saint_Charles_Main_Street_3.jpg",
+  "artist": "",
+  "license": "CC BY-SA 3.0",
+  "w": 720,
+  "h": 480
+ },
+ "cwe": {
+  "file": "Central_West_End_Collage.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Central_West_End_Collage.jpg",
+  "artist": "Lightmetro",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 1000
+ },
+ "chain": {
+  "file": "ChainOfRocksBridge_StLouisMO.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:ChainOfRocksBridge_StLouisMO.jpg",
+  "artist": "David Hinkson, http://www.trailnet.org/",
+  "license": "Public domain",
+  "w": 1000,
+  "h": 648
+ },
+ "nutcracker": {
+  "file": "Tschaikowsky_EBieber_1888.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Tschaikowsky_EBieber_1888.jpg",
+  "artist": "Atelier E. Bieber, Hamburg (probably by Leonard Berlin (1841-1931))",
+  "license": "Public domain",
+  "w": 718,
+  "h": 1000
+ },
+ "turkey": {
+  "file": "Thanksgiving_1918.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Thanksgiving_1918.jpg",
+  "artist": "Underwood &amp; Underwood. (War Dept.)",
+  "license": "Public domain",
+  "w": 1000,
+  "h": 767
+ },
+ "skate": {
+  "file": "Skating,_man,_woman,_ice-skating_rink,_winter,_smile,_free_time_Fortepan_14348.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Skating,_man,_woman,_ice-skating_rink,_winter,_smile,_free_time_Fortepan_14348.jpg",
+  "artist": "FOTO:Fortepan \u2014 ID 14348: Adom\u00e1nyoz\u00f3/Donor: Unknown.",
+  "license": "Public domain",
+  "w": 1000,
+  "h": 744
+ },
+ "citymuseum": {
+  "file": "City Museum, St Louis MO 988773 1280.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:City_Museum,_St_Louis_MO_988773_1280.jpg",
+  "artist": "stefib230",
+  "license": "CC0",
+  "w": 1000,
+  "h": 563
+ },
+ "zoo": {
+  "file": "Entrance to the Saint Louis Zoo.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Entrance_to_the_Saint_Louis_Zoo.jpg",
+  "artist": "HeatherMarieKosur",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 750
+ },
+ "garden": {
+  "file": "Climatron, Missouri Botanical Gardens.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Climatron,_Missouri_Botanical_Gardens.jpg",
+  "artist": "",
+  "license": "CC BY-SA 3.0",
+  "w": 1000,
+  "h": 753
+ },
+ "slam": {
+  "file": "Fishing on the Merced River by Thomas Hill, 1891, oil on canvas, Saint Louis Art Museum.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Fishing_on_the_Merced_River_by_Thomas_Hill,_1891,_oil_on_canvas,_Saint_Louis_Art_Museum.jpg",
+  "artist": "Hiart",
+  "license": "CC0",
+  "w": 1000,
+  "h": 638
+ },
+ "courthouse": {
+  "file": "St Louis night expblend.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St_Louis_night_expblend.jpg",
+  "artist": "Daniel Schwen",
+  "license": "CC BY-SA 4.0",
+  "w": 1000,
+  "h": 643
+ },
+ "kiener": {
+  "file": "St. Louis Missouri, View SE from Kiener Plaza - panoramio.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:St._Louis_Missouri,_View_SE_from_Kiener_Plaza_-_panoramio.jpg",
+  "artist": "Chris English",
+  "license": "CC BY-SA 3.0",
+  "w": 1000,
+  "h": 665
+ },
+ "stifel": {
+  "file": "Stifel Theatre, Market Street, St. Louis, MO.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Stifel_Theatre,_Market_Street,_St._Louis,_MO.jpg",
+  "artist": "Warren LeMay",
+  "license": "CC BY-SA 2.0",
+  "w": 1000,
+  "h": 750
+ },
+ "history": {
+  "file": "Dedication ceremony for Thomas Jefferson Statue in Jefferson Memorial Building, 1913.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Dedication_ceremony_for_Thomas_Jefferson_Statue_in_Jefferson_Memorial_Building,_1913.jpg",
+  "artist": "Unknown authorUnknown author",
+  "license": "Public domain",
+  "w": 1000,
+  "h": 811
+ },
+ "cahokia": {
+  "file": "Monks Mound in July.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Monks_Mound_in_July.JPG",
+  "artist": "Skubasteve834",
+  "license": "CC BY-SA 3.0",
+  "w": 1000,
+  "h": 750
+ },
+ "route66": {
+  "file": "Carved Route 66 Sign - Devils Elbow - Missouri - USA (41916764281).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Carved_Route_66_Sign_-_Devils_Elbow_-_Missouri_-_USA_(41916764281).jpg",
+  "artist": "Adam Jones from Kelowna, BC, Canada",
+  "license": "CC BY-SA 2.0",
+  "w": 1000,
+  "h": 750
+ }
+}
